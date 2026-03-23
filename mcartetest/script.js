@@ -292,8 +292,77 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 // ─────────────────────────────────────────
-// BACKGROUND CLICK DESELECT
+// CUSTOM 1-FINGER PANNING (MAP MODE)
 // ─────────────────────────────────────────
+let isPanning = false;
+let panLastX = 0;
+let panLastY = 0;
+let activePointers = new Map();
+
+mv.addEventListener('pointerdown', (e) => {
+  activePointers.set(e.pointerId, e);
+  
+  // Start panning if it's Left Click (mouse) or 1 Finger (touch)
+  if (activePointers.size === 1 && (e.pointerType === 'touch' || e.button === 0)) {
+    isPanning = true;
+    panLastX = e.clientX;
+    panLastY = e.clientY;
+  }
+}, { capture: true });
+
+mv.addEventListener('pointermove', (e) => {
+  if (activePointers.has(e.pointerId)) {
+    activePointers.set(e.pointerId, e);
+  }
+
+  // Intercept Left-click dragging and 1-finger swipes
+  if (isPanning && activePointers.size === 1 && (e.pointerType === 'touch' || e.buttons === 1)) {
+    e.stopPropagation(); // Stop model-viewer's native Orbit behavior!
+
+    const deltaX = e.clientX - panLastX;
+    const deltaY = e.clientY - panLastY;
+    
+    // Pan Sensitivity: Maps screen pixels to meters. Adjusts natively based on camera zoom.
+    const orbit = mv.getCameraOrbit();
+    const panFactor = orbit.radius * 0.0012; 
+    
+    // Convert screen deltas to world space target movement.
+    const theta = orbit.theta;
+    const moveX = -deltaX * panFactor;
+    const moveZ = -deltaY * panFactor;
+    
+    const target = mv.getCameraTarget();
+    
+    // Calculate new target by multiplying against the camera's rotational angle (theta).
+    // This perfectly aligns the dragging direction with the rotated 3D models viewing angle.
+    const newX = target.x + (moveX * Math.cos(theta) + moveZ * Math.sin(theta));
+    const newZ = target.z + (moveZ * Math.cos(theta) - moveX * Math.sin(theta));
+    
+    // Add boundaries so they don't scroll completely off the map
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    // Soft limits for X and Z across the Glendon map.
+    const clampedX = clamp(newX, -60, 60);
+    const clampedZ = clamp(newZ, -80, 80);
+    
+    mv.cameraTarget = `${clampedX}m ${target.y}m ${clampedZ}m`;
+    
+    panLastX = e.clientX;
+    panLastY = e.clientY;
+  }
+}, { capture: true });
+
+const endPan = (e) => {
+  activePointers.delete(e.pointerId);
+  if (activePointers.size === 0) {
+    isPanning = false;
+  }
+};
+
+mv.addEventListener('pointerup', endPan, { capture: true });
+mv.addEventListener('pointercancel', endPan, { capture: true });
+mv.addEventListener('pointerleave', endPan, { capture: true });
+
+// Background Click Deselect
 mv.addEventListener('click', (e) => {
   if (e.target === mv && selectedHotspot) {
     deselectAll();
