@@ -33,27 +33,54 @@
     <img id="mobile-top-logo" src="glendonlogo.webp" alt="Glendon Logo" />
     <span>Glendon Athletic Club Interactive Map</span>
   </div> 
-  <!-- Mobile Bottom Search Container -->
-  <div class="bottom-search-container">
-    <div class="search-pill">
-      <div class="search-icon-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24" width="22" height="22">
-          <path d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z"></path>
-        </svg>
+  <!-- Mobile Top Left Legend Dropdown -->
+  <div id="mobile-legend-container">
+    <button class="legend-btn-3d" id="mobile-legend-btn">
+      <div class="legend-btn-front">
+        <span class="btn-text">Legend <i class="fas fa-caret-down"></i></span>
       </div>
-      <input type="text" class="search-pill-input" placeholder="Search..." />
-    </div>
-  </div> 
-  <!-- Dev Overlay -->
-  <div id="dev-overlay">
-    <div><strong>Orbit:</strong> <span id="dev-orbit">Measuring...</span></div>
-    <div><strong>Target:</strong> <span id="dev-target">Measuring...</span></div>
-    <div><strong>FOV:</strong> <span id="dev-fov">Measuring...</span></div>
-    <div><strong>Zoom Sens:</strong> <span id="dev-zoom">Measuring...</span></div>
-    <div><strong>Orbit Sens:</strong> <span id="dev-orbit-sens">Measuring...</span></div>
-    <div><strong>Size (XYZ):</strong> <span id="dev-size">Measuring...</span></div>
-    <button id="dev-copy-btn">Copy as Default</button>
+    </button>
+    <ul id="mobile-legend-menu">
+      <li onclick="document.querySelector('[slot=\'hotspot-2\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-lobby">1</div>Lobby / Entrance</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-20\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-weight">2</div>Weight room</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-9\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-pool">3</div>Swimming Pool</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-5\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-stretching">4</div>Stretching room</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-6\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-spinning">5</div>Spinning room</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-4\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-boxing">6</div>Boxing room</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-3\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-golf">7</div>Golf Court</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-18\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-squash">8</div>Squash court</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-19\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-basketball">9</div>Basketball court</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-10\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-m-changing">10</div>M. changing room</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-11\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-w-changing">11</div>W. changing room</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-7\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-w-locker">12</div>W. Locker room</div></li>
+      <li onclick="document.querySelector('[slot=\'hotspot-8\']').click(); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-m-locker">13</div>M. Locker room</div></li>
+    </ul>
   </div>
+  
+  <!-- Mobile Bottom Right Controls -->
+  <div class="mobile-bottom-right-controls">
+    <!-- Recenter 3D Button -->
+    <div class="search-pill action-only" id="mobile-reset-btn">
+      <div class="search-pill-front">
+        <div class="search-icon-wrapper">
+          <i class="fas fa-location-arrow" style="font-size: 18px;"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search 3D Button -->
+    <div class="search-pill expandable-search">
+      <div class="search-pill-front">
+        <input type="text" class="search-pill-input" placeholder="Search..." />
+        <div class="search-icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24" width="22" height="22">
+            <path d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
 
 
@@ -226,145 +253,8 @@
       <img src="ar_hand_prompt.png">
     </div>
   </model-viewer>
-  <div id="legend-panel" class="loading-hidden">
-    <!-- Mobile Location FAB -->
-    <button id="mobile-location-btn"><i class="fas fa-map-marker-alt"></i></button>
+  <svg id="route-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;"></svg>
 
-    <!-- Mobile Drag Handle -->
-    <div id="mobile-drag-area">
-      <div id="mobile-drag-handle"></div>
-      <div id="mobile-legend-header-wrapper">
-        <div id="mobile-legend-title">Légende</div>
-        <button id="mobile-minimize-btn"><i class="fas fa-chevron-up"></i></button>
-      </div>
-    </div>
-
-    <!-- Relocated Mobile Search Bar -->
-    <div id="mobile-search-container">
-      <i class="fas fa-search search-icon"></i>
-      <input type="text" class="legend-search" placeholder="Search locations...">
-    </div>
-
-    <div class="legend-header">
-      <div class="legend-title-container">
-        <h2 id="legend-title-text">Glendon Athletic Club First Floor Map</h2>
-      </div>
-      <div class="minimize-container">
-        <span class="minimize-text">minimize</span>
-        <button class="collapse-btn">
-          <i class="fas fa-chevron-up"></i>
-        </button>
-      </div>
-    </div>
-    <input type="text" class="legend-search desktop-search-input" placeholder="Search locations...">
-    <div class="legend-content">
-      <!-- Featured -->
-      <div class="legend-item" data-number="2">
-        <div class="item-number color-weight">2</div>
-        <div class="item-icon">🏋️</div>
-        <div class="item-label">Weight room</div>
-        <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-      </div>
-      <div class="legend-item" data-number="3">
-        <div class="item-number color-pool">3</div>
-        <div class="item-icon">🏊</div>
-        <div class="item-label">Swimming Pool</div>
-        <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-      </div>
-      <hr class="divider">
-      <!-- Rooms -->
-      <div class="legend-category">
-        <h3 class="category-header">Rooms <button class="eye-toggle category-toggle"><i class="fas fa-eye"></i></button>
-        </h3>
-        <div class="legend-item" data-number="1">
-          <div class="item-number color-lobby">1</div>
-          <div class="item-icon">🏢</div>
-          <div class="item-label">Lobby <span class="legend-pill">You are here</span></div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-        <div class="legend-item" data-number="4">
-          <div class="item-number color-stretching">4</div>
-          <div class="item-icon">🧘</div>
-          <div class="item-label">Stretching room</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-        <div class="legend-item" data-number="5">
-          <div class="item-number color-spinning">5</div>
-          <div class="item-icon">🚴</div>
-          <div class="item-label">Spinning room</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-        <div class="legend-item" data-number="6">
-          <div class="item-number color-boxing">6</div>
-          <div class="item-icon">🥊</div>
-          <div class="item-label">Boxing room</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-      </div>
-      <!-- Courts -->
-      <div class="legend-category">
-        <h3 class="category-header">Courts <button class="eye-toggle category-toggle"><i
-              class="fas fa-eye"></i></button></h3>
-        <div class="legend-item" data-number="7">
-          <div class="item-number color-golf">7</div>
-          <div class="item-icon">⛳</div>
-          <div class="item-label">Golf Court</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-        <div class="legend-item" data-number="8">
-          <div class="item-number color-squash">8</div>
-          <div class="item-icon">🎾</div>
-          <div class="item-label">Squash court</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-        <div class="legend-item" data-number="9">
-          <div class="item-number color-basketball">9</div>
-          <div class="item-icon">🏀</div>
-          <div class="item-label">Basketball court</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-      </div>
-      <!-- Changing Rooms -->
-      <div class="legend-category">
-        <h3 class="category-header">Changing Rooms <button class="eye-toggle category-toggle"><i
-              class="fas fa-eye"></i></button></h3>
-        <div class="legend-item" data-number="10">
-          <div class="item-number color-m-changing">10</div>
-          <div class="item-icon">🔒</div>
-          <div class="item-label">M.changing room</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-        <div class="legend-item" data-number="11">
-          <div class="item-number color-w-changing">11</div>
-          <div class="item-icon">🔒</div>
-          <div class="item-label">W. changing room</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-        <div class="legend-item" data-number="12">
-          <div class="item-number color-w-locker">12</div>
-          <div class="item-icon">🔒</div>
-          <div class="item-label">W.Locker room</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-        <div class="legend-item" data-number="13">
-          <div class="item-number color-m-locker">13</div>
-          <div class="item-icon">🔒</div>
-          <div class="item-label">M. Locker room</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-      </div>
-
-      <!-- Stairs -->
-      <div class="legend-category">
-        <h3>Stairs</h3>
-        <div class="legend-item" data-category="Stairs">
-          <div class="item-number color-stairs">🪜</div>
-          <div class="item-label">All Stairs</div>
-          <button class="eye-toggle"><i class="fas fa-eye"></i></button>
-        </div>
-      </div>
-    </div>
-  </div>
   <img src="glendonlogo.webp" id="glendon-logo" alt="Glendon Logo">
   <script defer src="script.js?v=9"></script>
   <!-- Loads <model-viewer> for browsers: -->
