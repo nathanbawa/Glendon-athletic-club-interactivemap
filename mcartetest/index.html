@@ -19,8 +19,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
   <!-- Cache Control for GitHub Pages updates (optional but helpful) -->
-  <link type="text/css" href="./styles.css?v=3" rel="stylesheet" />
-  <link rel="preload" href="cartedugacv1maude.glb" as="fetch" crossorigin>
+  <link type="text/css" href="./styles.css?v=6" rel="stylesheet" />
+  <link rel="preload" href="testmapvoidbackgroung5_compressed.glb" as="fetch" crossorigin>
 </head>
 
 <body>
@@ -51,25 +51,29 @@
   <!-- <model-viewer> HTML element -->
   <model-viewer
     id="mv"
-    src="cartedugacv1maude.glb"
+    src="testmapvoidbackgroung5_compressed.glb"
     camera-controls
     interaction-prompt="none"
     camera-orbit="360deg 45deg 100m" 
     camera-target="0m -1.3m 8.5m"
-    field-of-view="69.44deg"
-    min-camera-orbit="auto auto 50m"
-    max-camera-orbit="auto 90deg auto"
+    field-of-view="70deg"
+    min-camera-orbit="auto 0deg 20m"
+    max-camera-orbit="auto 90deg 150m"
     interpolation-decay="200"
+    pan-sensitivity="1.8"
     shadow-intensity="1"
     bounds="tight"
-    touch-action="none"
     loading="eager"
     reveal="auto"
     tone-mapping="neutral"
     poster="poster.webp"
+    touch-action="pan-y"
     ar
     ar-modes="webxr scene-viewer quick-look"
   >
+    <button id="reset-view-btn" style="position: absolute; top: 12px; right: 12px; z-index: 1000; padding: 8px 12px; background: white; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.25); font-family: inherit; font-size: 14px; font-weight: 600; color: #5f6368;">
+      <i class="fas fa-location-arrow"></i> Recenter
+    </button>
     <button class="Hotspot" slot="hotspot-2"
       data-position="-0.551538062727321m -2.3945470342935096m 16.539627028885956m" data-normal="0m 1m 0m"
       data-visibility-attribute="visible">
@@ -431,7 +435,7 @@
     </div>
   </div>
   <img src="glendonlogo.webp" id="glendon-logo" alt="Glendon Logo">
-  <script defer src="script.js?v=3"></script>
+  <script defer src="script.js?v=6"></script>
   <!-- Loads <model-viewer> for browsers: -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.2.0/model-viewer.min.js"></script>
 </body>
