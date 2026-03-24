@@ -1,1666 +1,297 @@
-:not(:defined)>* {
-  display: none;
-}
-
-html {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-}
-
-model-viewer {
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  top: 48px;
-  /* accounts for top bar height */
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: transparent;
-  touch-action: none;
-}
-
-html,
-body {
-  font-family: 'Inter', sans-serif;
-  background: #E5E5E5;
-  color: #000;
-  overflow: hidden;
-}
-
-/* Top Bar */
-#top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 48px;
-  background: #E31837;
-  /* Glendon Red */
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 16px;
-  z-index: 1000;
-}
-
-model-viewer {
-  background: radial-gradient(ellipse at center, #f0f0f0 0%, #E5E5E5 60%, #d5d5d5 100%);
-}
-
-/* DaisyUI-like Card & Dropdown implementation */
-.dropdown { position: relative; display: inline-block; }
-.btn-circle {
-  width: 44px; height: 44px; padding: 0 !important; border-radius: 50% !important;
-  display: flex !important; justify-content: center; align-items: center;
-}
-.dropdown .btn.btn-circle { 
-  background: white; border: 1px solid #ccc; cursor: pointer; 
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15); color: #5f6368; 
-}
-.dropdown .btn.btn-circle:hover { background: #f8f9fa; }
-/* Uiverse Hover-Reveal Card Styling */
-.dropdown-content.card {
-  position: absolute; right: 100%; top: 0; margin-right: 8px;
-  width: 230px;
-  min-height: 150px;
-  background-color: rgba(242, 242, 242, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 10px;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  perspective: 1000px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  transition: opacity 0.3s, visibility 0.3s, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  visibility: hidden; opacity: 0;
-  z-index: 1001; text-align: left;
-}
-
-.dropdown:focus-within .dropdown-content.card, .dropdown-content.card.force-show {
-  visibility: visible; opacity: 1;
-}
-
-.card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-}
-
-.card__front-text {
-  font-weight: 700;
-  color: #333;
-  font-size: 16px;
-  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  pointer-events: none;
-}
-
-.card:hover .card__front-text, .card.force-show .card__front-text, .dropdown:focus-within .card__front-text {
-  transform: scale(0);
-}
-
-.card__content {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  padding: 12px; box-sizing: border-box;
-  background-color: rgba(242, 242, 242, 0.85);
-  transform: rotateX(-90deg);
-  transform-origin: bottom;
-  display: flex; flex-direction: column;
-  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.card:hover .card__content, .card.force-show .card__content, .dropdown:focus-within .card__content {
-  transform: rotateX(0deg);
-}
-
-.card__title {
-  margin: 0; font-size: 15px; color: #333; font-weight: 700; padding-right: 24px;
-}
-
-.card__description {
-  margin: 8px 0 0; font-size: 11px; color: #555; line-height: 1.4;
-  overflow-y: auto; flex-grow: 1;
-}
-
-.btn-primary {
-  background: #E31837; color: white; border: none; padding: 6px 12px; border-radius: 6px; 
-  font-weight: 600; cursor: pointer; text-decoration: none; font-size: 12px;
-  display: inline-block; margin-top: 10px; align-self: flex-end;
-}
-.btn-primary:active {
-  background: #C4122C;
-}
-
-.btn-ghost {
-  background: transparent; color: #999; border: none; font-size: 14px; cursor: pointer;
-  position: absolute; right: 12px; top: 12px; width: 26px; height: 26px; border-radius: 50%;
-  display: flex; justify-content: center; align-items: center; padding:0; z-index: 10;
-}
-.btn-ghost:hover {
-  color: #333; background: #e0e0e0;
-}
-
-.eye-toggle.hidden {
-  color: #e53e3e;
-}
-
-/* 3D Pushable Glassmorphism Hotspot */
-.Hotspot {
-  position: relative;
-  background: transparent;
-  padding: 0px;
-  border: none;
-  cursor: pointer;
-  transition: filter 250ms;
-  display: inline-flex;
-  height: 48px;
-  min-width: 48px;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  border-radius: 999px;
-  user-select: none;
-}
-
-.Hotspot.angled-away {
-  opacity: 0.15;
-}
-
-/* The Shadow */
-.Hotspot::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  background: rgba(0,0,0,0.25);
-  border-radius: inherit;
-  filter: blur(2px);
-  will-change: transform;
-  transform: translateY(2px);
-  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
-  z-index: 1;
-}
-
-/* The Edge (3D Side) */
-.Hotspot::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  border-radius: inherit;
-  background: linear-gradient(to right, rgba(150,150,150,0.4) 0%, rgba(250,250,250,0.5) 8%, rgba(150,150,150,0.4) 92%, rgba(100,100,100,0.4) 100%);
-  z-index: 2;
-  backdrop-filter: blur(2px);
-}
-
-/* The Front Face (hotspot-marker) */
-.hotspot-marker {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%; height: 100%;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  transform: translateY(-4px); /* Starts popped up */
-  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1), background 0.3s ease, border-color 0.3s ease;
-  padding: 0 10px; /* Base padding */
-  box-sizing: border-box;
-}
-
-.Hotspot.selected .hotspot-marker {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: #fff;
-  padding: 0 16px; /* Expand padding slightly for the pill shape */
-}
-
-/* Hover & Active States */
-.Hotspot:hover {
-  filter: brightness(110%);
-}
-
-.Hotspot:hover .hotspot-marker {
-  transform: translateY(-6px); /* pops up more on hover */
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-}
-
-.Hotspot:active .hotspot-marker {
-  transform: translateY(-1px); /* Pushes completely down on click */
-  transition: transform 34ms;
-}
-
-.Hotspot:hover::before {
-  transform: translateY(4px); /* shadow pushes lower on hover */
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-}
-
-.Hotspot:active::before {
-  transform: translateY(1px); /* shadow shrinks on click */
-  transition: transform 34ms;
-}
-
-/* Inner elements */
-.hotspot-icon {
-  font-size: 16px;
-  margin-left: 4px;
-}
-
-.hotspot-number {
-  background: #007bff;
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-  flex-shrink: 0;
-}
-
-.Hotspot.selected .hotspot-number {
-  background: #8b4513; /* Original selected map color */
-}
-
-/* Original Slide-In mechanics */
-.hotspot-label {
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  padding: 0;
-  margin-left: 0;
-  white-space: nowrap;
-  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-left 0.3s ease;
-  font-weight: 600;
-  color: #333;
-}
-
-.Hotspot.selected .hotspot-label {
-  max-width: 200px;
-  opacity: 1;
-  margin-left: 8px; /* Adds the gap dynamically side-by-side */
-}
-.you-are-here {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #e53e3e;
-}
-
-.you-are-here svg {
-  width: 24px;
-  height: 24px;
-}
-
-.you-are-here-outer {
-  fill: #e53e3e;
-  animation: pulse 2s infinite;
-}
-
-.you-are-here-inner {
-  fill: white;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.7;
-  }
-  70% {
-    transform: scale(1);
-    opacity: 0.3;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0.7;
-  }
-}
-
-.legend-pill {
-  background: #e53e3e;
-  color: white;
-  border-radius: 999px;
-  padding: 2px 6px;
-  font-size: 10px;
-  font-weight: bold;
-  margin-left: 6px;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-
-
-.HotspotAnnotation {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  padding: 4px 8px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  color: white;
-  font-size: 12px;
-  font-family: Futura, Helvetica Neue, sans-serif;
-  font-weight: 700;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.Hotspot:hover .HotspotAnnotation {
-  opacity: 1;
-}
-
-
-.progress-bar {
-  display: block;
-  width: 33%;
-  height: 10%;
-  max-height: 2%;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate3d(-50%, -50%, 0);
-  border-radius: 25px;
-  box-shadow: 0px 3px 10px 3px rgba(0, 0, 0, 0.5), 0px 0px 5px 1px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.progress-bar.hide {
-  visibility: hidden;
-  transition: visibility 0.3s;
-}
-
-.update-bar {
-  background-color: rgba(255, 255, 255, 0.9);
-  width: 0%;
-  height: 100%;
-  border-radius: 25px;
-  float: left;
-  transition: width 0.3s;
-}
-
-#ar-button {
-  background-image: url(ar_icon.png);
-  background-repeat: no-repeat;
-  background-size: 20px 20px;
-  background-position: 12px 50%;
-  background-color: #fff;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  bottom: 16px;
-  padding: 0px 16px 0px 40px;
-  font-family: Roboto Regular, Helvetica Neue, sans-serif;
-  font-size: 14px;
-  color: #4285f4;
-  height: 36px;
-  line-height: 36px;
-  border-radius: 18px;
-  border: 1px solid #DADCE0;
-}
-
-#ar-button:active {
-  background-color: #E8EAED;
-}
-
-#ar-button:focus {
-  outline: none;
-}
-
-#ar-button:focus-visible {
-  outline: 1px solid #4285f4;
-}
-
-@keyframes circle {
-  from {
-    transform: translateX(-50%) rotate(0deg) translateX(50px) rotate(0deg);
-  }
-
-  to {
-    transform: translateX(-50%) rotate(360deg) translateX(50px) rotate(-360deg);
-  }
-}
-
-@keyframes elongate {
-  from {
-    transform: translateX(100px);
-  }
-
-  to {
-    transform: translateX(-100px);
-  }
-}
-
-model-viewer>#ar-prompt {
-  position: absolute;
-  left: 50%;
-  bottom: 60px;
-  animation: elongate 2s infinite ease-in-out alternate;
-  display: none;
-}
-
-model-viewer[ar-status="session-started"]>#ar-prompt {
-  display: block;
-}
-
-model-viewer>#ar-prompt>img {
-  animation: circle 4s linear infinite;
-}
-
-
-#glendon-logo {
-  position: fixed;
-  bottom: 10%;
-  /* 10% from bottom */
-  right: 5%;
-  /* A bit more to the right */
-  width: 80px;
-  height: 80px;
-  opacity: 0.85;
-  z-index: 9999;
-  pointer-events: none;
-  /* Does not interfere with map interaction */
-}
-
-#legend-panel.minimized {
-  max-height: 48px;
-  /* Fit strictly to header */
-}
-
-#legend-panel.minimized .legend-content,
-#legend-panel.minimized .legend-search {
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0s linear 0.2s;
-}
-
-.Hotspot.color-exit {
-  background: #e63946;
-  /* Red */
-}
-
-.Hotspot.color-exit .hotspot-label,
-.Hotspot.color-exit .hotspot-icon {
-  color: white;
-}
-
-#legend-panel {
-  position: fixed;
-  top: 68px;
-  /* Below the top bar (48px) + margin */
-  left: 20px;
-  width: 280px;
-  height: 420px;
-  max-height: 420px;
-  background: #ffffff !important;
-  backdrop-filter: none !important;
-  border-radius: 12px;
-  color: #000;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: max-height 0.3s ease, opacity 0.4s ease, transform 0.4s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 999;
-}
-
-#legend-panel.loading-hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(10px);
-}
-
-.legend-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-
-#legend-title-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #000;
-}
-
-.minimize-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.minimize-text {
-  font-size: 12px;
-  color: #888;
-  text-transform: uppercase;
-}
-
-.collapse-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: #888;
-  transition: transform 0.3s ease;
-}
-
-#legend-panel.minimized .collapse-btn {
-  transform: rotate(180deg);
-}
-
-.legend-header h2 {
-  margin: 0;
-  font-size: 18px;
-  color: #000;
-  font-weight: 600;
-}
-
-.collapse-btn {
-  cursor: pointer;
-  color: #888;
-}
-
-.legend-search {
-  width: auto;
-  padding: 10px 15px;
-  margin: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #f0f0f0;
-  color: #000;
-  flex-shrink: 0;
-}
-
-.legend-search::placeholder {
-  color: #888;
-}
-
-.legend-content {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 0 15px 15px 15px;
-}
-
-/* Slim Scrollbar Styling */
-.legend-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.legend-content::-webkit-scrollbar-track {
-  background: #f0f0f0;
-  border-radius: 10px;
-}
-
-.legend-content::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
-}
-
-.legend-content::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
-}
-
-.legend-category h3 {
-  margin: 20px 0 10px 0;
-  font-size: 11px;
-  color: #888;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.category-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-hr.divider {
-  border: 0;
-  height: 1px;
-  background: #eee;
-  margin: 15px 0;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px;
-  border-radius: 6px;
-  margin-bottom: 4px;
-  transition: background 0.2s ease;
-  cursor: pointer;
-}
-
-.legend-item:hover {
-  background: #f0f0f0;
-}
-
-.item-number,
-.hotspot-number {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: bold;
-  color: white;
-  flex-shrink: 0;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.item-icon {
-  font-size: 16px;
-  width: 20px;
-  text-align: center;
-}
-
-.item-label {
-  flex: 1;
-  font-size: 14px;
-  color: #000;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.eye-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 4px;
-  color: #aaa;
-  transition: color 0.2s;
-}
-
-.eye-toggle:hover {
-  color: #000;
-}
-
-/* --- COLOR CODING --- */
-/* Unique colors for each room */
-.color-lobby {
-  background-color: #004A8D !important;
-}
-
-/* Glendon Blue */
-.color-weight {
-  background-color: #2E8B57 !important;
-}
-
-/* Sea Green */
-.color-pool {
-  background-color: #00CED1 !important;
-}
-
-/* Dark Turquoise */
-.color-stretching {
-  background-color: #D49F0F !important;
-}
-
-/* Glendon Gold */
-.color-spinning {
-  background-color: #9370DB !important;
-}
-
-/* Medium Purple */
-.color-boxing {
-  background-color: #FF8C00 !important;
-}
-
-/* Dark Orange */
-.color-golf {
-  background-color: #8FBC8B !important;
-}
-
-/* Dark Sea Green */
-.color-squash {
-  background-color: #4169E1 !important;
-}
-
-/* Royal Blue */
-.color-basketball {
-  background-color: #DC143C !important;
-}
-
-/* Crimson */
-.color-m-changing {
-  background-color: #4682B4 !important;
-}
-
-/* Steel Blue */
-.color-w-changing {
-  background-color: #C71585 !important;
-}
-
-/* Medium Violet Red */
-.color-w-locker {
-  background-color: #FF69B4 !important;
-}
-
-/* Hot Pink */
-.color-m-locker {
-  background-color: #1E90FF !important;
-}
-
-/* Dodger Blue */
-
-/* These remain consistent */
-.color-stairs {
-  background-color: #000000 !important;
-  color: white !important;
-}
-
-.color-exit {
-  background-color: #E31837 !important;
-  color: white !important;
-}
-
-/* Ensure hotspot numbers have a white border to pop against their background */
-.hotspot-number {
-  border: 1.5px solid white;
-}
-
-/* Search and Eye Toggle states */
-.search-hidden,
-.eye-hidden {
-  display: none !important;
-}
-
-/* Exit Hotspots Override - Hide permanently as requested */
-.Hotspot.exit-hotspot {
-  opacity: 0.7;
-  z-index: 2;
-}
-
-/* Dev Overlay HUD */
-#dev-overlay {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.85);
-  color: #00ff00;
-  font-family: monospace;
-  font-size: 13px;
-  padding: 15px;
-  border-radius: 8px;
-  max-width: 320px;
-  backdrop-filter: blur(5px);
-  pointer-events: auto;
-}
-
-#dev-overlay div {
-  margin-bottom: 5px;
-  word-wrap: break-word;
-  /* Ensure radians don't break overlay */
-}
-
-#dev-copy-btn {
-  margin-top: 10px;
-  background: #333;
-  color: white;
-  border: 1px solid #555;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  width: 100%;
-  font-family: inherit;
-  transition: background 0.2s;
-}
-
-#dev-copy-btn:hover {
-  background: #555;
-}
-
-/* Performance & Mobile Optimizations */
-
-
-.legend-content {
-  -webkit-overflow-scrolling: touch;
-  overflow-y: scroll;
-}
-
-@media (max-width: 768px) {
-  .Hotspot {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-  }
-}
-
-#loading-screen {
-  position: fixed;
-  inset: 0;
-  background: #FAF7F2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  transition: opacity 0.5s ease;
-}
-
-#loading-screen img {
-  width: 100px;
-  margin-bottom: 16px;
-}
-
-#loading-screen p {
-  font-family: sans-serif;
-  color: #004A8D;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-/* Fade Out Hotspots Globally */
-.Hotspot.faded-out {
-  opacity: 0.25 !important;
-  pointer-events: none !important;
-  transition: opacity 0.3s;
-}
-
-.Hotspot.faded-out>* {
-  opacity: 0.25 !important;
-  pointer-events: none !important;
-}
-
-
-
-/* ========================================= */
-/* MOBILE OVERHAUL (Google Maps Style)       */
-/* ========================================= */
-
-#mobile-top-logo {
-  display: none;
-}
-
-#mobile-drag-area {
-  display: none;
-}
-
-#mobile-search-container {
-}
-
-#mobile-location-btn {
-  display: none;
-}
-
-@media (max-width: 768px) {
-
-  /* Hide the existing floating glendon logo */
-  #glendon-logo {
-    display: none !important;
-  }
-
-  /* Mobile Search Pill (Curved Inside Drawer) */
-  #mobile-search-container {
-    display: flex !important;
-    position: relative;
-    top: auto;
-    left: auto;
-    right: auto;
-    margin: 5px 20px 15px 20px;
-    background: #f1f3f4;
-    /* Google Maps light grey */
-    border-radius: 999px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) inset;
-    align-items: center;
-    padding: 0 15px;
-    height: 44px;
-    z-index: 1005;
-    pointer-events: auto;
-    flex-shrink: 0;
-  }
-
-
-
-  /* Shrink Hotspot Markers */
-  .Hotspot {
-    transform: scale(0.65) !important;
-    transform-origin: bottom center;
-  }
-
-  /* Location Drop Pin */
-  #mobile-location-btn {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: -65px;
-    /* Float cleanly right above the drawer */
-    right: 15px;
-    /* Stay anchored to the right side natively */
-    left: auto;
-    transform: none;
-    /* Strip centering math */
-    background: #E53935;
-    /* Google Maps location red style solid */
-    color: white;
-    border: none;
-    width: 48px;
-    /* Smaller icon badge per explicit request */
-    height: 48px;
-    border-radius: 14px;
-    /* Google Maps 'squircle' radius exactly matching the green button */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-    cursor: pointer;
-    z-index: 1002;
-    transition: background 0.2s, transform 0.1s;
-  }
-
-  #mobile-location-btn i {
-    font-size: 20px;
-    margin: 0;
-  }
-
-  #mobile-location-btn:active {
-    background: #D32F2F;
-    transform: scale(0.95);
-  }
-
-  #mobile-search-container .search-icon {
-    color: #666;
-    margin-right: 10px;
-    font-size: 16px;
-  }
-
-  #mobile-search-container .legend-search {
-    border: none;
-    outline: none;
-    background: transparent;
-    width: 100%;
-    font-size: 16px;
-    color: #333;
-  }
-
-  .desktop-search-input {
-    display: none !important;
-  }
-
-  /* Top Bar */
-  #top-bar {
-    position: fixed !important;
-    top: 0px !important;
-    bottom: auto !important;
-    width: 100%;
-    background: rgba(235, 235, 235, 0.98);
-    /* Slightly darker */
-    border-radius: 0 0 20px 20px;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 15px;
-    z-index: 1001;
-    font-size: 14px;
-    text-align: center;
-    height: 60px;
-    /* Slightly taller for wrapping text */
-    box-sizing: border-box;
-  }
-
-  #top-bar span {
-    flex-grow: 0;
-    font-weight: 600;
-    color: #111;
-    line-height: 1.2;
-    /* Removed nowrap to allow word wrapping */
-  }
-
-  #mobile-top-logo {
-    display: block;
-    height: 28px;
-    margin-right: 10px;
-  }
-
-  /* Bottom Sheet Drawer */
-  #legend-panel {
-    /* Reset desktop alignments */
-    top: auto !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 60px !important;
-    /* Sit exactly above bottom bar */
-    height: 85vh !important;
-    /* Strict height for translating percentages properly */
-    width: 100% !important;
-    margin: 0 !important;
-    border-radius: 20px 20px 0 0 !important;
-    background: rgba(255, 255, 255, 0.75) !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
-    transform: translateY(calc(100% - 40px));
-    /* Hidden state by default locally */
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    z-index: 1000 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    box-sizing: border-box;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
-    border: none !important;
-    opacity: 1 !important;
-  }
-
-  /* Disable inner transitions to prevent lag while dragging */
-  #legend-panel.dragging {
-    transition: none !important;
-  }
-
-  /* Handle Area */
-  #mobile-drag-area {
-    display: block !important;
-    width: 100%;
-    padding: 10px 0 10px 0;
-    cursor: grab;
-    flex-shrink: 0;
-    touch-action: none;
-    /* Crucial for custom touch handling */
-  }
-
-  #mobile-drag-area:active {
-    cursor: grabbing;
-  }
-
-  #mobile-drag-handle {
-    width: 40px;
-    height: 5px;
-    background: #bbb;
-    border-radius: 5px;
-    margin: 0 auto 10px auto;
-  }
-
-  #mobile-legend-header-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    width: 100%;
-    padding-bottom: 5px;
-  }
-
-  #mobile-legend-title {
-    font-weight: bold;
-    font-size: 18px;
-    color: #333;
-  }
-
-  #mobile-minimize-btn {
-    position: absolute;
-    right: 20px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: #666;
-    padding: 5px;
-    cursor: pointer;
-  }
-
-  /* Hide Desktop Headers */
-  .legend-header {
-    display: none !important;
-  }
-
-  /* Ensure content lists overflow properly */
-  .legend-content {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding-top: 5px;
-    padding-bottom: 20px;
-  }
-}
-
-/* Developer Settings HUD */
-#dev-overlay {
-  position: fixed;
-  top: 80px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #0f0;
-  font-family: monospace;
-  font-size: 11px;
-  padding: 12px;
-  border-radius: 8px;
-  z-index: 99999;
-  pointer-events: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-#dev-overlay div {
-  margin-bottom: 4px;
-}
-
-#dev-copy-btn {
-  margin-top: 8px;
-  background: #0f0;
-  color: #000;
-  border: none;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-weight: bold;
-  border-radius: 4px;
-  width: 100%;
-}
-
-#dev-copy-btn:active {
-  background: #0a0;
-}
-
-@media (max-width: 768px) {
-  #dev-overlay {
-    top: 75px;
-    left: 10px;
-    font-size: 10px;
-    max-width: calc(100vw - 20px);
-    z-index: 99999;
-    pointer-events: auto;
-  }
-}
-
-/* Mobile Bottom Right Controls (Search + Recenter) */
-.mobile-bottom-right-controls {
-  display: none; /* Desktop hidden */
-  position: absolute;
-  bottom: 20px;
-  right: 20px; /* Shifted firmly to right */
-  z-index: 1000;
-  flex-direction: column;
-  align-items: flex-end; /* Stack aligned natively to right */
-  gap: 16px;
-  pointer-events: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-bottom-right-controls {
-    display: flex;
-  }
-}
-
-.mobile-bottom-right-controls > * {
-  pointer-events: auto; /* Re-enable for the buttons inside */
-}
-
-.search-pill {
-  position: relative;
-  background: transparent;
-  padding: 0;
-  border: none;
-  cursor: pointer;
-  outline: none;
-  width: 60px; /* Base circle size */
-  height: 60px;
-  border-radius: 9999px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* For the expanding search specifically */
-.expandable-search {
-  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1), filter 250ms;
-}
-
-.expandable-search:focus-within {
-  width: calc(100vw - 40px);
-  max-width: 340px;
-}
-
-/* Base Shadow */
-.search-pill::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  background: rgba(0,0,0,0.3);
-  border-radius: inherit;
-  filter: blur(2px);
-  will-change: transform;
-  transform: translateY(2px);
-  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
-  z-index: 1;
-}
-
-/* Base Edge Thickness */
-.search-pill::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  border-radius: inherit;
-  background: linear-gradient(to right, #8a0c20 0%, #b3102a 8%, #8a0c20 92%, #5c0815 100%);
-  z-index: 2;
-}
-
-/* Info Pill Grey/Red Override */
-.info-pill-override::after {
-  background: linear-gradient(to right, #c1c1c1 0%, #e0e0e0 8%, #d1d1d1 92%, #b0b0b0 100%) !important;
-}
-
-.info-pill-override .search-pill-front {
-  background-color: #f0f0f0 !important;
-}
-
-/* Face Top Cover */
-.search-pill-front {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center; /* keep default centered for Recenter button natively */
-  width: 100%; height: 100%;
-  border-radius: 9999px;
-  background-color: #E31837; /* Glendon Red */
-  box-sizing: border-box;
-  overflow: hidden;
-  transform: translateY(-4px); /* Elevated by default */
-  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
-}
-
-/* Expandable specific inner alignment */
-.expandable-search .search-pill-front {
-  flex-direction: row;
-  justify-content: flex-end; /* when closed, SVG anchors cleanly to the right naturally */
-  padding: 0; /* Clear default padding */
-}
-
-/* Depth Interaction States */
-.search-pill:hover {
-  filter: brightness(110%);
-}
-
-.search-pill:hover .search-pill-front {
-  transform: translateY(-6px);
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-}
-
-.search-pill:active .search-pill-front {
-  transform: translateY(-1px);
-  transition: transform 34ms;
-}
-
-.search-pill:hover::before {
-  transform: translateY(4px);
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-}
-
-.search-pill:active::before {
-  transform: translateY(1px);
-  transition: transform 34ms;
-}
-
-.search-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  fill: white;
-  color: white;
-  flex-shrink: 0;
-  width: 22px;
-}
-
-.expandable-search .search-icon-wrapper {
-  margin-right: 19px; /* Gives the exact right-side space mathematically to sit center natively in a 60px circle */
-}
-
-.search-pill-input {
-  flex-grow: 1;
-  min-width: 0;
-  opacity: 0;
-  width: 0;
-  transition: opacity 0.2s ease, width 0.3s;
-  pointer-events: none;
-  outline: none;
-  font-size: 20px;
-  background: transparent;
-  color: white;
-  font-weight: normal;
-  border: none;
-  padding-left: 20px;
-  margin-right: 10px;
-}
-
-.expandable-search:focus-within .search-pill-input {
-  opacity: 1;
-  width: 100%; /* Expands natively to the left seamlessly */
-  pointer-events: auto;
-}
-
-.search-pill-input::placeholder {
-  color: rgba(255,255,255,0.7);
-}
-
-@media (max-width: 768px) {
-  #top-bar {
-    height: 38px !important;
-    font-size: 14px !important;
-  }
-  #mobile-top-logo {
-    height: 22px !important;
-    margin-right: 8px !important;
-  }
-}
-
-/* Mobile Top Left Dropdown Legend */
-#mobile-legend-container {
-  display: none; /* hidden on desktop */
-  position: absolute;
-  top: 56px; /* Nudged down slightly */
-  left: 12px;
-  z-index: 1005;
-}
-
-@media (max-width: 768px) {
-  #mobile-legend-container {
-    display: block;
-  }
-}
-
-/* Solid 3D Red Override for Legend Toggle */
-.legend-btn-3d {
-  position: relative;
-  background: transparent;
-  padding: 0;
-  border: none;
-  cursor: pointer;
-  outline: none;
-  height: 38px; /* Shrunk from 44px */
-  min-width: 90px; /* Shrunk from 105px */
-  border-radius: 12px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.legend-btn-3d::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  background: rgba(0,0,0,0.3);
-  border-radius: inherit;
-  filter: blur(2px);
-  transform: translateY(2px);
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-  z-index: 1;
-}
-
-.legend-btn-3d::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  border-radius: inherit;
-  background: linear-gradient(to right, #8a0c20 0%, #b3102a 8%, #8a0c20 92%, #5c0815 100%);
-  z-index: 2;
-}
-
-.legend-btn-front {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%; height: 100%;
-  border-radius: inherit;
-  background-color: #E31837;
-  padding: 0 12px; /* Shrunk */
-  box-sizing: border-box;
-  transform: translateY(-4px);
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-}
-
-.legend-btn-front .btn-text {
-  color: white;
-  font-weight: 800;
-  font-size: 12px; /* Shrunk from 14px */
-}
-.legend-btn-front .btn-text i {
-  margin-left: 6px;
-}
-
-.legend-btn-3d:hover .legend-btn-front { transform: translateY(-5px); }
-.legend-btn-3d:active .legend-btn-front { transform: translateY(-1px); transition: transform 34ms; }
-.legend-btn-3d:hover::before { transform: translateY(4px); }
-.legend-btn-3d:active::before { transform: translateY(1px); transition: transform 34ms; }
-
-/* Scrollable robust dropdown content */
-#mobile-legend-menu {
-  display: none; /* hidden visually */
-  position: absolute;
-  top: 50px; /* below the bigger btn */
-  left: 0;
-  background: rgba(255,255,255,0.4); /* More transparent */
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 12px;
-  padding: 10px 0; /* Padding inside the dropdown container */
-  margin: 0;
-  width: 220px;
-  max-height: 280px; 
-  overflow-y: auto;  
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-  list-style: none;
-  flex-direction: column;
-}
-#mobile-legend-menu.show {
-  display: flex !important;
-}
-
-/* 3D Pushable List Items (Matching the physical layer logic) */
-#mobile-legend-menu li {
-  position: relative;
-  background: transparent;
-  padding: 0;
-  border: none;
-  cursor: pointer;
-  margin: 6px 12px;
-  height: 48px;
-  border-radius: 6px; /* Squarer Inputs per request */
-  list-style: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-#mobile-legend-menu li::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  background: rgba(0,0,0,0.15);
-  border-radius: inherit;
-  filter: blur(2px);
-  transform: translateY(2px);
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-  z-index: 1;
-}
-
-#mobile-legend-menu li::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  border-radius: inherit;
-  background: linear-gradient(to right, #ccc 0%, #eee 8%, #ccc 92%, #aaa 100%);
-  z-index: 2;
-}
-
-.li-front {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%; height: 100%;
-  border-radius: inherit;
-  background-color: #ffffff;
-  padding: 0 14px;
-  box-sizing: border-box;
-  transform: translateY(-4px);
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5), background 0.2s;
-  font-size: 13px;
-  font-weight: 700;
-  color: #333;
-}
-
-#mobile-legend-menu li:hover .li-front { transform: translateY(-5px); }
-#mobile-legend-menu li:active .li-front { transform: translateY(-1px); transition: transform 34ms; background: #f8f8f8; }
-#mobile-legend-menu li:hover::before { transform: translateY(4px); }
-#mobile-legend-menu li:active::before { transform: translateY(1px); transition: transform 34ms; }
-
-/* Legend Inner Colored Dots (automatically maps mapped class styles natively) */
-.legend-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  color: white;
-  font-size: 11px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background-color: #007bff; /* Fallback baseline */
-}
-
-/* Gray Recenter Button Override */
-#mobile-reset-btn .search-pill-front {
-  background-color: #f0f0f0;
-}
-
-#mobile-reset-btn::after {
-  background: linear-gradient(to right, #b4b4b4 0%, #d4d4d4 8%, #b4b4b4 92%, #888888 100%);
-}
-
-#mobile-reset-btn .search-icon-wrapper {
-  color: #E31837; /* Glendon Red Icon */
-}
-
-/* Full Pill Pulsating Ping Animation (Dynamically inherits native color injected via JS variable) */
-@keyframes hotspot-ping {
-  0% { transform: scale(1); opacity: 0.8; }
-  75%, 100% { transform: scale(1.6); opacity: 0; }
-}
-
-.Hotspot.selected .hotspot-marker::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  border-radius: inherit; /* Copies the 9999px pill expansion perfectly */
-  background-color: var(--ping-color, rgba(255,255,255,0.8)); /* Maps physically from JS */
-  animation: hotspot-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-  z-index: -1;
-}
-
-/* --- Search Fading Transition --- */
-model-viewer > .Hotspot {
-  transition: opacity 0.5s ease, visibility 0.5s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-model-viewer > .Hotspot.faded-out {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important; /* Immediately freezes clicks to prevent accident misclicks during fade out */
-}
-
-/* --- Custom Gesture Prompt Overlay --- */
-#gesture-prompt-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: none; /* Crucial so touches pass completely through to the map! */
-  z-index: 5000;
-  opacity: 0;
-  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-#gesture-prompt-overlay.show-prompt {
-  opacity: 1;
-}
-
-.gesture-visuals {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 30px;
-  background: rgba(0,0,0,0.7);
-  padding: 15px 30px;
-  border-radius: 12px;
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.gesture-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  color: white;
-}
-
-.gesture-box span {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  letter-spacing: 0.5px;
-}
-
-.gesture-divider {
-  width: 1px;
-  height: 54px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.two-fingers {
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-
-.offset-finger {
-  position: absolute;
-  margin-left: 20px;
-  margin-top: 6px;
-  opacity: 0.7;
-}
-
-.icon-orbit {
-  font-size: 28px;
-  animation: orbit-hand 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  transform-origin: bottom center;
-}
-
-.icon-pan {
-  font-size: 28px;
-  animation: pan-hand 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes orbit-hand {
-  0%, 100% { transform: translateX(-14px) rotate(-20deg); }
-  50% { transform: translateX(14px) rotate(20deg); }
-}
-
-@keyframes pan-hand {
-  0%, 100% { transform: translateY(-8px); }
-  50% { transform: translateY(8px); }
-}
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Glendon Athletic Map</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Interactive 3D Map for Glendon Athletic Club">
+  
+  <!-- Essential Mobile & Web App Meta Tags -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#E31837">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- Cache Control for GitHub Pages updates (optional but helpful) -->
+  <link type="text/css" href="./styles.css?v=9" rel="stylesheet" />
+  <link rel="preload" href="testmapvoidbackgroung5_compressed.glb" as="fetch" crossorigin>
+</head>
+
+<body>
+  <div id="loading-screen">
+    <img src="glendonlogo.webp" alt="Glendon Logo" />
+    <p>Loading map...</p>
+  </div>
+  <!-- Top Bar -->
+  <div id="top-bar">
+    <img id="mobile-top-logo" src="glendonlogo.webp" alt="Glendon Logo" />
+    <span>Glendon Athletic Club Interactive Map</span>
+  </div> 
+  <!-- Mobile Top Left Legend Dropdown -->
+  <div id="mobile-legend-container">
+    <button class="legend-btn-3d" id="mobile-legend-btn">
+      <div class="legend-btn-front">
+        <span class="btn-text">Legend <i class="fas fa-caret-down"></i></span>
+      </div>
+    </button>
+    <ul id="mobile-legend-menu">
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-2\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-lobby">1</div>Lobby / Entrance</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-20\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-weight">2</div>Weight room</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-9\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-pool">3</div>Swimming Pool</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-5\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-stretching">4</div>Stretching room</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-6\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-spinning">5</div>Spinning room</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-4\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-boxing">6</div>Boxing room</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-3\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-golf">7</div>Golf Court</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-18\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-squash">8</div>Squash court</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-10\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-m-changing">10</div>M. changing room</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-11\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-w-changing">11</div>W. changing room</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-7\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-w-locker">12</div>W. Locker room</div></li>
+      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-8\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-m-locker">13</div>M. Locker room</div></li>
+    </ul>
+  </div>
+  
+  <!-- Mobile Bottom Right Controls -->
+  <div class="mobile-bottom-right-controls">
+    <!-- Recenter 3D Button -->
+    <div class="search-pill action-only" id="mobile-reset-btn">
+      <div class="search-pill-front">
+        <div class="search-icon-wrapper">
+          <i class="fas fa-location-arrow" style="font-size: 18px;"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search 3D Button -->
+    <div class="search-pill expandable-search">
+      <div class="search-pill-front">
+        <input type="text" class="search-pill-input" placeholder="Search..." />
+        <div class="search-icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24" width="22" height="22">
+            <path d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+  <!-- <model-viewer> HTML element -->
+  <model-viewer
+    id="mv"
+    src="testmapvoidbackgroung5_compressed.glb"
+    camera-controls
+    interaction-prompt="none"
+    camera-orbit="360deg 45deg 100m" 
+    camera-target="0m -1.3m 8.5m"
+    field-of-view="70deg"
+    min-camera-orbit="auto 0deg 20m"
+    max-camera-orbit="auto 90deg 150m"
+    interpolation-decay="200"
+    pan-sensitivity="1.8"
+    shadow-intensity="1"
+    bounds="tight"
+    disable-tap
+    loading="eager"
+    reveal="auto"
+    tone-mapping="neutral"
+    poster="poster.webp"
+    touch-action="pan-y"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+  >
+    <div id="info-dropdown-container" style="position: absolute; top: 20px; right: 12px; z-index: 1000;">
+      <div role="button" id="info-dropdown-trigger" class="search-pill info-pill-override" style="width:38px; height:38px; display:block;">
+        <div class="search-pill-front">
+          <i class="fas fa-info" style="color:#E31837; font-size:16px; margin:auto;"></i>
+        </div>
+      </div>
+      <div class="dropdown-content card" id="info-dropdown-content">
+        <div class="card__front-text">GAC Info</div>
+        <div class="card__content">
+          <button id="info-close-btn" class="btn-ghost">✕</button>
+          <h2 class="card__title" id="info-title">Glendon Athletic Club</h2>
+          <div class="card__description" id="info-desc">
+            <strong>Hours:</strong><br>
+            Mon-Thu: 7 AM - 10:30 PM<br>
+            Fri: 7 AM - 9 PM<br>
+            Sat-Sun: 8 AM - 8 PM
+          </div>
+          <a href="https://www.yorku.ca/glendon/glendon-athletic-club/about-the-gac/" target="_blank" class="btn-primary">Learn More</a>
+        </div>
+      </div>
+    </div>
+    <button class="Hotspot" slot="hotspot-2"
+      data-position="-0.551538062727321m -2.3945470342935096m 16.539627028885956m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-lobby">1</div>
+        <div class="hotspot-icon">🏢</div>
+        <div class="hotspot-label">Lobby</div>
+        <div class="you-are-here">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle class="you-are-here-outer" cx="50" cy="50" r="40"/>
+            <circle class="you-are-here-inner" cx="50" cy="50" r="20"/>
+          </svg>
+          <span>You are here</span>
+        </div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-3"
+      data-position="8.437275370193435m -1.0287922461393153m 16.72265748311171m"
+      data-normal="0.00436433888409535m 0.9999904762277014m 0m" data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-golf">7</div>
+        <div class="hotspot-icon">⛳</div>
+        <div class="hotspot-label">Golf Court</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-4"
+      data-position="14.433459818907735m -1.05924774230175m 16.707232043377523m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-boxing">6</div>
+        <div class="hotspot-icon">🥊</div>
+        <div class="hotspot-label">Boxing room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-5"
+      data-position="20.84727849002133m -1.0404507932719014m 16.967584193638768m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-stretching">4</div>
+        <div class="hotspot-icon">🧘</div>
+        <div class="hotspot-label">Stretching room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-6"
+      data-position="27.99132979393329m -1.0404507932719014m 16.696790888225205m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-spinning">5</div>
+        <div class="hotspot-icon">🚴</div>
+        <div class="hotspot-label">Spinning room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-7"
+      data-position="-5.07776444161724m -1.8667741003567355m 0.5588579926922752m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-w-locker">12</div>
+        <div class="hotspot-icon">🔒</div>
+        <div class="hotspot-label">W.Locker room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-8"
+      data-position="-5.568420021465271m -1.8128206135868652m -13.430809149171129m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-m-locker">13</div>
+        <div class="hotspot-icon">🔒</div>
+        <div class="hotspot-label">M. Locker room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-9"
+      data-position="-22.755174169906574m -1.8819745803040462m -5.472320528105499m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-pool">3</div>
+        <div class="hotspot-icon">🏊</div>
+        <div class="hotspot-label">Swimming Pool</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-10"
+      data-position="-9.938181479396764m 0.4684005389835306m 14.840629844557307m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-m-changing">10</div>
+        <div class="hotspot-icon">🔒</div>
+        <div class="hotspot-label">M.changing room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-11"
+      data-position="-10.000326654578657m 0.4684005389835306m 19.782660721116677m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-w-changing">11</div>
+        <div class="hotspot-icon">🔒</div>
+        <div class="hotspot-label">W. changing room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-18"
+      data-position="-17.500092505793585m -1.8787937421865735m -28.07412929130228m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-squash">8</div>
+        <div class="hotspot-icon">🎾</div>
+        <div class="hotspot-label">Squash court</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-20"
+      data-position="16.18306637402933m -1.8955074344638945m -3.700744943780854m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-weight">2</div>
+        <div class="hotspot-icon">🏋️</div>
+        <div class="hotspot-label">Weight room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-21"
+      data-position="-2.013584774238617m -0.5874605795021197m 8.49744720902788m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-stairs">14</div>
+        <div class="hotspot-icon">🪜</div>
+        <div class="hotspot-label">Stairs</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-22"
+      data-position="27.9540205609903m -0.013889892644726842m 3.7187076021023175m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-stairs">15</div>
+        <div class="hotspot-icon">🪜</div>
+        <div class="hotspot-label">Stairs</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-23"
+      data-position="-23.98910027002954m -0.22358405590057373m -38.72637679230526m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-stairs">16</div>
+        <div class="hotspot-icon">🪜</div>
+        <div class="hotspot-label">Stairs</div>
+      </div>
+    </button>
+    <div class="progress-bar hide" slot="progress-bar">
+      <div class="update-bar"></div>
+    </div>
+    <button slot="ar-button" id="ar-button">
+      View in your space
+    </button>
+    <div id="ar-prompt">
+      <img src="ar_hand_prompt.png">
+    </div>
+  </model-viewer>
+  <!-- Hand Gesture Prompts (Emoji Base) -->
+  <div id="gesture-prompt-overlay">
+    <div class="gesture-visuals">
+      <div class="gesture-box" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <div class="two-fingers" style="position:relative; width:40px; height:40px; font-size:26px;">
+          <span class="icon-pan" style="position:absolute; left:0;">👆</span>
+          <span class="icon-pan offset-finger" style="position:absolute; right:0; top:4px;">👆</span>
+        </div>
+        <span>Pan</span>
+      </div>
+      <div class="gesture-divider" style="width:2px; height:40px; background:white; opacity:0.5;"></div>
+      <div class="gesture-box" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <span class="icon-orbit" style="font-size:26px; height:40px; display:flex; align-items:center;">👆</span>
+        <span>Orbit</span>
+      </div>
+    </div>
+  </div>
+  <svg id="route-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;"></svg>
+
+  <img src="glendonlogo.webp" id="glendon-logo" alt="Glendon Logo">
+  <script defer src="script.js?v=9"></script>
+  <!-- Loads <model-viewer> for browsers: -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.2.0/model-viewer.min.js"></script>
+</body>
+
+</html>
