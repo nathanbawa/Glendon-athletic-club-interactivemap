@@ -703,4 +703,15 @@ if (devOverlay) {
     });
   }
 
+  // --- Mobile Search Keyboard Auto-Recenter ---
+  const mobileSearchInput = document.querySelector('.search-pill-input');
+  if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('focus', () => {
+      // Glides camera to perfect isometric view to compensate for the bottom-half of the screen being eaten by the software keyboard
+      modelViewer.cameraOrbit = "360deg 45deg 100m";
+      modelViewer.cameraTarget = "0m -1.3m 8.5m";
+      modelViewer.fieldOfView = "70deg";
+    });
+  }
+
 });
