@@ -643,10 +643,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const mobileSearchInput = document.querySelector('.search-pill-input');
   if (mobileSearchInput) {
     mobileSearchInput.addEventListener('focus', () => {
-      // Glides camera to perfect isometric view to compensate for the bottom-half of the screen being eaten by the software keyboard
-      modelViewer.cameraOrbit = "360deg 45deg 100m";
+      // Glides camera to starter view with zoomed out perspective to compensate for the bottom-half of the screen being eaten by the software keyboard
+      modelViewer.cameraOrbit = "360deg 45deg 130m";
       modelViewer.cameraTarget = "0m -1.3m 8.5m";
-      modelViewer.fieldOfView = "70deg";
+      modelViewer.fieldOfView = "75deg";
     });
   }
 
@@ -655,7 +655,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileResetBtn) {
     mobileResetBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      modelViewer.cameraOrbit = "360deg 45deg 100m";
+      // Reset to starter view (slightly zoomed out)
+      modelViewer.cameraOrbit = "360deg 45deg 115m";
       modelViewer.cameraTarget = "0m -1.3m 8.5m";
       modelViewer.fieldOfView = "70deg";
     });
