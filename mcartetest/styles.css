@@ -62,104 +62,104 @@ model-viewer {
   color: #e53e3e;
 }
 
+/* 3D Pushable Glassmorphism Hotspot */
 .Hotspot {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 999px;
-  padding: 8px 12px;
-  cursor: pointer;
   position: relative;
-  transition: all 0.2s ease, opacity 0.4s ease;
+  background: transparent;
+  padding: 0px;
+  border: none;
+  cursor: pointer;
+  transition: filter 250ms;
   display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 14px;
-  white-space: nowrap;
-  opacity: 1;
-  /* Default fully visible */
-  color: #333;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-/* Expand touch target without changing visual size */
-.Hotspot::before {
-  content: '';
-  position: absolute;
-  inset: -16px;
-  /* 16px extra tap area on all sides */
+  height: 48px;
+  min-width: 48px;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   border-radius: 999px;
+  user-select: none;
 }
 
 .Hotspot.angled-away {
   opacity: 0.15;
 }
 
-.Hotspot.selected {
-  background: rgba(255, 255, 255, 0.9);
-  color: #333;
-  border-color: #fff;
+/* The Shadow */
+.Hotspot::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 100%;
+  background: rgba(0,0,0,0.25);
+  border-radius: inherit;
+  filter: blur(2px);
+  will-change: transform;
+  transform: translateY(2px);
+  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
+  z-index: 1;
 }
 
-.Hotspot.selected .hotspot-number {
-  background: #8b4513;
-  /* dark brown/maroon */
+/* The Edge (3D Side) */
+.Hotspot::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, rgba(150,150,150,0.4) 0%, rgba(250,250,250,0.5) 8%, rgba(150,150,150,0.4) 92%, rgba(100,100,100,0.4) 100%);
+  z-index: 2;
+  backdrop-filter: blur(2px);
 }
 
-.hotspot-label,
-.you-are-here {
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  padding: 0;
-  margin-left: 0;
-  white-space: nowrap;
-  transition: max-width 0.3s ease, opacity 0.3s ease, margin-left 0.3s ease;
-}
-
-.Hotspot.selected .hotspot-label {
-  max-width: 200px;
-  /* Arbitrary max width for expansion */
-  opacity: 1;
-  margin-left: 6px;
-  font-weight: 500;
-}
-
-/* Adjust so 'you-are-here' expands if selected AND has the class inside the DOM structure */
-.Hotspot.selected .you-are-here {
-  max-width: 150px;
-  opacity: 1;
-  padding: 4px 8px;
-  /* Restoring default padding */
-}
-
+/* The Front Face (hotspot-marker) */
 .hotspot-marker {
+  position: relative;
+  z-index: 3;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 6px;
-}
-
-.hotspot-marker.selected::after {
-  content: "You are here";
-  background: #e53e3e;
-  color: white;
+  width: 100%; height: 100%;
   border-radius: 999px;
-  padding: 4px 10px;
-  font-weight: bold;
-  font-size: 12px;
-  margin-left: 8px;
-  display: inline-block;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transform: translateY(-4px); /* Starts popped up */
+  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1), background 0.3s ease, border-color 0.3s ease;
+  padding: 0 10px; /* Base padding */
+  box-sizing: border-box;
 }
 
+.Hotspot.selected .hotspot-marker {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #fff;
+  padding: 0 16px; /* Expand padding slightly for the pill shape */
+}
+
+/* Hover & Active States */
+.Hotspot:hover {
+  filter: brightness(110%);
+}
+
+.Hotspot:hover .hotspot-marker {
+  transform: translateY(-6px); /* pops up more on hover */
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+}
+
+.Hotspot:active .hotspot-marker {
+  transform: translateY(-1px); /* Pushes completely down on click */
+  transition: transform 34ms;
+}
+
+.Hotspot:hover::before {
+  transform: translateY(4px); /* shadow pushes lower on hover */
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+}
+
+.Hotspot:active::before {
+  transform: translateY(1px); /* shadow shrinks on click */
+  transition: transform 34ms;
+}
+
+/* Inner elements */
 .hotspot-icon {
   font-size: 16px;
-}
-
-.hotspot-label {
-  font-weight: 700 !important;
+  margin-left: 4px;
 }
 
 .hotspot-number {
@@ -176,6 +176,28 @@ model-viewer {
   flex-shrink: 0;
 }
 
+.Hotspot.selected .hotspot-number {
+  background: #8b4513; /* Original selected map color */
+}
+
+/* Original Slide-In mechanics */
+.hotspot-label {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0;
+  margin-left: 0;
+  white-space: nowrap;
+  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-left 0.3s ease;
+  font-weight: 600;
+  color: #333;
+}
+
+.Hotspot.selected .hotspot-label {
+  max-width: 200px;
+  opacity: 1;
+  margin-left: 8px; /* Adds the gap dynamically side-by-side */
+}
 .you-are-here {
   background: #e53e3e;
   /* Standard red */
@@ -1051,43 +1073,122 @@ hr.divider {
   }
 }
 
-/* Bottom Left Animated Search Bar (Mobile Only) */
-.bottom-search-container {
-  display: none; /* Hidden on Desktop */
+/* Mobile Bottom Right Controls (Search + Recenter) */
+.mobile-bottom-right-controls {
+  display: none; /* Desktop hidden */
   position: absolute;
   bottom: 20px;
-  left: 20px;
+  right: 20px; /* Shifted firmly to right */
   z-index: 1000;
-  pointer-events: auto;
+  flex-direction: column;
+  align-items: flex-end; /* Stack aligned natively to right */
+  gap: 16px;
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {
-  .bottom-search-container {
+  .mobile-bottom-right-controls {
     display: flex;
   }
+}
 
-  /* Force hide legend on mobile as requested */
-  #legend-panel {
-    display: none !important;
-  }
+.mobile-bottom-right-controls > * {
+  pointer-events: auto; /* Re-enable for the buttons inside */
 }
 
 .search-pill {
-  padding: 1.25rem; /* p-5 */
-  overflow: hidden;
-  width: 60px;
+  position: relative;
+  background: transparent;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  width: 60px; /* Base circle size */
   height: 60px;
-  background-color: #E31837; /* Custom Glendon Red override per prompt */
-  box-shadow: 2px 2px 20px rgba(0,0,0,0.08);
   border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.search-pill:focus-within {
-  width: 270px;
+/* For the expanding search specifically */
+.expandable-search {
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1), filter 250ms;
+}
+
+.expandable-search:focus-within {
+  width: calc(100vw - 40px);
+  max-width: 340px;
+}
+
+/* Base Shadow */
+.search-pill::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 100%;
+  background: rgba(0,0,0,0.3);
+  border-radius: inherit;
+  filter: blur(2px);
+  will-change: transform;
+  transform: translateY(2px);
+  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
+  z-index: 1;
+}
+
+/* Base Edge Thickness */
+.search-pill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #8a0c20 0%, #b3102a 8%, #8a0c20 92%, #5c0815 100%);
+  z-index: 2;
+}
+
+/* Face Top Cover */
+.search-pill-front {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* keep default centered for Recenter button natively */
+  width: 100%; height: 100%;
+  border-radius: 9999px;
+  background-color: #E31837; /* Glendon Red */
+  box-sizing: border-box;
+  overflow: hidden;
+  transform: translateY(-4px); /* Elevated by default */
+  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+
+/* Expandable specific inner alignment */
+.expandable-search .search-pill-front {
+  flex-direction: row;
+  justify-content: flex-end; /* when closed, SVG anchors cleanly to the right naturally */
+  padding: 0; /* Clear default padding */
+}
+
+/* Depth Interaction States */
+.search-pill:hover {
+  filter: brightness(110%);
+}
+
+.search-pill:hover .search-pill-front {
+  transform: translateY(-6px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+}
+
+.search-pill:active .search-pill-front {
+  transform: translateY(-1px);
+  transition: transform 34ms;
+}
+
+.search-pill:hover::before {
+  transform: translateY(4px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+}
+
+.search-pill:active::before {
+  transform: translateY(1px);
+  transition: transform 34ms;
 }
 
 .search-icon-wrapper {
@@ -1095,22 +1196,351 @@ hr.divider {
   align-items: center;
   justify-content: center;
   fill: white;
+  color: white;
   flex-shrink: 0;
   width: 22px;
 }
 
+.expandable-search .search-icon-wrapper {
+  margin-right: 19px; /* Gives the exact right-side space mathematically to sit center natively in a 60px circle */
+}
+
 .search-pill-input {
+  flex-grow: 1;
+  min-width: 0;
+  opacity: 0;
+  width: 0;
+  transition: opacity 0.2s ease, width 0.3s;
+  pointer-events: none;
   outline: none;
   font-size: 20px;
   background: transparent;
-  width: 100%;
   color: white;
   font-weight: normal;
-  padding-left: 1rem; /* px-4 */
-  padding-right: 1rem;
   border: none;
+  padding-left: 20px;
+  margin-right: 10px;
+}
+
+.expandable-search:focus-within .search-pill-input {
+  opacity: 1;
+  width: 100%; /* Expands natively to the left seamlessly */
+  pointer-events: auto;
 }
 
 .search-pill-input::placeholder {
   color: rgba(255,255,255,0.7);
+}
+
+@media (max-width: 768px) {
+  #top-bar {
+    height: 38px !important;
+    font-size: 14px !important;
+  }
+  #mobile-top-logo {
+    height: 22px !important;
+    margin-right: 8px !important;
+  }
+}
+
+/* Mobile Top Left Dropdown Legend */
+#mobile-legend-container {
+  display: none; /* hidden on desktop */
+  position: absolute;
+  top: 48px; /* Below the 38px top bar */
+  left: 12px;
+  z-index: 1005;
+}
+
+@media (max-width: 768px) {
+  #mobile-legend-container {
+    display: block;
+  }
+}
+
+/* Solid 3D Red Override for Legend Toggle */
+.legend-btn-3d {
+  position: relative;
+  background: transparent;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  height: 44px; /* Squarer / Bigger */
+  min-width: 105px;
+  border-radius: 12px; /* Squarer Geometry */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.legend-btn-3d::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 100%;
+  background: rgba(0,0,0,0.3);
+  border-radius: inherit;
+  filter: blur(2px);
+  transform: translateY(2px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+  z-index: 1;
+}
+
+.legend-btn-3d::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #8a0c20 0%, #b3102a 8%, #8a0c20 92%, #5c0815 100%);
+  z-index: 2;
+}
+
+.legend-btn-front {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%; height: 100%;
+  border-radius: inherit;
+  background-color: #E31837; /* Solid Glendon Red */
+  padding: 0 16px;
+  box-sizing: border-box;
+  transform: translateY(-4px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+}
+
+.legend-btn-front .btn-text {
+  color: white;
+  font-weight: 800;
+  font-size: 14px;
+}
+.legend-btn-front .btn-text i {
+  margin-left: 6px;
+}
+
+.legend-btn-3d:hover .legend-btn-front { transform: translateY(-5px); }
+.legend-btn-3d:active .legend-btn-front { transform: translateY(-1px); transition: transform 34ms; }
+.legend-btn-3d:hover::before { transform: translateY(4px); }
+.legend-btn-3d:active::before { transform: translateY(1px); transition: transform 34ms; }
+
+/* Scrollable robust dropdown content */
+#mobile-legend-menu {
+  display: none; /* hidden visually */
+  position: absolute;
+  top: 50px; /* below the bigger btn */
+  left: 0;
+  background: rgba(255,255,255,0.4); /* More transparent */
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  padding: 10px 0; /* Padding inside the dropdown container */
+  margin: 0;
+  width: 220px;
+  max-height: 280px; 
+  overflow-y: auto;  
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  list-style: none;
+  flex-direction: column;
+}
+#mobile-legend-menu.show {
+  display: flex !important;
+}
+
+/* 3D Pushable List Items (Matching the physical layer logic) */
+#mobile-legend-menu li {
+  position: relative;
+  background: transparent;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  margin: 6px 12px;
+  height: 48px;
+  border-radius: 6px; /* Squarer Inputs per request */
+  list-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#mobile-legend-menu li::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 100%;
+  background: rgba(0,0,0,0.15);
+  border-radius: inherit;
+  filter: blur(2px);
+  transform: translateY(2px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+  z-index: 1;
+}
+
+#mobile-legend-menu li::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #ccc 0%, #eee 8%, #ccc 92%, #aaa 100%);
+  z-index: 2;
+}
+
+.li-front {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%; height: 100%;
+  border-radius: inherit;
+  background-color: #ffffff;
+  padding: 0 14px;
+  box-sizing: border-box;
+  transform: translateY(-4px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5), background 0.2s;
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+}
+
+#mobile-legend-menu li:hover .li-front { transform: translateY(-5px); }
+#mobile-legend-menu li:active .li-front { transform: translateY(-1px); transition: transform 34ms; background: #f8f8f8; }
+#mobile-legend-menu li:hover::before { transform: translateY(4px); }
+#mobile-legend-menu li:active::before { transform: translateY(1px); transition: transform 34ms; }
+
+/* Legend Inner Colored Dots (automatically maps mapped class styles natively) */
+.legend-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: #007bff; /* Fallback baseline */
+}
+
+/* Gray Recenter Button Override */
+#mobile-reset-btn .search-pill-front {
+  background-color: #f0f0f0;
+}
+
+#mobile-reset-btn::after {
+  background: linear-gradient(to right, #b4b4b4 0%, #d4d4d4 8%, #b4b4b4 92%, #888888 100%);
+}
+
+#mobile-reset-btn .search-icon-wrapper {
+  color: #E31837; /* Glendon Red Icon */
+}
+
+/* Full Pill Pulsating Ping Animation (Dynamically inherits native color injected via JS variable) */
+@keyframes hotspot-ping {
+  0% { transform: scale(1); opacity: 0.8; }
+  75%, 100% { transform: scale(1.6); opacity: 0; }
+}
+
+.Hotspot.selected .hotspot-marker::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  border-radius: inherit; /* Copies the 9999px pill expansion perfectly */
+  background-color: var(--ping-color, rgba(255,255,255,0.8)); /* Maps physically from JS */
+  animation: hotspot-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  z-index: -1;
+}
+
+/* --- Search Fading Transition --- */
+model-viewer > .Hotspot {
+  transition: opacity 0.5s ease, visibility 0.5s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+model-viewer > .Hotspot.faded-out {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important; /* Immediately freezes clicks to prevent accident misclicks during fade out */
+}
+
+/* --- Custom Gesture Prompt Overlay --- */
+#gesture-prompt-overlay {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none; /* Crucial so touches pass completely through to the map! */
+  z-index: 5000;
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+#gesture-prompt-overlay.show-prompt {
+  opacity: 1;
+}
+
+.gesture-visuals {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.gesture-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: white;
+}
+
+.gesture-box span {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.gesture-divider {
+  width: 1px;
+  height: 54px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.two-fingers {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.offset-finger {
+  position: absolute;
+  margin-left: 20px;
+  margin-top: 6px;
+  opacity: 0.7;
+}
+
+.icon-orbit {
+  font-size: 28px;
+  animation: orbit-hand 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform-origin: bottom center;
+}
+
+.icon-pan {
+  font-size: 28px;
+  animation: pan-hand 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes orbit-hand {
+  0%, 100% { transform: translateX(-14px) rotate(-20deg); }
+  50% { transform: translateX(14px) rotate(20deg); }
+}
+
+@keyframes pan-hand {
+  0%, 100% { transform: translateY(-8px); }
+  50% { transform: translateY(8px); }
 }
