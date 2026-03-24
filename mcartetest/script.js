@@ -310,6 +310,50 @@ mv.addEventListener('click', (e) => {
   }
 });
 
+// --- Dev Overlay System ---
+const devOverlay = document.getElementById('dev-overlay');
+if (devOverlay) {
+  const mvOrbit = document.getElementById('dev-orbit');
+  const mvTarget = document.getElementById('dev-target');
+  const mvFov = document.getElementById('dev-fov');
+  const copyBtn = document.getElementById('dev-copy-btn');
+  
+  // Make it visible for testing
+  devOverlay.style.display = 'block';
+
+  // Listen for camera movement
+  modelViewer.addEventListener('camera-change', () => {
+    if (mvOrbit) mvOrbit.textContent = modelViewer.getCameraOrbit().toString();
+    if (mvTarget) mvTarget.textContent = modelViewer.getCameraTarget().toString();
+    if (mvFov) mvFov.textContent = `${modelViewer.getFieldOfView()}deg`;
+  });
+
+  // Copy to clipboard
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const orbit = modelViewer.getCameraOrbit();
+      const target = modelViewer.getCameraTarget();
+      const fov = modelViewer.getFieldOfView();
+      
+      const configStr = `camera-orbit="${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m"\n` +
+                        `camera-target="${target.x}m ${target.y}m ${target.z}m"\n` +
+                        `field-of-view="${fov}deg"`;
+                        
+      navigator.clipboard.writeText(configStr).then(() => {
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = "Copied!";
+        copyBtn.style.background = "#4CAF50";
+        copyBtn.style.color = "white";
+        setTimeout(() => {
+            copyBtn.textContent = originalText;
+            copyBtn.style.background = "";
+            copyBtn.style.color = "";
+        }, 2000);
+      });
+    });
+  }
+}
+
   // --- Initialization & Performance Optimizations ---
   modelViewer.addEventListener('load', () => {
     // 1. Elevate Hotspots on Y axis to float above the mesh surface perfectly
