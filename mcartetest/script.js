@@ -1,245 +1,211 @@
 document.addEventListener('DOMContentLoaded', () => {
   const modelViewer = document.querySelector('model-viewer');
-  const legendPanel = document.getElementById('legend-panel');
-  const legendHeader = document.querySelector('.legend-header');
-  const legendContent = document.querySelector('.legend-content');
-  const searchInputs = document.querySelectorAll('.legend-search');
-  const legendItems = document.querySelectorAll('.legend-item');
   const hotspots = document.querySelectorAll('.Hotspot');
-  const legendCategories = document.querySelectorAll('.legend-category');
+  let selectedHotspot = null;
 
-  // --- Legend Collapse ---
-  legendHeader.addEventListener('click', () => {
-    const isMinimized = legendPanel.classList.toggle('minimized');
-    const icon = legendHeader.querySelector('.collapse-btn i');
-    icon.classList.toggle('fa-chevron-up', !isMinimized);
-    icon.classList.toggle('fa-chevron-down', isMinimized);
-  });
+// ─────────────────────────────────────────
+// WAYPOINT ROUTE SYSTEM
+// ─────────────────────────────────────────
+const WAYPOINTS = [
+  {id:24,label:'1:Lobby',key:'1',px:228,py:425,nx:-1.5,nz:34.9},
+  {id:25,label:'2:Weight room',key:'2',px:346,py:278,nx:23.5,nz:5.5},
+  {id:26,label:'3:Swimming Pool',key:'3',px:69,py:264,nx:-35.3,nz:2.7},
+  {id:27,label:'4:Stretching',key:'4',px:386,py:427,nx:32,nz:35.3},
+  {id:28,label:'5:Spinning',key:'5',px:433,py:428,nx:42,nz:35.5},
+  {id:29,label:'6:Boxing',key:'6',px:339,py:427,nx:22,nz:35.3},
+  {id:30,label:'7:Golf',key:'7',px:292,py:424,nx:12.1,nz:34.7},
+  {id:31,label:'8:Squash',key:'8',px:120,py:104,nx:-24.5,nz:-29.3},
+  {id:32,label:'10:M.Changing',key:'10',px:195,py:209,nx:-8.5,nz:-8.3},
+  {id:33,label:'11:W.Changing',key:'11',px:198,py:310,nx:-7.9,nz:11.9},
+  {id:34,label:'12:W.Locker',key:'12',px:160,py:446,nx:-16,nz:39.1},
+  {id:35,label:'13:M.Locker',key:'13',px:160,py:413,nx:-16,nz:32.5},
+  {id:36,label:'14:Stairs-14',key:'14',px:216,py:366,nx:-4.1,nz:23.1},
+  {id:37,label:'15:Stairs-15',key:'15',px:438,py:335,nx:43.1,nz:16.9},
+  {id:38,label:'16:Stairs-16',key:'16',px:61,py:24,nx:-37,nz:-45.3},
+  {id:39,label:'c39',key:'c39',px:18,py:50,nx:-46.1,nz:-40.1},
+  {id:40,label:'c40',key:'c40',px:52,py:48,nx:-38.9,nz:-40.5},
+  {id:41,label:'c41',key:'c41',px:81,py:46,nx:-32.7,nz:-40.9},
+  {id:42,label:'c42',key:'c42',px:113,py:50,nx:-25.9,nz:-40.1},
+  {id:43,label:'c43',key:'c43',px:143,py:48,nx:-19.6,nz:-40.5},
+  {id:44,label:'c44',key:'c44',px:175,py:48,nx:-12.8,nz:-40.5},
+  {id:45,label:'c45',key:'c45',px:208,py:45,nx:-5.8,nz:-41.1},
+  {id:46,label:'c46',key:'c46',px:227,py:46,nx:-1.7,nz:-40.9},
+  {id:47,label:'c47',key:'c47',px:236,py:60,nx:0.2,nz:-38.1},
+  {id:48,label:'c48',key:'c48',px:234,py:80,nx:-0.2,nz:-34.1},
+  {id:49,label:'c49',key:'c49',px:231,py:103,nx:-0.9,nz:-29.5},
+  {id:50,label:'c50',key:'c50',px:229,py:124,nx:-1.3,nz:-25.3},
+  {id:51,label:'c51',key:'c51',px:250,py:126,nx:3.1,nz:-24.9},
+  {id:52,label:'c52',key:'c52',px:269,py:126,nx:7.2,nz:-24.9},
+  {id:53,label:'c53',key:'c53',px:267,py:153,nx:6.8,nz:-19.5},
+  {id:54,label:'c54',key:'c54',px:266,py:175,nx:6.5,nz:-15.1},
+  {id:55,label:'c55',key:'c55',px:268,py:200,nx:7,nz:-10.1},
+  {id:56,label:'c56',key:'c56',px:266,py:225,nx:6.5,nz:-5.1},
+  {id:57,label:'c57',key:'c57',px:266,py:251,nx:6.5,nz:0.1},
+  {id:58,label:'c58',key:'c58',px:266,py:274,nx:6.5,nz:4.7},
+  {id:59,label:'c59',key:'c59',px:267,py:300,nx:6.8,nz:9.9},
+  {id:60,label:'c60',key:'c60',px:266,py:326,nx:6.5,nz:15.1},
+  {id:61,label:'c61',key:'c61',px:267,py:340,nx:6.8,nz:17.9},
+  {id:62,label:'c62',key:'c62',px:266,py:359,nx:6.5,nz:21.7},
+  {id:63,label:'c63',key:'c63',px:265,py:387,nx:6.3,nz:27.3},
+  {id:64,label:'c64',key:'c64',px:278,py:367,nx:9.1,nz:23.3},
+  {id:65,label:'c65',key:'c65',px:304,py:368,nx:14.6,nz:23.5},
+  {id:66,label:'c66',key:'c66',px:334,py:368,nx:21,nz:23.5},
+  {id:67,label:'c67',key:'c67',px:356,py:368,nx:25.7,nz:23.5},
+  {id:68,label:'c68',key:'c68',px:383,py:365,nx:31.4,nz:22.9},
+  {id:69,label:'c69',key:'c69',px:403,py:365,nx:35.6,nz:22.9},
+  {id:70,label:'c70',key:'c70',px:423,py:370,nx:39.9,nz:23.9},
+  {id:71,label:'c71',key:'c71',px:446,py:368,nx:44.8,nz:23.5},
+  {id:72,label:'c72',key:'c72',px:447,py:345,nx:45,nz:18.9},
+  {id:73,label:'c73',key:'c73',px:265,py:370,nx:6.3,nz:23.9},
+  {id:74,label:'c74',key:'c74',px:243,py:360,nx:1.7,nz:21.9},
+  {id:75,label:'c75',key:'c75',px:220,py:356,nx:-3.2,nz:21.1},
+  {id:76,label:'c76',key:'c76',px:251,py:373,nx:3.4,nz:24.5},
+  {id:77,label:'c77',key:'c77',px:222,py:380,nx:-2.8,nz:25.9},
+  {id:78,label:'c78',key:'c78',px:194,py:378,nx:-8.7,nz:25.5},
+  {id:79,label:'c79',key:'c79',px:174,py:375,nx:-13,nz:24.9},
+  {id:80,label:'c80',key:'c80',px:148,py:378,nx:-18.5,nz:25.5},
+  {id:81,label:'c81',key:'c81',px:128,py:386,nx:-22.8,nz:27.1},
+  {id:82,label:'c82',key:'c82',px:132,py:359,nx:-21.9,nz:21.7},
+  {id:83,label:'c83',key:'c83',px:132,py:336,nx:-21.9,nz:17.1},
+  {id:84,label:'c84',key:'c84',px:266,py:400,nx:6.5,nz:29.9},
+  {id:85,label:'c85',key:'c85',px:256,py:414,nx:4.4,nz:32.7}
+];
 
-  // --- Search ---
-  searchInputs.forEach(searchInput => {
-    searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase().trim();
+const CONNECTIONS = [[39,40],[40,41],[41,42],[42,43],[43,44],[44,45],[45,46],[46,47],[47,48],[48,49],[49,50],[50,51],[51,52],[52,53],[53,54],[54,55],[55,56],[56,57],[57,58],[58,59],[59,60],[60,61],[61,62],[62,64],[62,73],[62,76],[62,63],[64,65],[65,66],[66,67],[67,68],[68,69],[69,70],[70,71],[71,72],[73,74],[74,75],[75,36],[36,77],[77,78],[78,79],[79,80],[80,81],[81,82],[82,83],[63,84],[84,85],[85,24],[85,30],[85,29],[84,35],[84,34],[66,27],[67,29],[71,28],[72,37],[58,25],[59,33],[55,32],[42,31],[83,26],[39,38]];
 
-      // Keep both inputs visually synced
-      searchInputs.forEach(i => { if(i !== e.target) i.value = e.target.value; });
+// Build adjacency map
+const waypointMap = {};
+WAYPOINTS.forEach(w => waypointMap[w.id] = w);
 
-      const visibleHotspots = new Set();
-      let isSearchEmpty = !query;
-
-    legendItems.forEach(item => {
-      const label = item.querySelector('.item-label').textContent.toLowerCase();
-      const match = isSearchEmpty || label.includes(query);
-      item.style.display = match ? 'flex' : 'none';
-
-      if (match) {
-        const category = item.dataset.category;
-        const number = item.dataset.number;
-        if (category) {
-          Array.from(hotspots).forEach(h => {
-            const hLabel = h.querySelector('.hotspot-label').textContent;
-            if (hLabel === category || (category === 'Exit' && hLabel.includes('Exit')) || (category === 'Stairs' && hLabel.includes('Stairs'))) {
-              visibleHotspots.add(h);
-            }
-          });
-        } else if (number) {
-          const hotspot = Array.from(hotspots).find(h => h.querySelector('.hotspot-number').textContent === number);
-          if (hotspot) visibleHotspots.add(hotspot);
-        }
-      }
-    });
-
-    // Hide/show category titles
-    legendCategories.forEach(category => {
-      const anyVisible = Array.from(category.querySelectorAll('.legend-item')).some(
-        item => item.style.display !== 'none'
-      );
-      category.style.display = anyVisible ? 'block' : 'none';
-    });
-    
-    // Hide unmatched hotspots
-    hotspots.forEach(h => {
-      if (isSearchEmpty || visibleHotspots.has(h)) {
-        h.classList.remove('search-hidden');
-      } else {
-        h.classList.add('search-hidden');
-      }
-    });
-  });
+const adjacency = {};
+WAYPOINTS.forEach(w => adjacency[w.id] = []);
+CONNECTIONS.forEach(([a, b]) => {
+  adjacency[a].push(b);
+  adjacency[b].push(a);
 });
 
-  // --- Initialize Exit Hotspots ---
-  hotspots.forEach(h => {
-    const label = h.querySelector('.hotspot-label');
-    if (label && label.textContent.includes('Exit')) {
-      h.classList.add('exit-hotspot');
+// A* pathfinding using px/py pixel coords as the heuristic
+function astar(startId, endId) {
+  const dist = (a, b) => Math.hypot(waypointMap[a].px - waypointMap[b].px, waypointMap[a].py - waypointMap[b].py);
+  const open = new Set([startId]);
+  const cameFrom = {};
+  const gScore = { [startId]: 0 };
+  const fScore = { [startId]: dist(startId, endId) };
+
+  while (open.size) {
+    let current = [...open].reduce((a, b) => (fScore[a] || Infinity) < (fScore[b] || Infinity) ? a : b);
+    if (current === endId) {
+      const path = [];
+      while (current !== undefined) { path.unshift(current); current = cameFrom[current]; }
+      return path;
     }
+    open.delete(current);
+    for (const neighbor of (adjacency[current] || [])) {
+      const tentative = (gScore[current] || 0) + dist(current, neighbor);
+      if (tentative < (gScore[neighbor] || Infinity)) {
+        cameFrom[neighbor] = current;
+        gScore[neighbor] = tentative;
+        fScore[neighbor] = tentative + dist(neighbor, endId);
+        open.add(neighbor);
+      }
+    }
+  }
+  return [];
+}
+
+// Find the waypoint node closest to a given hotspot key (room number)
+function waypointForRoom(roomKey) {
+  return WAYPOINTS.find(w => w.key === roomKey) || null;
+}
+
+// Draw the route as animated SVG path
+const routeSVG = document.getElementById('route-overlay');
+
+function drawRoute(pathIds) {
+  if (!routeSVG) return;
+  routeSVG.innerHTML = '';
+  if (!pathIds || pathIds.length < 2) return;
+
+  const REF_W = 472, REF_H = 500;
+  const scaleX = window.innerWidth / REF_W;
+  const scaleY = window.innerHeight / REF_H;
+
+  const points = pathIds.map(id => {
+    const w = waypointMap[id];
+    return { x: w.px * scaleX, y: w.py * scaleY };
   });
 
-  // --- Eye Toggle ---
-  const toggleVisibility = (elements, show) => {
-    elements.forEach(el => {
-      if (show) {
-        el.classList.remove('eye-hidden');
-      } else {
-        el.classList.add('eye-hidden');
-      }
+  const d = points.map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`)).join(' ');
+
+  // Shadow line
+  const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  shadow.setAttribute('d', d);
+  shadow.setAttribute('stroke', 'rgba(0,0,0,0.25)');
+  shadow.setAttribute('stroke-width', '6');
+  shadow.setAttribute('fill', 'none');
+  shadow.setAttribute('stroke-linecap', 'round');
+  shadow.setAttribute('stroke-linejoin', 'round');
+  routeSVG.appendChild(shadow);
+
+  // Main route line — append FIRST before measuring
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('stroke', '#E31837');
+  path.setAttribute('stroke-width', '4');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+  routeSVG.appendChild(path);
+
+  // Start dot
+  const startDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startDot.setAttribute('cx', points[0].x);
+  startDot.setAttribute('cy', points[0].y);
+  startDot.setAttribute('r', '7');
+  startDot.setAttribute('fill', '#1D9E75');
+  startDot.setAttribute('stroke', 'white');
+  startDot.setAttribute('stroke-width', '2');
+  routeSVG.appendChild(startDot);
+
+  // End dot
+  const endDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endDot.setAttribute('cx', points[points.length - 1].x);
+  endDot.setAttribute('cy', points[points.length - 1].y);
+  endDot.setAttribute('r', '7');
+  endDot.setAttribute('fill', '#E31837');
+  endDot.setAttribute('stroke', 'white');
+  endDot.setAttribute('stroke-width', '2');
+  routeSVG.appendChild(endDot);
+
+  // FIX: measure length AFTER element is in DOM, guard against 0
+  // Use setTimeout to guarantee browser has completed layout pass
+  setTimeout(() => {
+    const totalLength = path.getTotalLength();
+    if (!totalLength || totalLength < 1) return; // guard — never set dasharray to 0
+    path.setAttribute('stroke-dasharray', totalLength);
+    path.setAttribute('stroke-dashoffset', totalLength);
+    // Set transition AFTER setting initial dashoffset so it doesn't animate from 0
+    requestAnimationFrame(() => {
+      path.style.transition = 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)';
+      path.setAttribute('stroke-dashoffset', '0');
     });
-  };
+  }, 50); // 50ms gives browser time to complete the layout pass
+}
 
-  legendItems.forEach(item => {
-    const eyeBtn = item.querySelector('.eye-toggle');
-    if (!eyeBtn) return;
+function clearRoute() {
+  if (routeSVG) routeSVG.innerHTML = '';
+}
 
-    eyeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const icon = eyeBtn.querySelector('i');
-      const isCurrentlyVisible = !icon.classList.contains('fa-eye-slash');
-      const newVisibleState = !isCurrentlyVisible;
-      
-      const category = item.dataset.category;
-      const number = item.dataset.number;
-
-      if (category) {
-        const categoryHotspots = Array.from(hotspots).filter(h => {
-          const hLabel = h.querySelector('.hotspot-label').textContent;
-          return hLabel === category || (category === 'Exit' && hLabel.includes('Exit')) || (category === 'Stairs' && hLabel.includes('Stairs'));
-        });
-        toggleVisibility(categoryHotspots, newVisibleState);
-      } else if (number) {
-        const hotspot = Array.from(hotspots).find(h => h.querySelector('.hotspot-number').textContent === number);
-        if (hotspot) {
-          toggleVisibility([hotspot], newVisibleState);
-        }
-      }
-      
-      if (newVisibleState) {
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-        eyeBtn.classList.remove('hidden-state');
-      } else {
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-        eyeBtn.classList.add('hidden-state');
-      }
-    });
-  });
-
-  // --- Category Toggle ---
-  const categoryHeaders = document.querySelectorAll('.category-header');
-  categoryHeaders.forEach(header => {
-    const catToggleBtn = header.querySelector('.category-toggle');
-    if (!catToggleBtn) return;
-
-    catToggleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const icon = catToggleBtn.querySelector('i');
-      const isCurrentlyVisible = !icon.classList.contains('fa-eye-slash');
-      const newVisibleState = !isCurrentlyVisible;
-
-      // Update the category button icon
-      if (newVisibleState) {
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-        catToggleBtn.classList.remove('hidden-state');
-      } else {
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-        catToggleBtn.classList.add('hidden-state');
-      }
-
-      // Find all items within this category and toggle them
-      const categoryContainer = header.closest('.legend-category');
-      const items = categoryContainer.querySelectorAll('.legend-item');
-      
-      items.forEach(item => {
-        const itemEyeBtn = item.querySelector('.eye-toggle');
-        const itemIcon = itemEyeBtn.querySelector('i');
-        
-        // Update individual item icon state
-        if (newVisibleState) {
-          itemIcon.classList.remove('fa-eye-slash');
-          itemIcon.classList.add('fa-eye');
-          itemEyeBtn.classList.remove('hidden-state');
-        } else {
-          itemIcon.classList.remove('fa-eye');
-          itemIcon.classList.add('fa-eye-slash');
-          itemEyeBtn.classList.add('hidden-state');
-        }
-
-        // Toggle map hotspots
-        const categoryLabel = item.dataset.category;
-        const number = item.dataset.number;
-
-        if (categoryLabel) {
-          const categoryHotspots = Array.from(hotspots).filter(h => {
-            const hLabel = h.querySelector('.hotspot-label').textContent;
-            return hLabel === categoryLabel || (categoryLabel === 'Exit' && hLabel.includes('Exit')) || (categoryLabel === 'Stairs' && hLabel.includes('Stairs'));
-          });
-          toggleVisibility(categoryHotspots, newVisibleState);
-        } else if (number) {
-          const hotspot = Array.from(hotspots).find(h => h.querySelector('.hotspot-number').textContent === number);
-          if (hotspot) {
-            toggleVisibility([hotspot], newVisibleState);
-          }
-        }
-      });
-    });
-  });
-
-  // --- Legend Item Click (Auto-Focus and Filter) ---
-  legendItems.forEach(item => {
-    item.style.cursor = 'pointer'; 
-    
-    item.addEventListener('click', (e) => {
-      // Ignore if they are physically clicking the eye visibility toggle
-      if (e.target.closest('.eye-toggle')) return;
-
-      const categoryLabel = item.dataset.category;
-      const number = item.dataset.number;
-      
-      let targetHotspot = null;
-
-      // Filter and hide all other hotspots
-      hotspots.forEach(h => {
-        let isMatch = false;
-        
-        const hLabelNode = h.querySelector('.hotspot-label');
-        const hNumNode = h.querySelector('.hotspot-number');
-        
-        const hLabel = hLabelNode ? hLabelNode.textContent : "";
-        const hNum = hNumNode ? hNumNode.textContent : "";
-        
-        if (number && hNum === number) isMatch = true;
-        if (categoryLabel && (hLabel === categoryLabel || (categoryLabel === 'Exit' && hLabel.includes('Exit')) || (categoryLabel === 'Stairs' && hLabel.includes('Stairs')))) isMatch = true;
-        
-        if (isMatch) {
-            h.classList.remove('faded-out'); 
-            h.style.display = 'inline-flex';
-            if(!targetHotspot) targetHotspot = h;
-        } else {
-            h.classList.add('faded-out'); 
-        }
-      });
-      
-      // Auto-orbit and focus camera identically to tapping the hotspot cleanly
-      if (targetHotspot) {
-         targetHotspot.click();
-      }
-      
-      // Auto-collapse legend slightly to half-state on mobile so model is fully framed but legend still peeks
-      if (isMobile() && typeof currentState !== 'undefined') {
-         currentState = snapStates.HALF;
-         legendPanel.style.transform = `translateY(65%)`;
-         if(minimizeBtn) minimizeBtn.querySelector('i').classList.replace('fa-chevron-up', 'fa-chevron-down');
-      }
-    });
-  });
+// Re-scale route on window resize
+let currentRoutePathIds = [];
+window.addEventListener('resize', () => {
+  if (currentRoutePathIds && currentRoutePathIds.length) drawRoute(currentRoutePathIds);
+});
 
   // --- Hotspot Selection & Camera View ---
   const annotationClicked = (annotation) => {
     let dataset = annotation.dataset;
-    
+
     // Automatically fallback to position for target and keep current orbit if none provided, 
     // ensuring the camera correctly focuses on the clicked room
     if (dataset.target || dataset.position) {
@@ -262,12 +228,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     hotspots.forEach(other => {
       other.classList.remove('selected');
-      if (other !== h) {
+      other.style.removeProperty('--ping-color');
+      
+      const hasYouAreHere = other.querySelector('.you-are-here') !== null;
+      if (other !== h && !hasYouAreHere) {
         other.classList.add('faded-out');
+      } else {
+        other.classList.remove('faded-out');
       }
     });
-    h.classList.remove('faded-out');
     h.classList.add('selected');
+
+    // Dynamically clone the marker color for the outer wrapper ping effect
+    const colorNode = h.querySelector('.hotspot-number');
+    if (colorNode) {
+      const bg = window.getComputedStyle(colorNode).backgroundColor;
+      h.style.setProperty('--ping-color', bg);
+    }
 
     // Rely on existing native alignment logic flawlessly
     annotationClicked(h);
@@ -278,6 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
     hotspots.forEach(h => {
       h.classList.remove('selected', 'faded-out');
     });
+    clearRoute();
+    currentRoutePathIds = [];
   };
 
   // ─────────────────────────────────────────
@@ -288,104 +267,90 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
       if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
       selectHotspot(h);
+
+      clearRoute();
     });
   });
 
-// --- Reset View Button ---
-const resetBtn = document.getElementById('reset-view-btn');
-if (resetBtn) {
-  resetBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    // Glide camera back to the requested 45-degree starter position perfectly
-    modelViewer.cameraOrbit = "360deg 45deg 100m";
-    modelViewer.cameraTarget = "0m -1.3m 8.5m";
-    modelViewer.fieldOfView = "70deg";
-  });
-}
-
-// Background Click Deselect
-mv.addEventListener('click', (e) => {
-  if (e.target === mv && selectedHotspot) {
-    deselectAll();
+  // --- Reset View Button ---
+  const resetBtn = document.getElementById('reset-view-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Glide camera back to the requested 45-degree starter position perfectly
+      modelViewer.cameraOrbit = "360deg 45deg 100m";
+      modelViewer.cameraTarget = "0m -1.3m 8.5m";
+      modelViewer.fieldOfView = "70deg";
+    });
   }
-});
 
-// --- Dev Overlay System ---
-const devOverlay = document.getElementById('dev-overlay');
-if (devOverlay) {
-  const mvOrbit = document.getElementById('dev-orbit');
-  const mvTarget = document.getElementById('dev-target');
-  const mvFov = document.getElementById('dev-fov');
-  const copyBtn = document.getElementById('dev-copy-btn');
-  
-  // Make it visible for testing
-  devOverlay.style.display = 'block';
-
-  // Listen for camera movement
-  modelViewer.addEventListener('camera-change', () => {
-    if (mvOrbit) mvOrbit.textContent = modelViewer.getCameraOrbit().toString();
-    if (mvTarget) mvTarget.textContent = modelViewer.getCameraTarget().toString();
-    if (mvFov) mvFov.textContent = `${modelViewer.getFieldOfView()}deg`;
+  // Background Click Deselect
+  mv.addEventListener('click', (e) => {
+    if (e.target === mv && selectedHotspot) {
+      deselectAll();
+    }
   });
 
-  // Copy to clipboard
-  if (copyBtn) {
-    copyBtn.addEventListener('click', () => {
-      const orbit = modelViewer.getCameraOrbit();
-      const target = modelViewer.getCameraTarget();
-      const fov = modelViewer.getFieldOfView();
-      
-      const configStr = `camera-orbit="${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m"\n` +
-                        `camera-target="${target.x}m ${target.y}m ${target.z}m"\n` +
-                        `field-of-view="${fov}deg"`;
-                        
-      navigator.clipboard.writeText(configStr).then(() => {
-        const originalText = copyBtn.textContent;
-        copyBtn.textContent = "Copied!";
-        copyBtn.style.background = "#4CAF50";
-        copyBtn.style.color = "white";
-        setTimeout(() => {
-            copyBtn.textContent = originalText;
-            copyBtn.style.background = "";
-            copyBtn.style.color = "";
-        }, 2000);
+  // --- Legend & Search Mutual Exclusion Controller ---
+  const legendBtn = document.getElementById('mobile-legend-btn');
+  const legendMenu = document.getElementById('mobile-legend-menu');
+  const expandableSearch = document.querySelector('.expandable-search');
+  const searchPillNode = document.querySelector('.search-pill-input');
+
+  // 1. Legend Toggle Logic
+  if (legendBtn && legendMenu) {
+    legendBtn.addEventListener('click', () => {
+      const isShowing = legendMenu.classList.toggle('show');
+      // If opening the Legend, forcefully close the Search Bar
+      if (isShowing && searchPillNode) {
+        searchPillNode.blur();
+        searchPillNode.value = ''; // clear out search so map perfectly resets
+        searchPillNode.dispatchEvent(new Event('input')); // trigger reset naturally natively
+      }
+    });
+  }
+
+  // 2. Search Logic & Legend Exclusion
+  if (searchPillNode) {
+    if (expandableSearch) {
+      expandableSearch.addEventListener('click', () => searchPillNode.focus());
+    }
+
+    searchPillNode.addEventListener('focus', () => {
+      // If opening the Search Bar, violently close the Legend
+      if (legendMenu) legendMenu.classList.remove('show');
+    });
+
+    searchPillNode.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      hotspots.forEach(h => {
+        const labelText = h.querySelector('.hotspot-label');
+        if (!labelText) return;
+        if (query === '' || labelText.textContent.toLowerCase().includes(query)) {
+          h.classList.remove('faded-out');
+        } else {
+          h.classList.add('faded-out');
+        }
       });
     });
   }
-}
 
   // --- Initialization & Performance Optimizations ---
   modelViewer.addEventListener('load', () => {
     // 1. Elevate Hotspots on Y axis to float above the mesh surface perfectly
     hotspots.forEach(h => {
-        if (h.dataset.position) {
-            const pos = h.dataset.position.split(' ');
-            if (pos.length === 3) {
-                const y = parseFloat(pos[1]) + 2.0; 
-                h.dataset.position = `${pos[0]} ${y}m ${pos[2]}`;
-            }
+      if (h.dataset.position) {
+        const pos = h.dataset.position.split(' ');
+        if (pos.length === 3) {
+          const y = parseFloat(pos[1]) + 2.0;
+          h.dataset.position = `${pos[0]} ${y}m ${pos[2]}`;
         }
+      }
     });
 
-    // Temporarily hide all hotspots during camera development
-    hotspots.forEach(h => {
-      h.style.display = 'none';
-    });
+    // Hotspots restored natively
 
-    // 2. Automatically trigger the hide function for Exits and Stairs correctly through the legend UI
-    const categories = document.querySelectorAll('.legend-category');
-    categories.forEach(cat => {
-        const titleEl = cat.querySelector('h3');
-        if (titleEl) {
-            const title = titleEl.textContent.toLowerCase();
-            if (title.includes('exit') || title.includes('stairs')) {
-                const toggles = cat.querySelectorAll('.eye-toggle');
-                toggles.forEach(t => {
-                   if (!t.querySelector('i').classList.contains('fa-eye-slash')) t.click();
-                });
-            }
-        }
-    });
+
 
     const screen = document.getElementById('loading-screen');
     if (screen) {
@@ -415,10 +380,7 @@ if (devOverlay) {
     // existing resize logic (none currently)
   }, 200));
 
-  modelViewer.addEventListener('load', () => {
-    // Preserve logic to show legend on load seamlessly
-    legendPanel.classList.remove('loading-hidden');
-  });
+
 
   // the easiest method to handle the fading natively on model viewer is looking at the 'data-visible'
   // model viewer sets 'data-visible' to true or false.
@@ -429,10 +391,10 @@ if (devOverlay) {
         const h = mutation.target;
         // modelViewer natively sets data-visible=false when strongly pointing away
         // However, instead of hiding entirely we modify its style according to requirements
-        if(h.dataset.visible === 'false' || h.dataset.visible === false || !h.hasAttribute('data-visible')){
-           h.classList.add('angled-away');
+        if (h.dataset.visible === 'false' || h.dataset.visible === false || !h.hasAttribute('data-visible')) {
+          h.classList.add('angled-away');
         } else {
-           h.classList.remove('angled-away');
+          h.classList.remove('angled-away');
         }
       }
     });
@@ -442,11 +404,11 @@ if (devOverlay) {
     // Override the native hide behaviour:
     // Model-viewer naturally sets opacity to 0 via their default rules in CSS or JS. 
     // We handle it via CSS overriding and the MutationObserver monitoring the data tag.
-    
+
     // Inject a <style> tag if not already injected that forces model-viewer to not hide the buttons completely when 'data-visible' is false.
     observer.observe(h, { attributes: true });
   });
-  
+
   // Model viewer naturally hides buttons that aren't visible with a built-in style. 
   // We need to override this behavior so our CSS opacity transition works.
   const style = document.createElement('style');
@@ -483,164 +445,7 @@ if (devOverlay) {
 
 
 
-  // --- Mobile Drawer Drag Logic ---
-  const dragArea = document.getElementById('mobile-drag-area');
-  const minimizeBtn = document.getElementById('mobile-minimize-btn');
 
-  let isDragging = false;
-  let startY = 0;
-  let initialTransformY = 0;
-  
-  const getPanelHeight = () => legendPanel.offsetHeight;
-  
-  const snapStates = {
-    HIDDEN: 'HIDDEN',
-    HALF: 'HALF',
-    FULL: 'FULL'
-  };
-  let currentState = snapStates.HIDDEN; // Default collapsed state per user request
-
-  const isMobile = () => window.innerWidth <= 768;
-  
-  const updateLayoutMode = (yPos) => {
-      const threshold = legendPanel.offsetHeight * 0.45;
-      if (yPos < threshold) {
-          legendPanel.classList.remove('layout-horizontal');
-      } else {
-          legendPanel.classList.add('layout-horizontal');
-      }
-  };
-  
-  if(isMobile()) {
-      legendPanel.style.transform = `translateY(calc(100% - 40px))`;
-      legendPanel.style.transition = `transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)`;
-      updateLayoutMode(legendPanel.offsetHeight * 0.8); // Initially horizontal since Hidden
-  }
-
-  const getTransformY = () => {
-    const style = window.getComputedStyle(legendPanel);
-    const matrix = new DOMMatrixReadOnly(style.transform);
-    return matrix.m42;
-  };
-
-  const handleDragStart = (e) => {
-    if (!isMobile()) return;
-    isDragging = true;
-    startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-    initialTransformY = getTransformY();
-    
-    legendPanel.style.transition = 'none';
-    legendPanel.classList.add('dragging');
-  };
-
-  const handleDragMove = (e) => {
-    if (!isDragging || !isMobile()) return;
-    
-    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-    const deltaY = clientY - startY;
-    
-    let newY = initialTransformY + deltaY;
-    
-    const panelHeight = getPanelHeight();
-    const maxPush = panelHeight - 40; // 40px remaining for the handle visibility
-    
-    if (newY < 193) newY = 193; // Mathematically override to exactly 193px offset per explicit prompt
-    if (newY > maxPush) newY = maxPush;
-    
-    legendPanel.style.transform = `translateY(${newY}px)`;
-    updateLayoutMode(newY);
-  };
-
-  const handleDragEnd = () => {
-    if (!isDragging || !isMobile()) return;
-    isDragging = false;
-    
-    legendPanel.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
-    legendPanel.classList.remove('dragging');
-    
-    const panelHeight = getPanelHeight();
-    const currentYPix = getTransformY();
-    
-    const hiddenY = panelHeight - 40;
-    const halfY = panelHeight * 0.65;
-    const fullY = 193;
-    
-    const distances = [
-      { state: snapStates.FULL, dist: Math.abs(currentYPix - fullY), val: '193px' },
-      { state: snapStates.HALF, dist: Math.abs(currentYPix - halfY), val: '65%' },
-      { state: snapStates.HIDDEN, dist: Math.abs(currentYPix - hiddenY), val: 'calc(100% - 40px)' }
-    ];
-    
-    distances.sort((a, b) => a.dist - b.dist);
-    const closest = distances[0];
-    
-    currentState = closest.state;
-    legendPanel.style.transform = `translateY(${closest.val})`;
-
-    if (currentState === snapStates.FULL) {
-        updateLayoutMode(193);
-    } else if (currentState === snapStates.HALF) {
-        updateLayoutMode(getPanelHeight() * 0.65);
-    } else {
-        updateLayoutMode(getPanelHeight() - 40);
-    }
-    
-    const icon = minimizeBtn.querySelector('i');
-    if(currentState === snapStates.HIDDEN) {
-        icon.classList.remove('fa-chevron-down');
-        icon.classList.add('fa-chevron-up');
-    } else {
-        icon.classList.remove('fa-chevron-up');
-        icon.classList.add('fa-chevron-down');
-    }
-  };
-
-  if (dragArea) {
-      dragArea.addEventListener('mousedown', handleDragStart);
-      dragArea.addEventListener('touchstart', handleDragStart, { passive: true });
-  }
-
-  window.addEventListener('mousemove', handleDragMove);
-  window.addEventListener('touchmove', handleDragMove, { passive: true });
-
-  window.addEventListener('mouseup', handleDragEnd);
-  window.addEventListener('touchend', handleDragEnd);
-
-  if (minimizeBtn) {
-      minimizeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if(currentState === snapStates.HIDDEN) {
-              currentState = snapStates.HALF;
-              legendPanel.style.transform = `translateY(65%)`;
-              minimizeBtn.querySelector('i').classList.replace('fa-chevron-up', 'fa-chevron-down');
-          } else {
-              currentState = snapStates.HIDDEN;
-              legendPanel.style.transform = `translateY(calc(100% - 40px))`;
-              minimizeBtn.querySelector('i').classList.replace('fa-chevron-down', 'fa-chevron-up');
-          }
-      });
-  }
-
-  const existingResizeHandler = window.onresize || function(){};
-  window.addEventListener('resize', debounce(() => {
-    existingResizeHandler();
-    if (!isMobile()) {
-        legendPanel.style.transform = '';
-        legendPanel.style.transition = '';
-        legendPanel.classList.remove('layout-horizontal');
-    } else {
-        if (currentState === snapStates.HALF) {
-            legendPanel.style.transform = `translateY(65%)`;
-            updateLayoutMode(legendPanel.offsetHeight * 0.65);
-        } else if (currentState === snapStates.FULL) {
-            legendPanel.style.transform = `translateY(193px)`;
-            updateLayoutMode(193);
-        } else {
-            legendPanel.style.transform = `translateY(calc(100% - 40px))`;
-            updateLayoutMode(legendPanel.offsetHeight - 40);
-        }
-    }
-  }, 200));
 
   // --- Developer Settings HUD Logic ---
   const updateDevOverlay = () => {
@@ -655,13 +460,13 @@ if (devOverlay) {
     const orbitStr = `${thetaDeg}deg ${phiDeg}deg ${radius}m`;
     const targetStr = `${target.x.toFixed(2)}m ${target.y.toFixed(2)}m ${target.z.toFixed(2)}m`;
     const fovStr = `${fov.toFixed(2)}deg`;
-    
+
     const zoomSens = modelViewer.getAttribute('zoom-sensitivity') || "Default";
     const orbitSens = modelViewer.getAttribute('orbit-sensitivity') || "Default";
     let sizeStr = "Evaluating...";
     const size = modelViewer.getDimensions();
     if (size && size.x) {
-        sizeStr = `${size.x.toFixed(2)}m x ${size.y.toFixed(2)}m x ${size.z.toFixed(2)}m`;
+      sizeStr = `${size.x.toFixed(2)}m x ${size.y.toFixed(2)}m x ${size.z.toFixed(2)}m`;
     }
 
     const devOrbit = document.getElementById('dev-orbit');
@@ -670,11 +475,11 @@ if (devOverlay) {
     const devZoom = document.getElementById('dev-zoom');
     const devOrbitSens = document.getElementById('dev-orbit-sens');
     const devSize = document.getElementById('dev-size');
-    
-    if(devOrbit && devTarget && devFov) {
-        devOrbit.innerText = orbitStr;
-        devTarget.innerText = targetStr;
-        devFov.innerText = fovStr;
+
+    if (devOrbit && devTarget && devFov) {
+      devOrbit.innerText = orbitStr;
+      devTarget.innerText = targetStr;
+      devFov.innerText = fovStr;
     }
     if (devZoom) devZoom.innerText = zoomSens;
     if (devOrbitSens) devOrbitSens.innerText = orbitSens;
@@ -694,7 +499,7 @@ if (devOverlay) {
       const fovStr = document.getElementById('dev-fov').innerText;
 
       const copyString = `camera-orbit="${orbitStr}"\ncamera-target="${targetStr}"\nfield-of-view="${fovStr}"`;
-      
+
       navigator.clipboard.writeText(copyString).then(() => {
         const orig = copyBtn.innerText;
         copyBtn.innerText = "Copied!";
@@ -713,5 +518,44 @@ if (devOverlay) {
       modelViewer.fieldOfView = "70deg";
     });
   }
+
+  // --- Mobile Reset View Button ---
+  const mobileResetBtn = document.getElementById('mobile-reset-btn');
+  if (mobileResetBtn) {
+    mobileResetBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      modelViewer.cameraOrbit = "360deg 45deg 100m";
+      modelViewer.cameraTarget = "0m -1.3m 8.5m";
+      modelViewer.fieldOfView = "70deg";
+    });
+  }
+  // --- Custom Gesture Tutorial Overlay ---
+  modelViewer.addEventListener('load', () => {
+    // Show the tutorial prompt securely 1.2s after load completes natively
+    setTimeout(() => {
+      const prompt = document.getElementById('gesture-prompt-overlay');
+      if (prompt) {
+        prompt.classList.add('show-prompt');
+      }
+    }, 1200);
+  });
+
+  const hideGesturePrompt = () => {
+    const prompt = document.getElementById('gesture-prompt-overlay');
+    if (prompt && prompt.classList.contains('show-prompt')) {
+      prompt.classList.remove('show-prompt');
+      setTimeout(() => {
+        if (prompt) prompt.style.display = 'none';
+      }, 600);
+    }
+  };
+
+  modelViewer.addEventListener('pointerdown', hideGesturePrompt);
+  modelViewer.addEventListener('wheel', hideGesturePrompt);
+  modelViewer.addEventListener('camera-change', (e) => {
+    if (e.detail.source === 'user-interaction') {
+      hideGesturePrompt();
+    }
+  });
 
 });
