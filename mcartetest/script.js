@@ -25,24 +25,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const BASE_TARGET_X = 0;
     const BASE_TARGET_Y = -1.3;
     const BASE_TARGET_Z = 8.5;
-    const MAX_SHIFT_X = 2; // Subtle parallax effect
-    const MAX_SHIFT_Z = 2;
+    const MAX_SHIFT_X = 14; // Dramatically wider range
+    const MAX_SHIFT_Z = 14; 
+
+    let targetShiftX = 0;
+    let targetShiftZ = 0;
+    let currentShiftX = 0;
+    let currentShiftZ = 0;
 
     window.addEventListener('deviceorientation', (e) => {
       let g = e.gamma; 
       let b = e.beta;  
       if (g === null || b === null) return;
       
-      // Clamp values (e.g. holding phone between 15 deg to 75 deg beta)
-      g = Math.max(-30, Math.min(30, g));
-      b = Math.max(15, Math.min(75, b));
+      // Broader clamp for much more physical freedom
+      g = Math.max(-60, Math.min(60, g));
+      b = Math.max(0, Math.min(90, b));
       
-      // Normalize to a -1 to 1 range relative to neutral positions
-      const shiftX = (g / 30) * MAX_SHIFT_X; 
-      const shiftZ = ((b - 45) / 30) * MAX_SHIFT_Z;
-      
-      modelViewer.cameraTarget = `${BASE_TARGET_X + shiftX}m ${BASE_TARGET_Y}m ${BASE_TARGET_Z + shiftZ}m`;
+      // Normalize relative to expanded ranges
+      targetShiftX = (g / 60) * MAX_SHIFT_X; 
+      targetShiftZ = ((b - 45) / 45) * MAX_SHIFT_Z;
     });
+
+    // Smooth LERP animation loop to filter gyro-sensor jitters and match phone motion gracefully
+    const runParallax = () => {
+      currentShiftX += (targetShiftX - currentShiftX) * 0.15;
+      currentShiftZ += (targetShiftZ - currentShiftZ) * 0.15;
+      
+      modelViewer.cameraTarget = `${BASE_TARGET_X + currentShiftX}m ${BASE_TARGET_Y}m ${BASE_TARGET_Z + currentShiftZ}m`;
+      requestAnimationFrame(runParallax);
+    };
+    runParallax();
   }
 
   // ─────────────────────────────────────────
@@ -741,3 +754,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
