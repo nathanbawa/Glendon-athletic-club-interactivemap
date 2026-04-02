@@ -3,6 +3,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const hotspots = document.querySelectorAll('.Hotspot');
   let selectedHotspot = null;
 
+  const isMobile = window.matchMedia("(max-width: 768px)").matches || /Mobi|Android/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    modelViewer.removeAttribute('camera-controls');
+    
+    // Request permission for iOS devices if necessary
+    const requestDeviceOrientation = () => {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              window.removeEventListener('click', requestDeviceOrientation);
+            }
+          })
+          .catch(console.error);
+      }
+    };
+    window.addEventListener('click', requestDeviceOrientation);
+
+    const BASE_TARGET_X = 0;
+    const BASE_TARGET_Y = -1.3;
+    const BASE_TARGET_Z = 8.5;
+    const MAX_SHIFT_X = 2; // Subtle parallax effect
+    const MAX_SHIFT_Z = 2;
+
+    window.addEventListener('deviceorientation', (e) => {
+      let g = e.gamma; 
+      let b = e.beta;  
+      if (g === null || b === null) return;
+      
+      // Clamp values (e.g. holding phone between 15 deg to 75 deg beta)
+      g = Math.max(-30, Math.min(30, g));
+      b = Math.max(15, Math.min(75, b));
+      
+      // Normalize to a -1 to 1 range relative to neutral positions
+      const shiftX = (g / 30) * MAX_SHIFT_X; 
+      const shiftZ = ((b - 45) / 30) * MAX_SHIFT_Z;
+      
+      modelViewer.cameraTarget = `${BASE_TARGET_X + shiftX}m ${BASE_TARGET_Y}m ${BASE_TARGET_Z + shiftZ}m`;
+    });
+  }
+
   // ─────────────────────────────────────────
   // WAYPOINT ROUTE SYSTEM
   // ─────────────────────────────────────────
@@ -208,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Automatically fallback to position for target and keep current orbit if none provided, 
     // ensuring the camera correctly focuses on the clicked room
-    if (dataset.target || dataset.position) {
+    if (!isMobile && (dataset.target || dataset.position)) {
       modelViewer.cameraTarget = dataset.target || dataset.position;
     }
   };
@@ -307,9 +349,11 @@ document.addEventListener('DOMContentLoaded', () => {
     annotationClicked(h);
 
     // Auto-orbit around selected hotspot
-    modelViewer.autoRotate = true;
-    modelViewer.setAttribute('rotation-per-second', '10deg');
-    modelViewer.autoRotateDelay = 200;
+    if (!isMobile) {
+      modelViewer.autoRotate = true;
+      modelViewer.setAttribute('rotation-per-second', '10deg');
+      modelViewer.autoRotateDelay = 200;
+    }
 
     // Update Info Dropdown securely via the new logical card handler
     const labelText = h.querySelector('.hotspot-label')?.textContent?.trim() || 'Room Details';
@@ -423,12 +467,12 @@ document.addEventListener('DOMContentLoaded', () => {
     searchPillNode.addEventListener('focus', () => {
       // If opening the Search Bar, violently close the Legend
       if (legendMenu) legendMenu.classList.remove('show');
-      modelViewer.cameraOrbit = "360deg 25deg 250m";
+      if (!isMobile) modelViewer.cameraOrbit = "360deg 25deg 250m";
     });
 
     searchPillNode.addEventListener('blur', () => {
       if (searchPillNode.value.trim() === '') {
-        modelViewer.cameraOrbit = "360deg 45deg 100m";
+        if (!isMobile) modelViewer.cameraOrbit = "360deg 45deg 100m";
       }
     });
 
@@ -615,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
 
     if (clamped && e.detail.source === 'user-interaction') {
-      modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
+      if (!isMobile) modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
     }
   });
   modelViewer.addEventListener('load', updateDevOverlay);
@@ -644,9 +688,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileSearchInput) {
     mobileSearchInput.addEventListener('focus', () => {
       // Glides camera to starter view with zoomed out perspective to compensate for the bottom-half of the screen being eaten by the software keyboard
-      modelViewer.cameraOrbit = "360deg 45deg 130m";
-      modelViewer.cameraTarget = "0m -1.3m 8.5m";
-      modelViewer.fieldOfView = "75deg";
+      if (!isMobile) {
+        modelViewer.cameraOrbit = "360deg 45deg 130m";
+        modelViewer.cameraTarget = "0m -1.3m 8.5m";
+        modelViewer.fieldOfView = "75deg";
+      }
     });
   }
 
@@ -655,10 +701,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileResetBtn) {
     mobileResetBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      // Reset to starter view (slightly zoomed out)
-      modelViewer.cameraOrbit = "360deg 45deg 115m";
-      modelViewer.cameraTarget = "0m -1.3m 8.5m";
-      modelViewer.fieldOfView = "70deg";
+      if (!isMobile) {
+        // Reset to starter view (slightly zoomed out)
+        modelViewer.cameraOrbit = "360deg 45deg 115m";
+        modelViewer.cameraTarget = "0m -1.3m 8.5m";
+        modelViewer.fieldOfView = "70deg";
+      } else {
+        deselectAll(); // On mobile, just clear selections.
+      }
     });
   }
   // --- Custom Gesture Tutorial Overlay ---
@@ -666,7 +716,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show the tutorial prompt securely 1.2s after load completes natively
     setTimeout(() => {
       const prompt = document.getElementById('gesture-prompt-overlay');
-      if (prompt) {
+      if (prompt && !isMobile) {
         prompt.classList.add('show-prompt');
       }
     }, 1200);
