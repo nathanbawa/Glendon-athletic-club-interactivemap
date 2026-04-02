@@ -6,7 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const isMobile = window.matchMedia("(max-width: 768px)").matches || /Mobi|Android/i.test(navigator.userAgent);
 
   if (isMobile) {
-    modelViewer.removeAttribute('camera-controls');
+    // Retain camera controls for pinch-to-zoom, but strictly lock theta/phi to prevent orbiting and disable panning
+    modelViewer.setAttribute('disable-pan', '');
+    modelViewer.setAttribute('min-camera-orbit', '360deg 45deg 20m');
+    modelViewer.setAttribute('max-camera-orbit', '360deg 45deg 200m');
     
     // Request permission for iOS devices if necessary
     const requestDeviceOrientation = () => {
