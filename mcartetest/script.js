@@ -6,11 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const isMobile = window.matchMedia("(max-width: 768px)").matches || /Mobi|Android/i.test(navigator.userAgent);
 
   if (isMobile) {
-    // Retain camera controls for pinch-to-zoom, but strictly lock theta/phi to prevent orbiting and disable panning
-    modelViewer.setAttribute('disable-pan', '');
-    modelViewer.setAttribute('min-camera-orbit', '360deg 45deg 20m');
-    modelViewer.setAttribute('max-camera-orbit', '360deg 45deg 200m');
-    
     // Request permission for iOS devices if necessary
     const requestDeviceOrientation = () => {
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -25,16 +20,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     window.addEventListener('click', requestDeviceOrientation);
 
-    const BASE_TARGET_X = 0;
-    const BASE_TARGET_Y = -1.3;
-    const BASE_TARGET_Z = 8.5;
+    window.originTarget = { x: 0, y: -1.3, z: 8.5 };
     const MAX_SHIFT_X = 14; // Dramatically wider range
     const MAX_SHIFT_Z = 14; 
 
     let targetShiftX = 0;
     let targetShiftZ = 0;
-    let currentShiftX = 0;
-    let currentShiftZ = 0;
+    window.currentShiftX = 0;
+    window.currentShiftZ = 0;
+
+    // Detect user-panning smoothly so parallax seamlessly drifts on top of where the user dragged it, rather than snapping back
+    modelViewer.addEventListener('camera-change', (e) => {
+      if (e.detail.source === 'user-interaction') {
+        const rawTarget = modelViewer.getCameraTarget();
+        window.originTarget.x = rawTarget.x - window.currentShiftX;
+        window.originTarget.y = rawTarget.y;
+        window.originTarget.z = rawTarget.z - window.currentShiftZ;
+      }
+    });
 
     window.addEventListener('deviceorientation', (e) => {
       let g = e.gamma; 
@@ -52,10 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Smooth LERP animation loop to filter gyro-sensor jitters and match phone motion gracefully
     const runParallax = () => {
-      currentShiftX += (targetShiftX - currentShiftX) * 0.15;
-      currentShiftZ += (targetShiftZ - currentShiftZ) * 0.15;
+      window.currentShiftX += (targetShiftX - window.currentShiftX) * 0.15;
+      window.currentShiftZ += (targetShiftZ - window.currentShiftZ) * 0.15;
       
-      modelViewer.cameraTarget = `${BASE_TARGET_X + currentShiftX}m ${BASE_TARGET_Y}m ${BASE_TARGET_Z + currentShiftZ}m`;
+      modelViewer.cameraTarget = `${window.originTarget.x + window.currentShiftX}m ${window.originTarget.y}m ${window.originTarget.z + window.currentShiftZ}m`;
       requestAnimationFrame(runParallax);
     };
     runParallax();
@@ -266,8 +269,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Automatically fallback to position for target and keep current orbit if none provided, 
     // ensuring the camera correctly focuses on the clicked room
-    if (!isMobile && (dataset.target || dataset.position)) {
+    if (dataset.target || dataset.position) {
       modelViewer.cameraTarget = dataset.target || dataset.position;
+      
+      if (typeof window.originTarget !== 'undefined') {
+         // Re-anchor the base origin to the target the code just snapped our view to
+         const rt = modelViewer.getCameraTarget();
+         window.originTarget.x = rt.x - (window.currentShiftX || 0);
+         window.originTarget.y = rt.y;
+         window.originTarget.z = rt.z - (window.currentShiftZ || 0);
+      }
     }
   };
 
@@ -365,11 +376,9 @@ document.addEventListener('DOMContentLoaded', () => {
     annotationClicked(h);
 
     // Auto-orbit around selected hotspot
-    if (!isMobile) {
-      modelViewer.autoRotate = true;
-      modelViewer.setAttribute('rotation-per-second', '10deg');
-      modelViewer.autoRotateDelay = 200;
-    }
+    modelViewer.autoRotate = true;
+    modelViewer.setAttribute('rotation-per-second', '10deg');
+    modelViewer.autoRotateDelay = 200;
 
     // Update Info Dropdown securely via the new logical card handler
     const labelText = h.querySelector('.hotspot-label')?.textContent?.trim() || 'Room Details';
@@ -685,7 +694,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
 
     if (clamped && e.detail.source === 'user-interaction') {
-      if (!isMobile) modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
+      modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
+      if (typeof window.originTarget !== 'undefined') {
+         window.originTarget.x = nx - (window.currentShiftX || 0);
+         window.originTarget.z = nz - (window.currentShiftZ || 0);
+      }
     }
   });
   modelViewer.addEventListener('load', updateDevOverlay);
@@ -717,13 +730,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileResetBtn) {
     mobileResetBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!isMobile) {
-        // Reset to starter view (slightly zoomed out)
-        modelViewer.cameraOrbit = "360deg 45deg 115m";
-        modelViewer.cameraTarget = "0m -1.3m 8.5m";
-        modelViewer.fieldOfView = "70deg";
-      } else {
-        deselectAll(); // On mobile, just clear selections.
+      deselectAll();
+      // Reset to starter view (slightly zoomed out)
+      modelViewer.cameraOrbit = "360deg 45deg 115m";
+      modelViewer.cameraTarget = "0m -1.3m 8.5m";
+      modelViewer.fieldOfView = "70deg";
+      if (typeof window.originTarget !== 'undefined') {
+         window.originTarget.x = 0;
+         window.originTarget.y = -1.3;
+         window.originTarget.z = 8.5;
       }
     });
   }
@@ -732,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show the tutorial prompt securely 1.2s after load completes natively
     setTimeout(() => {
       const prompt = document.getElementById('gesture-prompt-overlay');
-      if (prompt && !isMobile) {
+      if (prompt) {
         prompt.classList.add('show-prompt');
       }
     }, 1200);
