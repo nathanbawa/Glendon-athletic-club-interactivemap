@@ -480,12 +480,22 @@ document.addEventListener('DOMContentLoaded', () => {
     searchPillNode.addEventListener('focus', () => {
       // If opening the Search Bar, violently close the Legend
       if (legendMenu) legendMenu.classList.remove('show');
-      if (!isMobile) modelViewer.cameraOrbit = "360deg 25deg 250m";
+      if (isMobile) {
+        // Zoom out by exactly 50% (base 100m -> 150m) to accommodate software keyboard
+        modelViewer.cameraOrbit = "360deg 45deg 150m";
+      } else {
+        modelViewer.cameraOrbit = "360deg 25deg 250m";
+      }
     });
 
     searchPillNode.addEventListener('blur', () => {
-      if (searchPillNode.value.trim() === '') {
-        if (!isMobile) modelViewer.cameraOrbit = "360deg 45deg 100m";
+      // On mobile, aggressively revert immediately when unclicked
+      if (isMobile) {
+        modelViewer.cameraOrbit = "360deg 45deg 100m";
+      } else {
+        if (searchPillNode.value.trim() === '') {
+          modelViewer.cameraOrbit = "360deg 45deg 100m";
+        }
       }
     });
 
@@ -697,17 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Mobile Search Keyboard Auto-Recenter ---
-  const mobileSearchInput = document.querySelector('.search-pill-input');
-  if (mobileSearchInput) {
-    mobileSearchInput.addEventListener('focus', () => {
-      // Glides camera to starter view with zoomed out perspective to compensate for the bottom-half of the screen being eaten by the software keyboard
-      if (!isMobile) {
-        modelViewer.cameraOrbit = "360deg 45deg 130m";
-        modelViewer.cameraTarget = "0m -1.3m 8.5m";
-        modelViewer.fieldOfView = "75deg";
-      }
-    });
-  }
+  // (Logic consolidated into primary searchPillNode focus/blur listener above)
 
   // --- Mobile Reset View Button ---
   const mobileResetBtn = document.getElementById('mobile-reset-btn');
@@ -754,4 +754,3 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
-
