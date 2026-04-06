@@ -3,67 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const hotspots = document.querySelectorAll('.Hotspot');
   let selectedHotspot = null;
 
-  const isMobile = window.matchMedia("(max-width: 768px)").matches || /Mobi|Android/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    // Request permission for iOS devices if necessary
-    const requestDeviceOrientation = () => {
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-          .then(permissionState => {
-            if (permissionState === 'granted') {
-              window.removeEventListener('click', requestDeviceOrientation);
-            }
-          })
-          .catch(console.error);
-      }
-    };
-    window.addEventListener('click', requestDeviceOrientation);
-
-    window.originTarget = { x: 0, y: -1.3, z: 8.5 };
-    const MAX_SHIFT_X = 14; // Dramatically wider range
-    const MAX_SHIFT_Z = 14; 
-
-    let targetShiftX = 0;
-    let targetShiftZ = 0;
-    window.currentShiftX = 0;
-    window.currentShiftZ = 0;
-
-    // Detect user-panning smoothly so parallax seamlessly drifts on top of where the user dragged it, rather than snapping back
-    modelViewer.addEventListener('camera-change', (e) => {
-      if (e.detail.source === 'user-interaction') {
-        const rawTarget = modelViewer.getCameraTarget();
-        window.originTarget.x = rawTarget.x - window.currentShiftX;
-        window.originTarget.y = rawTarget.y;
-        window.originTarget.z = rawTarget.z - window.currentShiftZ;
-      }
-    });
-
-    window.addEventListener('deviceorientation', (e) => {
-      let g = e.gamma; 
-      let b = e.beta;  
-      if (g === null || b === null) return;
-      
-      // Broader clamp for much more physical freedom
-      g = Math.max(-60, Math.min(60, g));
-      b = Math.max(0, Math.min(90, b));
-      
-      // Normalize relative to expanded ranges
-      targetShiftX = (g / 60) * MAX_SHIFT_X; 
-      targetShiftZ = ((b - 45) / 45) * MAX_SHIFT_Z;
-    });
-
-    // Smooth LERP animation loop to filter gyro-sensor jitters and match phone motion gracefully
-    const runParallax = () => {
-      window.currentShiftX += (targetShiftX - window.currentShiftX) * 0.15;
-      window.currentShiftZ += (targetShiftZ - window.currentShiftZ) * 0.15;
-      
-      modelViewer.cameraTarget = `${window.originTarget.x + window.currentShiftX}m ${window.originTarget.y}m ${window.originTarget.z + window.currentShiftZ}m`;
-      requestAnimationFrame(runParallax);
-    };
-    runParallax();
-  }
-
   // ─────────────────────────────────────────
   // WAYPOINT ROUTE SYSTEM
   // ─────────────────────────────────────────
@@ -271,14 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ensuring the camera correctly focuses on the clicked room
     if (dataset.target || dataset.position) {
       modelViewer.cameraTarget = dataset.target || dataset.position;
-      
-      if (typeof window.originTarget !== 'undefined') {
-         // Re-anchor the base origin to the target the code just snapped our view to
-         const rt = modelViewer.getCameraTarget();
-         window.originTarget.x = rt.x - (window.currentShiftX || 0);
-         window.originTarget.y = rt.y;
-         window.originTarget.z = rt.z - (window.currentShiftZ || 0);
-      }
     }
   };
 
@@ -492,22 +423,12 @@ document.addEventListener('DOMContentLoaded', () => {
     searchPillNode.addEventListener('focus', () => {
       // If opening the Search Bar, violently close the Legend
       if (legendMenu) legendMenu.classList.remove('show');
-      if (isMobile) {
-        // Zoom out by exactly 50% (base 100m -> 150m) to accommodate software keyboard
-        modelViewer.cameraOrbit = "360deg 45deg 150m";
-      } else {
-        modelViewer.cameraOrbit = "360deg 25deg 250m";
-      }
+      modelViewer.cameraOrbit = "360deg 25deg 250m";
     });
 
     searchPillNode.addEventListener('blur', () => {
-      // On mobile, aggressively revert immediately when unclicked
-      if (isMobile) {
+      if (searchPillNode.value.trim() === '') {
         modelViewer.cameraOrbit = "360deg 45deg 100m";
-      } else {
-        if (searchPillNode.value.trim() === '') {
-          modelViewer.cameraOrbit = "360deg 45deg 100m";
-        }
       }
     });
 
@@ -566,8 +487,26 @@ document.addEventListener('DOMContentLoaded', () => {
       timer = setTimeout(() => fn(...args), delay);
     };
   }
+
+  const applyCameraLock = () => {
+    if (window.innerWidth <= 768) {
+      // Lock camera at starting position on mobile (disable manual panning/zooming/orbiting)
+      modelViewer.removeAttribute('camera-controls');
+      // Snap to the designated starting position if it's drifting (optional but ensures it is locked)
+      // modelViewer.cameraOrbit = "360deg 45deg 100m";
+      // modelViewer.cameraTarget = "0m -1.3m 8.5m";
+      // modelViewer.fieldOfView = "70deg";
+    } else {
+      // Re-enable free exploration on desktop
+      modelViewer.setAttribute('camera-controls', '');
+    }
+  };
+
+  // Run on first load
+  applyCameraLock();
+
   window.addEventListener('resize', debounce(() => {
-    // existing resize logic (none currently)
+    applyCameraLock();
   }, 200));
 
 
@@ -695,10 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (clamped && e.detail.source === 'user-interaction') {
       modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
-      if (typeof window.originTarget !== 'undefined') {
-         window.originTarget.x = nx - (window.currentShiftX || 0);
-         window.originTarget.z = nz - (window.currentShiftZ || 0);
-      }
     }
   });
   modelViewer.addEventListener('load', updateDevOverlay);
@@ -723,23 +658,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Mobile Search Keyboard Auto-Recenter ---
-  // (Logic consolidated into primary searchPillNode focus/blur listener above)
+  const mobileSearchInput = document.querySelector('.search-pill-input');
+  if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('focus', () => {
+      // Glides camera to starter view with zoomed out perspective to compensate for the bottom-half of the screen being eaten by the software keyboard
+      modelViewer.cameraOrbit = "360deg 45deg 130m";
+      modelViewer.cameraTarget = "0m -1.3m 8.5m";
+      modelViewer.fieldOfView = "75deg";
+    });
+  }
 
   // --- Mobile Reset View Button ---
   const mobileResetBtn = document.getElementById('mobile-reset-btn');
   if (mobileResetBtn) {
     mobileResetBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      deselectAll();
       // Reset to starter view (slightly zoomed out)
       modelViewer.cameraOrbit = "360deg 45deg 115m";
       modelViewer.cameraTarget = "0m -1.3m 8.5m";
       modelViewer.fieldOfView = "70deg";
-      if (typeof window.originTarget !== 'undefined') {
-         window.originTarget.x = 0;
-         window.originTarget.y = -1.3;
-         window.originTarget.z = 8.5;
-      }
     });
   }
   // --- Custom Gesture Tutorial Overlay ---
@@ -759,9 +696,55 @@ document.addEventListener('DOMContentLoaded', () => {
       prompt.classList.remove('show-prompt');
       setTimeout(() => {
         if (prompt) prompt.style.display = 'none';
+        // Show legend prompt after gesture prompt is hidden
+        showLegendPrompt();
       }, 600);
     }
   };
+
+  // --- Legend Prompt Overlay ---
+  let legendPromptDismissed = false;
+  const legendPromptEl = document.getElementById('legend-prompt-overlay');
+
+  const showLegendPrompt = () => {
+    // Only show if not already dismissed
+    if (legendPromptDismissed) return;
+
+    if (legendPromptEl) {
+      legendPromptEl.classList.add('show-prompt');
+    }
+    if (legendBtn) {
+      legendBtn.classList.add('pulsating');
+    }
+
+    // Auto-dismiss after 5 seconds if not interacted with
+    setTimeout(() => {
+      if (!legendPromptDismissed) {
+        hideLegendPrompt();
+      }
+    }, 5000);
+  };
+
+  const hideLegendPrompt = () => {
+    legendPromptDismissed = true;
+
+    if (legendPromptEl && legendPromptEl.classList.contains('show-prompt')) {
+      legendPromptEl.classList.remove('show-prompt');
+      setTimeout(() => {
+        if (legendPromptEl) legendPromptEl.style.display = 'none';
+      }, 500);
+    }
+    if (legendBtn) {
+      legendBtn.classList.remove('pulsating');
+    }
+  };
+
+  // Dismiss legend prompt on legend button click
+  if (legendBtn) {
+    legendBtn.addEventListener('click', () => {
+      hideLegendPrompt();
+    });
+  }
 
   modelViewer.addEventListener('pointerdown', hideGesturePrompt);
   modelViewer.addEventListener('wheel', hideGesturePrompt);
