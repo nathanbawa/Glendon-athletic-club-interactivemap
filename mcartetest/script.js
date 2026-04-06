@@ -497,11 +497,11 @@ document.addEventListener('DOMContentLoaded', () => {
       modelViewer.setAttribute('disable-pan', ''); // Disable multi-touch panning securely
       
       // Tune speed and smoothness: raise sensitivity for faster zooming, lower decay for quicker response
-      modelViewer.setAttribute('zoom-sensitivity', '1.8'); // Slowed down zoom slightly
+      modelViewer.setAttribute('zoom-sensitivity', '1.2'); // Dialed down zoom speed significantly
       modelViewer.setAttribute('interpolation-decay', '100'); // Smoother glide
 
       // Allow slight wiggle on Phi/Theta so pinch zoom doesn't break, but visually locks rotation
-      modelViewer.setAttribute('min-camera-orbit', '359.5deg 44.5deg 20m'); 
+      modelViewer.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m'); // Prevents zooming in too close
       modelViewer.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m'); 
 
       // Give hotspots a disabled class
@@ -688,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (radiusStr) {
       radius = parseFloat(radiusStr);
     }
-    const panSpeed = 0.0012 * radius; // Sped up the left/right scroll
+    const panSpeed = 0.0025 * radius; // Greatly sped up the left/right scroll to perfectly match the swiftness of zoom
 
     let newX = startCameraX - (deltaX * panSpeed);
 
