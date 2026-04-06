@@ -280,6 +280,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // HOTSPOT LOGIC
   // ─────────────────────────────────────────
   const selectHotspot = (h) => {
+    // Disabled hotspot click for now
+    return;
+    /*
     if (selectedHotspot === h) return;
     selectedHotspot = h;
 
@@ -314,6 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update Info Dropdown securely via the new logical card handler
     const labelText = h.querySelector('.hotspot-label')?.textContent?.trim() || 'Room Details';
     showInfoCard(labelText);
+    */
   };
 
   // Expose to window for inline HTML legend to trigger
@@ -423,7 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
     searchPillNode.addEventListener('focus', () => {
       // If opening the Search Bar, violently close the Legend
       if (legendMenu) legendMenu.classList.remove('show');
-      modelViewer.cameraOrbit = "360deg 25deg 250m";
+      // "Zoom out by 65 percent from 100m" -> 165m
+      modelViewer.cameraOrbit = "360deg 45deg 165m";
     });
 
     searchPillNode.addEventListener('blur', () => {
@@ -490,15 +495,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const applyCameraLock = () => {
     if (window.innerWidth <= 768) {
-      // Lock camera at starting position on mobile (disable manual panning/zooming/orbiting)
-      modelViewer.removeAttribute('camera-controls');
-      // Snap to the designated starting position if it's drifting (optional but ensures it is locked)
+      // "Only able to zoom in and out with zoom in limit and out limit" -> Disable pan, lock orbit theta/phi
+      modelViewer.setAttribute('camera-controls', ''); // Needs controls for zoom
+      modelViewer.setAttribute('disable-pan', '');
+      modelViewer.setAttribute('zoom-sensitivity', '0.25'); // Apple Maps smooth zoom feeling
+      modelViewer.setAttribute('min-camera-orbit', '360deg 45deg 20m'); // Zoom in limit
+      modelViewer.setAttribute('max-camera-orbit', '360deg 45deg 180m'); // Zoom out limit
+
       // modelViewer.cameraOrbit = "360deg 45deg 100m";
       // modelViewer.cameraTarget = "0m -1.3m 8.5m";
-      // modelViewer.fieldOfView = "70deg";
     } else {
       // Re-enable free exploration on desktop
       modelViewer.setAttribute('camera-controls', '');
+      modelViewer.removeAttribute('disable-pan');
+      modelViewer.removeAttribute('zoom-sensitivity');
+      modelViewer.setAttribute('min-camera-orbit', 'auto 0deg 20m');
+      modelViewer.setAttribute('max-camera-orbit', 'auto 90deg 150m');
     }
   };
 
@@ -658,13 +670,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Mobile Search Keyboard Auto-Recenter ---
-  const mobileSearchInput = document.querySelector('.search-pill-input');
-  if (mobileSearchInput) {
-    mobileSearchInput.addEventListener('focus', () => {
-      // Glides camera to starter view with zoomed out perspective to compensate for the bottom-half of the screen being eaten by the software keyboard
-      modelViewer.cameraOrbit = "360deg 45deg 130m";
+  const mobileSearchInputRef = document.querySelector('.search-pill-input');
+  if (mobileSearchInputRef) {
+    mobileSearchInputRef.addEventListener('focus', () => {
+      // Glides camera to starter view with zoomed out perspective by 65% to accommodate keyboard 
+      modelViewer.cameraOrbit = "360deg 45deg 165m";
       modelViewer.cameraTarget = "0m -1.3m 8.5m";
-      modelViewer.fieldOfView = "75deg";
+      modelViewer.fieldOfView = "70deg";
+    });
+    
+    mobileSearchInputRef.addEventListener('blur', () => {
+      // "When out of the search bar the camera goes back to starting position"
+      modelViewer.cameraOrbit = "360deg 45deg 100m";
+      modelViewer.cameraTarget = "0m -1.3m 8.5m";
+      modelViewer.fieldOfView = "70deg";
     });
   }
 
@@ -673,8 +692,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileResetBtn) {
     mobileResetBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      // Reset to starter view (slightly zoomed out)
-      modelViewer.cameraOrbit = "360deg 45deg 115m";
+      // Reset to exact starter view
+      modelViewer.cameraOrbit = "360deg 45deg 100m";
       modelViewer.cameraTarget = "0m -1.3m 8.5m";
       modelViewer.fieldOfView = "70deg";
     });
