@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const applyCameraLock = () => {
     if (window.innerWidth <= 768) {
       modelViewer.setAttribute('camera-controls', ''); 
-      modelViewer.setAttribute('disable-pan', '');
+      modelViewer.removeAttribute('disable-pan'); // Re-enable pan (we'll restrict vertical in JS)
       
       // Tune speed and smoothness: raise sensitivity for faster zooming, lower decay for quicker response
       modelViewer.setAttribute('zoom-sensitivity', '2.5'); 
@@ -645,8 +645,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (nx > BOUND_X) { nx = BOUND_X; clamped = true; }
     if (nx < -BOUND_X) { nx = -BOUND_X; clamped = true; }
-    if (nz > BOUND_Z) { nz = BOUND_Z; clamped = true; }
-    if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
+    
+    if (window.innerWidth <= 768) {
+      // Complete vertical lock on mobile (Z-axis). 8.5m is the starting depth.
+      if (Math.abs(nz - 8.5) > 0.01) {
+        nz = 8.5;
+        clamped = true;
+      }
+    } else {
+      if (nz > BOUND_Z) { nz = BOUND_Z; clamped = true; }
+      if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
+    }
 
     if (clamped && e.detail.source === 'user-interaction') {
       modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
