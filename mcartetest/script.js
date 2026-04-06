@@ -358,6 +358,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // HOTSPOT CLICK/TAP
   // ─────────────────────────────────────────
+  // Desable entirely
+  /*
   hotspots.forEach(h => {
     h.addEventListener('pointerup', (e) => {
       e.stopPropagation();
@@ -365,13 +367,17 @@ document.addEventListener('DOMContentLoaded', () => {
       selectHotspot(h);
     });
   });
+  */
 
   // --- End of Info Dropdown Logic ---
 
   // Background Click Deselect
   mv.addEventListener('click', (e) => {
-    if (e.target === mv && selectedHotspot) {
+    // deselect all interactions
+    if (e.target === mv) {
       deselectAll();
+      mv.cameraOrbit = "360deg 45deg 100m";
+      mv.cameraTarget = "0m -1.3m 8.5m";
     }
   });
 
@@ -427,14 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
     searchPillNode.addEventListener('focus', () => {
       // If opening the Search Bar, violently close the Legend
       if (legendMenu) legendMenu.classList.remove('show');
-      // "Zoom out by 65 percent from 100m" -> 165m
-      modelViewer.cameraOrbit = "360deg 45deg 165m";
-    });
-
-    searchPillNode.addEventListener('blur', () => {
-      if (searchPillNode.value.trim() === '') {
-        modelViewer.cameraOrbit = "360deg 45deg 100m";
-      }
     });
 
     searchPillNode.addEventListener('input', (e) => {
@@ -495,22 +493,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const applyCameraLock = () => {
     if (window.innerWidth <= 768) {
-      // "Only able to zoom in and out with zoom in limit and out limit" -> Disable pan, lock orbit theta/phi
-      modelViewer.setAttribute('camera-controls', ''); // Needs controls for zoom
+      modelViewer.setAttribute('camera-controls', ''); 
       modelViewer.setAttribute('disable-pan', '');
-      modelViewer.setAttribute('zoom-sensitivity', '0.25'); // Apple Maps smooth zoom feeling
-      modelViewer.setAttribute('min-camera-orbit', '360deg 45deg 20m'); // Zoom in limit
-      modelViewer.setAttribute('max-camera-orbit', '360deg 45deg 180m'); // Zoom out limit
+      
+      // Allow slight wiggle on Phi/Theta so pinch zoom doesn't break, but visually locks rotation
+      modelViewer.setAttribute('min-camera-orbit', '359.5deg 44.5deg 20m'); 
+      modelViewer.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m'); 
 
-      // modelViewer.cameraOrbit = "360deg 45deg 100m";
-      // modelViewer.cameraTarget = "0m -1.3m 8.5m";
+      // Give hotspots a disabled class
+      hotspots.forEach(h => h.classList.add('mobile-hotspot-disabled'));
     } else {
-      // Re-enable free exploration on desktop
       modelViewer.setAttribute('camera-controls', '');
       modelViewer.removeAttribute('disable-pan');
-      modelViewer.removeAttribute('zoom-sensitivity');
       modelViewer.setAttribute('min-camera-orbit', 'auto 0deg 20m');
       modelViewer.setAttribute('max-camera-orbit', 'auto 90deg 150m');
+      
+      hotspots.forEach(h => h.classList.remove('mobile-hotspot-disabled'));
     }
   };
 
