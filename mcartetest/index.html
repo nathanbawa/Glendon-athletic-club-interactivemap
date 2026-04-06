@@ -5,7 +5,7 @@
   <title>Glendon Athletic Map</title>
   <meta charset="utf-8">
   <meta name="description" content="Interactive 3D Map for Glendon Athletic Club">
-  
+
   <!-- Essential Mobile & Web App Meta Tags -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#E31837">
@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  
+
   <!-- Cache Control for GitHub Pages updates (optional but helpful) -->
   <link type="text/css" href="./styles.css?v=9" rel="stylesheet" />
   <link rel="preload" href="testmapvoidbackgroung5_compressed.glb" as="fetch" crossorigin>
@@ -32,7 +32,7 @@
   <div id="top-bar">
     <img id="mobile-top-logo" src="glendonlogo.webp" alt="Glendon Logo" />
     <span>Glendon Athletic Club Interactive Map</span>
-  </div> 
+  </div>
   <!-- Mobile Top Left Legend Dropdown -->
   <div id="mobile-legend-container">
     <button class="legend-btn-3d" id="mobile-legend-btn">
@@ -41,21 +41,81 @@
       </div>
     </button>
     <ul id="mobile-legend-menu">
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-2\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-lobby">1</div>Lobby / Entrance</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-20\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-weight">2</div>Weight room</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-9\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-pool">3</div>Swimming Pool</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-5\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-stretching">4</div>Stretching room</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-6\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-spinning">5</div>Spinning room</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-4\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-boxing">6</div>Boxing room</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-3\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-golf">7</div>Golf Court</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-18\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-squash">8</div>Squash court</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-10\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-m-changing">10</div>M. changing room</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-11\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-w-changing">11</div>W. changing room</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-7\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-w-locker">12</div>W. Locker room</div></li>
-      <li onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-8\']'); this.parentElement.classList.remove('show');"><div class="li-front"><div class="legend-dot color-m-locker">13</div>M. Locker room</div></li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-2\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-lobby">1</div>Lobby / Entrance
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-20\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-weight">2</div>Weight room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-9\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-pool">3</div>Swimming Pool
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-5\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-stretching">4</div>Stretching room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-6\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-spinning">5</div>Spinning room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-4\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-boxing">6</div>Boxing room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-3\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-golf">7</div>Golf Court
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-18\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-squash">8</div>Squash court
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-10\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-m-changing">10</div>M. changing room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-11\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-w-changing">11</div>W. changing room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-7\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-w-locker">12</div>W. Locker room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-8\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-m-locker">13</div>M. Locker room
+        </div>
+      </li>
     </ul>
   </div>
-  
+
   <!-- Mobile Bottom Right Controls -->
   <div class="mobile-bottom-right-controls">
     <!-- Recenter 3D Button -->
@@ -72,8 +132,11 @@
       <div class="search-pill-front">
         <input type="text" class="search-pill-input" placeholder="Search..." />
         <div class="search-icon-wrapper">
-          <svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24" width="22" height="22">
-            <path d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z"></path>
+          <svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24"
+            width="22" height="22">
+            <path
+              d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z">
+            </path>
           </svg>
         </div>
       </div>
@@ -87,31 +150,14 @@
 
 
   <!-- <model-viewer> HTML element -->
-  <model-viewer
-    id="mv"
-    src="testmapvoidbackgroung5_compressed.glb"
-    camera-controls
-    interaction-prompt="none"
-    camera-orbit="360deg 45deg 100m" 
-    camera-target="0m -1.3m 8.5m"
-    field-of-view="70deg"
-    min-camera-orbit="auto 0deg 20m"
-    max-camera-orbit="auto 90deg 150m"
-    interpolation-decay="60"
-    pan-sensitivity="1.2"
-    shadow-intensity="1"
-    bounds="tight"
-    disable-tap
-    loading="eager"
-    reveal="auto"
-    tone-mapping="neutral"
-    poster="poster.webp"
-    touch-action="pan-y"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-  >
+  <model-viewer id="mv" src="testmapvoidbackgroung5_compressed.glb" camera-controls interaction-prompt="none"
+    camera-orbit="360deg 45deg 100m" camera-target="0m -1.3m 8.5m" field-of-view="70deg"
+    min-camera-orbit="auto 0deg 20m" max-camera-orbit="auto 90deg 150m" interpolation-decay="200" pan-sensitivity="1.8"
+    shadow-intensity="1" bounds="tight" disable-tap loading="eager" reveal="auto" tone-mapping="neutral"
+    poster="poster.webp" touch-action="pan-y" ar ar-modes="webxr scene-viewer quick-look">
     <div id="info-dropdown-container" style="position: absolute; top: 20px; right: 12px; z-index: 1000;">
-      <div role="button" id="info-dropdown-trigger" class="search-pill info-pill-override" style="width:38px; height:38px; display:block;">
+      <div role="button" id="info-dropdown-trigger" class="search-pill info-pill-override"
+        style="width:38px; height:38px; display:block;">
         <div class="search-pill-front">
           <i class="fas fa-info" style="color:#E31837; font-size:16px; margin:auto;"></i>
         </div>
@@ -127,7 +173,8 @@
             Fri: 7 AM - 9 PM<br>
             Sat-Sun: 8 AM - 8 PM
           </div>
-          <a href="https://www.yorku.ca/glendon/glendon-athletic-club/about-the-gac/" target="_blank" class="btn-primary">Learn More</a>
+          <a href="https://www.yorku.ca/glendon/glendon-athletic-club/about-the-gac/" target="_blank"
+            class="btn-primary">Learn More</a>
         </div>
       </div>
     </div>
@@ -140,8 +187,8 @@
         <div class="hotspot-label">Lobby</div>
         <div class="you-are-here">
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <circle class="you-are-here-outer" cx="50" cy="50" r="40"/>
-            <circle class="you-are-here-inner" cx="50" cy="50" r="20"/>
+            <circle class="you-are-here-outer" cx="50" cy="50" r="40" />
+            <circle class="you-are-here-inner" cx="50" cy="50" r="20" />
           </svg>
           <span>You are here</span>
         </div>
@@ -286,7 +333,16 @@
       </div>
     </div>
   </div>
-  <svg id="route-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;"></svg>
+
+  <!-- Legend Prompt Overlay (Near Legend Button) -->
+  <div id="legend-prompt-overlay">
+    <div class="legend-prompt-content">
+      <span class="legend-hand-icon">👆</span>
+      <span class="legend-prompt-text">Open Legend</span>
+    </div>
+  </div>
+  <svg id="route-overlay"
+    style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;"></svg>
 
   <img src="glendonlogo.webp" id="glendon-logo" alt="Glendon Logo">
   <script defer src="script.js?v=9"></script>
