@@ -306,15 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rely on existing native alignment logic flawlessly
     annotationClicked(h);
 
-    // Auto-orbit around selected hotspot
-    modelViewer.autoRotate = true;
-    modelViewer.setAttribute('rotation-per-second', '10deg');
-    modelViewer.autoRotateDelay = 200;
-
-    // Permit local rotation specifically around the hotspot natively but limit height
+    // Keep constant map angle constraints and just provide a slight zoom to focus on the selected room
+    modelViewer.autoRotate = false;
+    
     if (window.innerWidth <= 768) {
-      modelViewer.setAttribute('min-camera-orbit', 'auto 45deg 20m'); // prevents looking top-down completely
-      modelViewer.setAttribute('max-camera-orbit', 'auto 90deg 180m');
+      // Zoom into 60m radius while honoring 360deg 45deg
+      modelViewer.cameraOrbit = "360deg 45deg 60m";
     }
 
     // Update Info Dropdown securely via the new logical card handler
@@ -354,12 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
         Fri: 7 AM - 9 PM<br>
         Sat-Sun: 8 AM - 8 PM
       `;
-    }
-
-    // Restore strict lock when deselected back to default view
-    if (window.innerWidth <= 768) {
-      modelViewer.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m');
-      modelViewer.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m');
     }
   };
 
@@ -760,10 +751,12 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
       // Unbind any active hotspots
       deselectAll();
-      // Reset to exact starter view
-      modelViewer.cameraOrbit = "360deg 45deg 100m";
-      modelViewer.cameraTarget = "0m -1.3m 8.5m";
-      modelViewer.fieldOfView = "70deg";
+      // Enforce the standard saved locked 2D start position on reset explicitly via frame request
+      requestAnimationFrame(() => {
+        modelViewer.cameraOrbit = "360deg 45deg 100m";
+        modelViewer.cameraTarget = "0m -1.3m 8.5m";
+        modelViewer.fieldOfView = "70deg";
+      });
     });
   }
   // --- Custom Gesture Tutorial Overlay ---
