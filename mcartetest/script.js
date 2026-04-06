@@ -378,17 +378,15 @@ document.addEventListener('DOMContentLoaded', () => {
     h.addEventListener('pointerup', (e) => {
       const dist = Math.hypot(e.clientX - hotspotStartX, e.clientY - hotspotStartY);
       
-      // If the user was dragging/swiping or zooming, do not activate hotspot
-      if (dist > 10 || window.isCustomScrolling) return;
+      // If the user was dragging/swiping horizontally or zooming, distance will exceed threshold
+      if (dist > 10) return;
 
       e.stopPropagation();
       if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
       
-      // Slight delay to confirm other movements aren't overriding
+      // Guaranteed slight delay to confirm gestures
       setTimeout(() => {
-        if (!window.isCustomScrolling) {
-          selectHotspot(h);
-        }
+        selectHotspot(h);
       }, 100);
     });
   });
@@ -667,7 +665,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nx > BOUND_X) { nx = BOUND_X; clamped = true; }
     if (nx < -BOUND_X) { nx = -BOUND_X; clamped = true; }
     
-    if (window.innerWidth <= 768) {
+    // Only strictly lock the Y/Z plane to a 2D-like slider if the map is completely fully deselected 
+    if (window.innerWidth <= 768 && !selectedHotspot) {
       // Complete vertical lock on mobile (Z-axis). 8.5m is the starting depth.
       if (Math.abs(nz - 8.5) > 0.01) {
         nz = 8.5;
@@ -701,6 +700,13 @@ document.addEventListener('DOMContentLoaded', () => {
   mv.addEventListener('touchmove', (e) => {
     if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1) return;
     
+    // Auto-deselect any strict hotspot interaction if user decides to scroll away
+    if (selectedHotspot) {
+      deselectAll();
+      // Ensure the horizontal base snaps appropriately
+      startCameraX = mv.getCameraTarget().x; 
+    }
+
     const deltaX = e.touches[0].clientX - scrollStartX;
     
     // Scale horizontal move speed based on zoom so it always feels 1:1 mapped to finger
@@ -768,6 +774,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileResetBtn) {
     mobileResetBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      // Unbind any active hotspots
+      deselectAll();
       // Reset to exact starter view
       modelViewer.cameraOrbit = "360deg 45deg 100m";
       modelViewer.cameraTarget = "0m -1.3m 8.5m";
