@@ -688,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (radiusStr) {
       radius = parseFloat(radiusStr);
     }
-    const panSpeed = 0.0025 * radius; // Greatly sped up the left/right scroll to perfectly match the swiftness of zoom
+    const panSpeed = 0.0016 * radius; // Sweet spot for scroll speed
 
     let newX = startCameraX - (deltaX * panSpeed);
 
