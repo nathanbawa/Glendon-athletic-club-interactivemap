@@ -366,28 +366,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // HOTSPOT CLICK/TAP
   // ─────────────────────────────────────────
-  let hotspotStartX = 0;
-  let hotspotStartY = 0;
-
   hotspots.forEach(h => {
-    h.addEventListener('pointerdown', (e) => {
-      hotspotStartX = e.clientX;
-      hotspotStartY = e.clientY;
-    });
-
-    h.addEventListener('pointerup', (e) => {
-      const dist = Math.hypot(e.clientX - hotspotStartX, e.clientY - hotspotStartY);
-      
-      // If the user was dragging/swiping horizontally or zooming, distance will exceed threshold
-      if (dist > 10) return;
-
+    h.addEventListener('click', (e) => {
       e.stopPropagation();
+      // Let the browser's native touch handling define a valid non-drag tap
       if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
-      
-      // Guaranteed slight delay to confirm gestures
-      setTimeout(() => {
-        selectHotspot(h);
-      }, 100);
+      selectHotspot(h);
     });
   });
 
