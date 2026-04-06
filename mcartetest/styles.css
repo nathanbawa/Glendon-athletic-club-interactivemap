@@ -1938,3 +1938,7 @@ model-viewer>.Hotspot.faded-out {
     transform: translateY(-6px) scale(1.05);
   }
 }
+
+.Hotspot.mobile-hotspot-disabled {
+  pointer-events: none !important;
+}
