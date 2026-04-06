@@ -496,6 +496,10 @@ document.addEventListener('DOMContentLoaded', () => {
       modelViewer.setAttribute('camera-controls', ''); 
       modelViewer.setAttribute('disable-pan', '');
       
+      // Tune speed and smoothness: raise sensitivity for faster zooming, lower decay for quicker response
+      modelViewer.setAttribute('zoom-sensitivity', '2.5'); 
+      modelViewer.setAttribute('interpolation-decay', '80'); 
+
       // Allow slight wiggle on Phi/Theta so pinch zoom doesn't break, but visually locks rotation
       modelViewer.setAttribute('min-camera-orbit', '359.5deg 44.5deg 20m'); 
       modelViewer.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m'); 
@@ -505,6 +509,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       modelViewer.setAttribute('camera-controls', '');
       modelViewer.removeAttribute('disable-pan');
+      modelViewer.removeAttribute('zoom-sensitivity');
+      modelViewer.setAttribute('interpolation-decay', '200'); // default
       modelViewer.setAttribute('min-camera-orbit', 'auto 0deg 20m');
       modelViewer.setAttribute('max-camera-orbit', 'auto 90deg 150m');
       
