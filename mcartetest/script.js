@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const applyCameraLock = () => {
     if (window.innerWidth <= 768) {
       modelViewer.setAttribute('camera-controls', ''); 
-      modelViewer.removeAttribute('disable-pan'); // Re-enable pan (we'll restrict vertical in JS)
+      modelViewer.setAttribute('disable-pan', ''); // Disable multi-touch panning securely
       
       // Tune speed and smoothness: raise sensitivity for faster zooming, lower decay for quicker response
       modelViewer.setAttribute('zoom-sensitivity', '2.5'); 
@@ -660,6 +660,48 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clamped && e.detail.source === 'user-interaction') {
       modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
     }
+  });
+
+  // --- Custom Mobile Horizontal Scroll (1-Finger) ---
+  let isCustomScrolling = false;
+  let scrollStartX = 0;
+  let startCameraX = 0;
+
+  mv.addEventListener('touchstart', (e) => {
+    if (window.innerWidth > 768 || e.touches.length !== 1) {
+      isCustomScrolling = false;
+      return;
+    }
+    isCustomScrolling = true;
+    scrollStartX = e.touches[0].clientX;
+    startCameraX = mv.getCameraTarget().x;
+  }, { passive: true });
+
+  mv.addEventListener('touchmove', (e) => {
+    if (!isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1) return;
+    
+    const deltaX = e.touches[0].clientX - scrollStartX;
+    
+    // Scale horizontal move speed based on zoom so it always feels 1:1 mapped to finger
+    const radiusStr = mv.getCameraOrbit().radius; 
+    let radius = 100;
+    if (radiusStr) {
+      radius = parseFloat(radiusStr);
+    }
+    const panSpeed = 0.0006 * radius; 
+
+    let newX = startCameraX - (deltaX * panSpeed);
+
+    // Hard bounds on the building horizontally
+    if (newX > 45) newX = 45;
+    if (newX < -45) newX = -45;
+
+    // Lock Y (-1.3) and Z (8.5) explicitly so there's absolutely 0 vertical drifting
+    mv.cameraTarget = `${newX}m -1.3m 8.5m`;
+  }, { passive: true });
+
+  mv.addEventListener('touchend', () => {
+    isCustomScrolling = false;
   });
   modelViewer.addEventListener('load', updateDevOverlay);
 
