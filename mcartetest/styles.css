@@ -1841,3 +1841,100 @@ model-viewer>.Hotspot.faded-out {
   }
 }
 
+/* --- Legend Prompt Overlay --- */
+#legend-prompt-overlay {
+  position: fixed;
+  top: 60px;
+  left: 10px;
+  z-index: 4999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#legend-prompt-overlay.show-prompt {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.legend-prompt-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: legend-prompt-bounce 2s ease-in-out infinite;
+}
+
+.legend-hand-icon {
+  font-size: 22px;
+  animation: tap-point 1.5s ease-in-out infinite;
+}
+
+.legend-prompt-text {
+  white-space: nowrap;
+}
+
+@keyframes legend-prompt-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes tap-point {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+/* Pulsating Legend Button until legend prompt is dismissed */
+.legend-btn-3d.pulsating::before {
+  animation: shadow-pulse 1s ease-in-out infinite;
+}
+
+.legend-btn-3d.pulsating .legend-btn-front {
+  animation: btn-pulse 1s ease-in-out infinite;
+}
+
+@keyframes shadow-pulse {
+
+  0%,
+  100% {
+    transform: translateY(2px);
+    filter: blur(2px);
+  }
+
+  50% {
+    transform: translateY(4px);
+    filter: blur(3px);
+  }
+}
+
+@keyframes btn-pulse {
+
+  0%,
+  100% {
+    transform: translateY(-4px) scale(1);
+  }
+
+  50% {
+    transform: translateY(-6px) scale(1.05);
+  }
+}
