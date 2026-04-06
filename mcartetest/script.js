@@ -280,9 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // HOTSPOT LOGIC
   // ─────────────────────────────────────────
   const selectHotspot = (h) => {
-    // Disabled hotspot click for now
-    return;
-    /*
     if (selectedHotspot === h) return;
     selectedHotspot = h;
 
@@ -314,10 +311,15 @@ document.addEventListener('DOMContentLoaded', () => {
     modelViewer.setAttribute('rotation-per-second', '10deg');
     modelViewer.autoRotateDelay = 200;
 
+    // Permit local rotation specifically around the hotspot natively but limit height
+    if (window.innerWidth <= 768) {
+      modelViewer.setAttribute('min-camera-orbit', 'auto 45deg 20m'); // prevents looking top-down completely
+      modelViewer.setAttribute('max-camera-orbit', 'auto 90deg 180m');
+    }
+
     // Update Info Dropdown securely via the new logical card handler
     const labelText = h.querySelector('.hotspot-label')?.textContent?.trim() || 'Room Details';
     showInfoCard(labelText);
-    */
   };
 
   // Expose to window for inline HTML legend to trigger
@@ -353,21 +355,43 @@ document.addEventListener('DOMContentLoaded', () => {
         Sat-Sun: 8 AM - 8 PM
       `;
     }
+
+    // Restore strict lock when deselected back to default view
+    if (window.innerWidth <= 768) {
+      modelViewer.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m');
+      modelViewer.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m');
+    }
   };
 
   // ─────────────────────────────────────────
   // HOTSPOT CLICK/TAP
   // ─────────────────────────────────────────
-  // Desable entirely
-  /*
+  let hotspotStartX = 0;
+  let hotspotStartY = 0;
+
   hotspots.forEach(h => {
+    h.addEventListener('pointerdown', (e) => {
+      hotspotStartX = e.clientX;
+      hotspotStartY = e.clientY;
+    });
+
     h.addEventListener('pointerup', (e) => {
+      const dist = Math.hypot(e.clientX - hotspotStartX, e.clientY - hotspotStartY);
+      
+      // If the user was dragging/swiping or zooming, do not activate hotspot
+      if (dist > 10 || window.isCustomScrolling) return;
+
       e.stopPropagation();
       if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
-      selectHotspot(h);
+      
+      // Slight delay to confirm other movements aren't overriding
+      setTimeout(() => {
+        if (!window.isCustomScrolling) {
+          selectHotspot(h);
+        }
+      }, 100);
     });
   });
-  */
 
   // --- End of Info Dropdown Logic ---
 
@@ -503,9 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Allow slight wiggle on Phi/Theta so pinch zoom doesn't break, but visually locks rotation
       modelViewer.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m'); // Prevents zooming in too close
       modelViewer.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m'); 
-
-      // Give hotspots a disabled class
-      hotspots.forEach(h => h.classList.add('mobile-hotspot-disabled'));
     } else {
       modelViewer.setAttribute('camera-controls', '');
       modelViewer.removeAttribute('disable-pan');
@@ -663,22 +684,22 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Custom Mobile Horizontal Scroll (1-Finger) ---
-  let isCustomScrolling = false;
+  window.isCustomScrolling = false;
   let scrollStartX = 0;
   let startCameraX = 0;
 
   mv.addEventListener('touchstart', (e) => {
     if (window.innerWidth > 768 || e.touches.length !== 1) {
-      isCustomScrolling = false;
+      window.isCustomScrolling = false;
       return;
     }
-    isCustomScrolling = true;
+    window.isCustomScrolling = true;
     scrollStartX = e.touches[0].clientX;
     startCameraX = mv.getCameraTarget().x;
   }, { passive: true });
 
   mv.addEventListener('touchmove', (e) => {
-    if (!isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1) return;
+    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1) return;
     
     const deltaX = e.touches[0].clientX - scrollStartX;
     
@@ -701,7 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 
   mv.addEventListener('touchend', () => {
-    isCustomScrolling = false;
+    window.isCustomScrolling = false;
   });
   modelViewer.addEventListener('load', updateDevOverlay);
 
