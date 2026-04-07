@@ -1973,6 +1973,8 @@ model-viewer>.Hotspot.faded-out {
 
 .hint-arrow {
   opacity: 0.2;
+  display: flex;
+  align-items: center;
 }
 
 .hint-arrow.left {
