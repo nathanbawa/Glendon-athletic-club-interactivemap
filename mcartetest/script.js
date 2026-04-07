@@ -11,6 +11,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const START_TARGET = "0m -1.3m 8.5m";
   const START_FOV    = "70deg";
 
+  const SLOT_TO_KEY = {
+    'hotspot-2': '1',   // Lobby
+    'hotspot-20': '2',  // Weight room
+    'hotspot-9': '3',   // Pool
+    'hotspot-5': '4',   // Stretching
+    'hotspot-6': '5',   // Spinning
+    'hotspot-4': '6',   // Boxing
+    'hotspot-3': '7',   // Golf
+    'hotspot-18': '8',  // Squash
+    'hotspot-10': '10', // M.Changing
+    'hotspot-11': '11', // W.Changing
+    'hotspot-7': '12',  // W.Locker
+    'hotspot-8': '13',  // M.Locker
+    'hotspot-21': '14', // Stairs
+  };
+
   function resetCamera() {
     modelViewer.cameraOrbit  = START_ORBIT;
     modelViewer.cameraTarget = START_TARGET;
@@ -367,6 +383,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const labelText = h.querySelector('.hotspot-label')?.textContent?.trim() || 'Room Details';
     showInfoCard(labelText);
+
+    const itineraryBtn = document.getElementById('itinerary-btn');
+    if (itineraryBtn) {
+      itineraryBtn.classList.add('show-itinerary');
+      itineraryBtn.dataset.targetSlot = h.slot;
+    }
   };
 
   window.triggerHotspot = (selector) => {
@@ -399,6 +421,11 @@ document.addEventListener('DOMContentLoaded', () => {
         Fri: 7 AM - 9 PM<br>
         Sat-Sun: 8 AM - 8 PM
       `;
+    }
+
+    const itineraryBtn = document.getElementById('itinerary-btn');
+    if (itineraryBtn) {
+      itineraryBtn.classList.remove('show-itinerary');
     }
 
     // Re-lock camera and reset to starting position
@@ -770,6 +797,38 @@ document.addEventListener('DOMContentLoaded', () => {
       if (prompt) prompt.classList.add('show-prompt');
     }, 1200);
   });
+
+  // ─────────────────────────────────────────
+  // ITINERARY BUTTON
+  // ─────────────────────────────────────────
+  const itineraryBtn = document.getElementById('itinerary-btn');
+  if (itineraryBtn) {
+    itineraryBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetSlot = itineraryBtn.dataset.targetSlot;
+      if (!targetSlot) return;
+
+      const targetKey = SLOT_TO_KEY[targetSlot];
+      if (!targetKey) return;
+
+      const targetWaypoint = waypointForRoom(targetKey);
+      if (!targetWaypoint) return;
+
+      // Ensure camera transitions smoothly
+      mv.setAttribute('interpolation-decay', '400');
+      requestAnimationFrame(() => {
+        mv.cameraOrbit = "0deg 0deg 120m";
+        mv.cameraTarget = START_TARGET;
+        mv.fieldOfView = "60deg";
+      });
+
+      const pathIds = astar(24, targetWaypoint.id);
+      if (pathIds && pathIds.length > 0) {
+        currentRoutePathIds = pathIds;
+        drawRoute(pathIds);
+      }
+    });
+  }
 
   const hideGesturePrompt = () => {
     const prompt = document.getElementById('gesture-prompt-overlay');
