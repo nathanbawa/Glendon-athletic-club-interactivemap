@@ -299,6 +299,25 @@ document.addEventListener('DOMContentLoaded', () => {
       h.style.setProperty('--ping-color', bg);
     }
 
+    // --- Inject Drag Hint ---
+    const marker = h.querySelector('.hotspot-marker');
+    if (marker) {
+      let hint = marker.querySelector('.hotspot-hint');
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.className = 'hotspot-hint';
+        hint.innerHTML = '<span class="hint-arrow left">‹</span><span class="hint-finger">👆</span><span class="hint-arrow right">›</span>';
+        marker.appendChild(hint);
+      }
+      
+      hint.classList.remove('hint-hiding');
+      
+      if (h._hintTimer) clearTimeout(h._hintTimer);
+      h._hintTimer = setTimeout(() => {
+        hint.classList.add('hint-hiding');
+      }, 2500);
+    }
+
     // ── Camera: pan to the hotspot position, keep the starting angle (360deg 45deg),
     //    just bring radius in slightly for a subtle zoom focus.
     const pos = h.dataset.position; // e.g. "14.43m -1.05m 16.70m"
