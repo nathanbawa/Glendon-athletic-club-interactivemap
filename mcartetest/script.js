@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   const CONNECTIONS = [
-    [41,42],[44,45],[42,44],[45,68],[68,66],[66,67],[44,49],[49,46],[46,60],[60,61],[61,62],[62,63],[63,64],[64,65],[49,50],[50,48],[48,82],[49,47],[47,80],[80,81],[50,51],[51,53],[53,52],[52,54],[54,55],[41,40],[41,39],[39,70],[70,71],[71,69],[71,72],[72,73],[73,74],[74,75],[74,76],[76,77],[77,78],[78,79],[79,31],[40,83],[83,84],[84,32],[42,43],[43,33],[60,56],[56,30],[61,57],[57,29],[62,58],[58,27],[63,59],[59,28],[65,37],[50,36],[53,85],[85,25],[55,35],[54,34]
+    [41,42],[44,45],[42,44],[45,68],[68,66],[66,67],[44,49],[49,46],[46,60],[60,61],[61,62],[62,63],[63,64],[64,65],[49,50],[50,48],[48,82],[49,47],[47,80],[80,81],[50,51],[51,53],[53,52],[52,54],[54,55],[41,40],[41,39],[39,70],[70,71],[71,69],[71,72],[72,73],[73,74],[74,75],[74,76],[76,77],[77,78],[78,79],[79,31],[40,83],[83,84],[84,32],[42,43],[43,33],[60,56],[56,30],[61,57],[57,29],[62,58],[58,27],[63,59],[59,28],[65,37],[50,36],[53,85],[85,25],[55,35],[54,34],[24,82],[82,48],[82,50]
   ];
 
   const waypointMap = {};
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!routeSVG) return;
     routeSVG.innerHTML = '';
     if (!pathIds || pathIds.length < 2) return;
-    const REF_W = 472, REF_H = 500;
+    const REF_W = 640, REF_H = 640;
     const scaleX = window.innerWidth / REF_W;
     const scaleY = window.innerHeight / REF_H;
     const points = pathIds.map(id => {
@@ -814,6 +814,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetWaypoint = waypointForRoom(targetKey);
       if (!targetWaypoint) return;
 
+      // Clear any locked ranges to allow top-down camera pitch natively
+      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
+      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
+
       // Ensure camera transitions smoothly
       mv.setAttribute('interpolation-decay', '400');
       requestAnimationFrame(() => {
@@ -823,6 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const pathIds = astar(24, targetWaypoint.id);
+      console.log('PATH:', pathIds, 'start:24 end:', targetWaypoint.id);
       if (pathIds && pathIds.length > 0) {
         currentRoutePathIds = pathIds;
         drawRoute(pathIds);
