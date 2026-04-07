@@ -4,6 +4,20 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedHotspot = null;
 
   // ─────────────────────────────────────────
+  // STARTING CAMERA STATE
+  // Captured once on load — used by recenter, outside-click, deselect
+  // ─────────────────────────────────────────
+  const START_ORBIT  = "360deg 45deg 100m";
+  const START_TARGET = "0m -1.3m 8.5m";
+  const START_FOV    = "70deg";
+
+  function resetCamera() {
+    modelViewer.cameraOrbit  = START_ORBIT;
+    modelViewer.cameraTarget = START_TARGET;
+    modelViewer.fieldOfView  = START_FOV;
+  }
+
+  // ─────────────────────────────────────────
   // WAYPOINT ROUTE SYSTEM
   // ─────────────────────────────────────────
   const WAYPOINTS = [
@@ -71,9 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 85, label: 'c85', key: 'c85', px: 256, py: 414, nx: 4.4, nz: 32.7 }
   ];
 
-  const CONNECTIONS = [[39, 40], [40, 41], [41, 42], [42, 43], [43, 44], [44, 45], [45, 46], [46, 47], [47, 48], [48, 49], [49, 50], [50, 51], [51, 52], [52, 53], [53, 54], [54, 55], [55, 56], [56, 57], [57, 58], [58, 59], [59, 60], [60, 61], [61, 62], [62, 64], [62, 73], [62, 76], [62, 63], [64, 65], [65, 66], [66, 67], [67, 68], [68, 69], [69, 70], [70, 71], [71, 72], [73, 74], [74, 75], [75, 36], [36, 77], [77, 78], [78, 79], [79, 80], [80, 81], [81, 82], [82, 83], [63, 84], [84, 85], [85, 24], [85, 30], [85, 29], [84, 35], [84, 34], [66, 27], [67, 29], [71, 28], [72, 37], [58, 25], [59, 33], [55, 32], [42, 31], [83, 26], [39, 38]];
+  const CONNECTIONS = [[39,40],[40,41],[41,42],[42,43],[43,44],[44,45],[45,46],[46,47],[47,48],[48,49],[49,50],[50,51],[51,52],[52,53],[53,54],[54,55],[55,56],[56,57],[57,58],[58,59],[59,60],[60,61],[61,62],[62,64],[62,73],[62,76],[62,63],[64,65],[65,66],[66,67],[67,68],[68,69],[69,70],[70,71],[71,72],[73,74],[74,75],[75,36],[36,77],[77,78],[78,79],[79,80],[80,81],[81,82],[82,83],[63,84],[84,85],[85,24],[85,30],[85,29],[84,35],[84,34],[66,27],[67,29],[71,28],[72,37],[58,25],[59,33],[55,32],[42,31],[83,26],[39,38]];
 
-  // Build adjacency map
   const waypointMap = {};
   WAYPOINTS.forEach(w => waypointMap[w.id] = w);
 
@@ -84,14 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
     adjacency[b].push(a);
   });
 
-  // A* pathfinding using px/py pixel coords as the heuristic
   function astar(startId, endId) {
     const dist = (a, b) => Math.hypot(waypointMap[a].px - waypointMap[b].px, waypointMap[a].py - waypointMap[b].py);
     const open = new Set([startId]);
     const cameFrom = {};
     const gScore = { [startId]: 0 };
     const fScore = { [startId]: dist(startId, endId) };
-
     while (open.size) {
       let current = [...open].reduce((a, b) => (fScore[a] || Infinity) < (fScore[b] || Infinity) ? a : b);
       if (current === endId) {
@@ -113,31 +124,24 @@ document.addEventListener('DOMContentLoaded', () => {
     return [];
   }
 
-  // Find the waypoint node closest to a given hotspot key (room number)
   function waypointForRoom(roomKey) {
     return WAYPOINTS.find(w => w.key === roomKey) || null;
   }
 
-  // Draw the route as animated SVG path
   const routeSVG = document.getElementById('route-overlay');
 
   function drawRoute(pathIds) {
     if (!routeSVG) return;
     routeSVG.innerHTML = '';
     if (!pathIds || pathIds.length < 2) return;
-
     const REF_W = 472, REF_H = 500;
     const scaleX = window.innerWidth / REF_W;
     const scaleY = window.innerHeight / REF_H;
-
     const points = pathIds.map(id => {
       const w = waypointMap[id];
       return { x: w.px * scaleX, y: w.py * scaleY };
     });
-
     const d = points.map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`)).join(' ');
-
-    // Shadow line
     const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     shadow.setAttribute('d', d);
     shadow.setAttribute('stroke', 'rgba(0,0,0,0.25)');
@@ -146,8 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
     shadow.setAttribute('stroke-linecap', 'round');
     shadow.setAttribute('stroke-linejoin', 'round');
     routeSVG.appendChild(shadow);
-
-    // Main route line — append FIRST before measuring
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', d);
     path.setAttribute('stroke', '#E31837');
@@ -156,8 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
     routeSVG.appendChild(path);
-
-    // Start dot
     const startDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     startDot.setAttribute('cx', points[0].x);
     startDot.setAttribute('cy', points[0].y);
@@ -166,8 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
     startDot.setAttribute('stroke', 'white');
     startDot.setAttribute('stroke-width', '2');
     routeSVG.appendChild(startDot);
-
-    // End dot
     const endDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     endDot.setAttribute('cx', points[points.length - 1].x);
     endDot.setAttribute('cy', points[points.length - 1].y);
@@ -176,51 +174,62 @@ document.addEventListener('DOMContentLoaded', () => {
     endDot.setAttribute('stroke', 'white');
     endDot.setAttribute('stroke-width', '2');
     routeSVG.appendChild(endDot);
-
-    // FIX: measure length AFTER element is in DOM, guard against 0
-    // Use setTimeout to guarantee browser has completed layout pass
     setTimeout(() => {
       const totalLength = path.getTotalLength();
-      if (!totalLength || totalLength < 1) return; // guard — never set dasharray to 0
+      if (!totalLength || totalLength < 1) return;
       path.setAttribute('stroke-dasharray', totalLength);
       path.setAttribute('stroke-dashoffset', totalLength);
-      // Set transition AFTER setting initial dashoffset so it doesn't animate from 0
       requestAnimationFrame(() => {
         path.style.transition = 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)';
         path.setAttribute('stroke-dashoffset', '0');
       });
-    }, 50); // 50ms gives browser time to complete the layout pass
+    }, 50);
   }
 
   function clearRoute() {
     if (routeSVG) routeSVG.innerHTML = '';
   }
 
-  // Re-scale route on window resize
   let currentRoutePathIds = [];
   window.addEventListener('resize', () => {
     if (currentRoutePathIds && currentRoutePathIds.length) drawRoute(currentRoutePathIds);
   });
 
-  // --- Hotspot Selection & Camera View ---
-  const annotationClicked = (annotation) => {
-    let dataset = annotation.dataset;
-
-    // Automatically fallback to position for target and keep current orbit if none provided, 
-    // ensuring the camera correctly focuses on the clicked room
-    if (dataset.target || dataset.position) {
-      modelViewer.cameraTarget = dataset.target || dataset.position;
-    }
-  };
-
   // ─────────────────────────────────────────
-  // CONSTANTS
+  // CAMERA ORBIT MODES
+  // Switches between locked (no rotation) and orbit-only (hotspot selected)
   // ─────────────────────────────────────────
   const mv = modelViewer;
 
+  function enterLockedMode() {
+    // Re-apply the tight angle lock — pan disabled, no rotation
+    if (window.innerWidth <= 768) {
+      mv.setAttribute('disable-pan', '');
+      mv.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m');
+      mv.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m');
+      mv.setAttribute('zoom-sensitivity', '1.2');
+      mv.setAttribute('interpolation-decay', '100');
+    } else {
+      mv.removeAttribute('disable-pan');
+      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
+      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
+      mv.setAttribute('interpolation-decay', '200');
+    }
+    mv.autoRotate = false;
+  }
+
+  function enterHotspotOrbitMode() {
+    // Free theta+phi so the user can orbit around the selected hotspot
+    // but keep zoom range same so they can't fly away
+    mv.removeAttribute('disable-pan');
+    mv.setAttribute('min-camera-orbit', 'auto auto 20m');
+    mv.setAttribute('max-camera-orbit', 'auto auto 150m');
+    mv.setAttribute('interpolation-decay', '150');
+    mv.autoRotate = false;
+  }
 
   // ─────────────────────────────────────────
-  // INFO CARD DICTIONARY AND AUTO-HIDE LOGIC
+  // INFO CARD
   // ─────────────────────────────────────────
   const ROOM_DETAILS = {
     'Boxing room': "Our Boxing studio is equipped with four heavy bags, one speed bag and battle ropes. Gloves may be borrowed at Reception but for hygienic reasons, it is advised that you either bring your own gloves or purchase gloves/hand wraps at Reception. The space is accessible during Club hours.",
@@ -237,35 +246,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showInfoCard = (labelStr) => {
     const titleEl = document.getElementById('info-title');
-    const descEl = document.getElementById('info-desc');
+    const descEl  = document.getElementById('info-desc');
     const container = document.getElementById('info-dropdown-content');
-
     if (titleEl && descEl && container) {
       titleEl.textContent = labelStr;
       descEl.innerHTML = ROOM_DETAILS[labelStr] || "Click the Learn More button to view full club scheduling and availability details.";
-
       container.classList.add('force-show');
       infoInteracted = false;
-
       if (infoTimeout) clearTimeout(infoTimeout);
       infoTimeout = setTimeout(() => {
-        if (!infoInteracted) {
-          container.classList.remove('force-show');
-        }
-      }, 5000); // Highlight lasts for 5 seconds
+        if (!infoInteracted) container.classList.remove('force-show');
+      }, 5000);
     }
   };
 
   const setupInfoInteractions = () => {
     const container = document.getElementById('info-dropdown-content');
-    const closeBtn = document.getElementById('info-close-btn');
-
-    if (container) {
-      container.addEventListener('pointerdown', () => {
-        infoInteracted = true;
-      });
-    }
-
+    const closeBtn  = document.getElementById('info-close-btn');
+    if (container) container.addEventListener('pointerdown', () => { infoInteracted = true; });
     if (closeBtn) {
       closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -277,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupInfoInteractions();
 
   // ─────────────────────────────────────────
-  // HOTSPOT LOGIC
+  // HOTSPOT SELECTION
   // ─────────────────────────────────────────
   const selectHotspot = (h) => {
     if (selectedHotspot === h) return;
@@ -286,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
     hotspots.forEach(other => {
       other.classList.remove('selected');
       other.style.removeProperty('--ping-color');
-
       const hasYouAreHere = other.querySelector('.you-are-here') !== null;
       if (other !== h && !hasYouAreHere) {
         other.classList.add('faded-out');
@@ -296,30 +293,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     h.classList.add('selected');
 
-    // Dynamically clone the marker color for the outer wrapper ping effect
     const colorNode = h.querySelector('.hotspot-number');
     if (colorNode) {
       const bg = window.getComputedStyle(colorNode).backgroundColor;
       h.style.setProperty('--ping-color', bg);
     }
 
-    // Rely on existing native alignment logic flawlessly
-    annotationClicked(h);
-
-    // Keep constant map angle constraints and just provide a slight zoom to focus on the selected room
-    modelViewer.autoRotate = false;
-    
-    if (window.innerWidth <= 768) {
-      // Zoom into 60m radius while honoring 360deg 45deg
-      modelViewer.cameraOrbit = "360deg 45deg 60m";
+    // ── Camera: pan to the hotspot position, keep the starting angle (360deg 45deg),
+    //    just bring radius in slightly for a subtle zoom focus.
+    const pos = h.dataset.position; // e.g. "14.43m -1.05m 16.70m"
+    if (pos) {
+      const parts = pos.split(' ');
+      if (parts.length === 3) {
+        const x = parseFloat(parts[0]);
+        const y = parseFloat(parts[1]);
+        const z = parseFloat(parts[2]);
+        // Set target to the hotspot — keeps same vertical/horizontal camera angle
+        mv.cameraTarget = `${x}m ${y}m ${z}m`;
+        // Slight zoom in: from 100m → 65m, preserving theta/phi lock
+        if (window.innerWidth <= 768) {
+          mv.cameraOrbit = "360deg 45deg 65m";
+        } else {
+          // Desktop: bring radius in but allow orbit freedom
+          const currentOrbit = mv.getCameraOrbit();
+          const theta = (currentOrbit.theta * 180 / Math.PI).toFixed(1);
+          const phi   = (currentOrbit.phi   * 180 / Math.PI).toFixed(1);
+          mv.cameraOrbit = `${theta}deg ${phi}deg 65m`;
+        }
+      }
     }
 
-    // Update Info Dropdown securely via the new logical card handler
+    // Allow orbit-only when hotspot is selected
+    enterHotspotOrbitMode();
+
+    mv.autoRotate = false;
+
     const labelText = h.querySelector('.hotspot-label')?.textContent?.trim() || 'Room Details';
     showInfoCard(labelText);
   };
 
-  // Expose to window for inline HTML legend to trigger
   window.triggerHotspot = (selector) => {
     const h = document.querySelector(selector);
     if (h) {
@@ -328,20 +340,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // ─────────────────────────────────────────
+  // DESELECT — always resets camera to start
+  // ─────────────────────────────────────────
   const deselectAll = () => {
     selectedHotspot = null;
-    hotspots.forEach(h => {
-      h.classList.remove('selected', 'faded-out');
-    });
-    modelViewer.autoRotate = false;
+    hotspots.forEach(h => h.classList.remove('selected', 'faded-out'));
+    mv.autoRotate = false;
     clearRoute();
     currentRoutePathIds = [];
 
-    // Reset Info Dropdown seamlessly
-    const titleEl = document.getElementById('info-title');
-    const descEl = document.getElementById('info-desc');
+    const titleEl   = document.getElementById('info-title');
+    const descEl    = document.getElementById('info-desc');
     const container = document.getElementById('info-dropdown-content');
-
     if (titleEl && descEl && container) {
       container.classList.remove('force-show');
       titleEl.textContent = "Glendon Athletic Club";
@@ -352,41 +363,42 @@ document.addEventListener('DOMContentLoaded', () => {
         Sat-Sun: 8 AM - 8 PM
       `;
     }
+
+    // Re-lock camera and reset to starting position
+    enterLockedMode();
+    resetCamera();
   };
 
   // ─────────────────────────────────────────
-  // HOTSPOT CLICK/TAP
+  // HOTSPOT CLICK / TAP
   // ─────────────────────────────────────────
   hotspots.forEach(h => {
     h.addEventListener('click', (e) => {
       e.stopPropagation();
-      // Let the browser's native touch handling define a valid non-drag tap
       if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
       selectHotspot(h);
     });
   });
 
-  // --- End of Info Dropdown Logic ---
-
-  // Background Click Deselect
+  // ─────────────────────────────────────────
+  // BACKGROUND CLICK → deselect + recenter
+  // ─────────────────────────────────────────
   mv.addEventListener('click', (e) => {
-    // deselect all interactions
     if (e.target === mv) {
-      deselectAll();
-      mv.cameraOrbit = "360deg 45deg 100m";
-      mv.cameraTarget = "0m -1.3m 8.5m";
+      deselectAll(); // already calls resetCamera() + enterLockedMode()
     }
   });
 
-  // --- Legend & Search Mutual Exclusion Controller ---
-  const legendBtn = document.getElementById('mobile-legend-btn');
-  const legendMenu = document.getElementById('mobile-legend-menu');
+  // ─────────────────────────────────────────
+  // LEGEND & SEARCH CONTROLS
+  // ─────────────────────────────────────────
+  const legendBtn       = document.getElementById('mobile-legend-btn');
+  const legendMenu      = document.getElementById('mobile-legend-menu');
   const expandableSearch = document.querySelector('.expandable-search');
-  const searchPillNode = document.querySelector('.search-pill-input');
+  const searchPillNode  = document.querySelector('.search-pill-input');
   const infoDropdownTrigger = document.getElementById('info-dropdown-trigger');
-  const container = document.getElementById('info-dropdown-content'); // Re-declare or ensure scope
+  const container       = document.getElementById('info-dropdown-content');
 
-  // Close legend and natively toggle info card on explicit click
   if (infoDropdownTrigger) {
     infoDropdownTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -397,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (document.activeElement) document.activeElement.blur();
         } else {
           const titleEl = document.getElementById('info-title');
-          const descEl = document.getElementById('info-desc');
+          const descEl  = document.getElementById('info-desc');
           if (titleEl && descEl) {
             titleEl.textContent = "Glendon Athletic Club";
             descEl.innerHTML = `<strong>Hours:</strong><br>Mon-Thu: 7 AM - 10:30 PM<br>Fri: 7 AM - 9 PM<br>Sat-Sun: 8 AM - 8 PM`;
@@ -408,30 +420,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 1. Legend Toggle Logic
   if (legendBtn && legendMenu) {
     legendBtn.addEventListener('click', () => {
       const isShowing = legendMenu.classList.toggle('show');
-      // If opening the Legend, forcefully close the Search Bar
       if (isShowing && searchPillNode) {
         searchPillNode.blur();
-        searchPillNode.value = ''; // clear out search so map perfectly resets
-        searchPillNode.dispatchEvent(new Event('input')); // trigger reset naturally natively
+        searchPillNode.value = '';
+        searchPillNode.dispatchEvent(new Event('input'));
       }
     });
   }
 
-  // 2. Search Logic & Legend Exclusion
   if (searchPillNode) {
     if (expandableSearch) {
       expandableSearch.addEventListener('click', () => searchPillNode.focus());
     }
-
     searchPillNode.addEventListener('focus', () => {
-      // If opening the Search Bar, violently close the Legend
       if (legendMenu) legendMenu.classList.remove('show');
     });
-
     searchPillNode.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
       hotspots.forEach(h => {
@@ -446,9 +452,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Initialization & Performance Optimizations ---
+  // ─────────────────────────────────────────
+  // MODEL LOAD
+  // ─────────────────────────────────────────
   modelViewer.addEventListener('load', () => {
-    // 1. Elevate Hotspots on Y axis to float above the mesh surface perfectly
     hotspots.forEach(h => {
       if (h.dataset.position) {
         const pos = h.dataset.position.split(' ');
@@ -459,10 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Hotspots restored natively
-
-
-
     const screen = document.getElementById('loading-screen');
     if (screen) {
       screen.style.opacity = '0';
@@ -470,7 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Force hide loading screen after 10 seconds maximum
   setTimeout(() => {
     const screen = document.getElementById('loading-screen');
     if (screen) {
@@ -479,58 +481,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 10000);
 
-  // --- Optimization: Debounce Resize Listeners ---
   function debounce(fn, delay) {
     let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn(...args), delay);
-    };
+    return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
   }
 
+  // ─────────────────────────────────────────
+  // APPLY CAMERA LOCK (responsive)
+  // ─────────────────────────────────────────
   const applyCameraLock = () => {
+    mv.setAttribute('camera-controls', '');
     if (window.innerWidth <= 768) {
-      modelViewer.setAttribute('camera-controls', ''); 
-      modelViewer.setAttribute('disable-pan', ''); // Disable multi-touch panning securely
-      
-      // Tune speed and smoothness: raise sensitivity for faster zooming, lower decay for quicker response
-      modelViewer.setAttribute('zoom-sensitivity', '1.2'); // Dialed down zoom speed significantly
-      modelViewer.setAttribute('interpolation-decay', '100'); // Smoother glide
-
-      // Allow slight wiggle on Phi/Theta so pinch zoom doesn't break, but visually locks rotation
-      modelViewer.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m'); // Prevents zooming in too close
-      modelViewer.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m'); 
+      mv.setAttribute('disable-pan', '');
+      mv.setAttribute('zoom-sensitivity', '1.2');
+      mv.setAttribute('interpolation-decay', '100');
+      mv.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m');
+      mv.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m');
     } else {
-      modelViewer.setAttribute('camera-controls', '');
-      modelViewer.removeAttribute('disable-pan');
-      modelViewer.removeAttribute('zoom-sensitivity');
-      modelViewer.setAttribute('interpolation-decay', '200'); // default
-      modelViewer.setAttribute('min-camera-orbit', 'auto 0deg 20m');
-      modelViewer.setAttribute('max-camera-orbit', 'auto 90deg 150m');
-      
+      mv.removeAttribute('disable-pan');
+      mv.removeAttribute('zoom-sensitivity');
+      mv.setAttribute('interpolation-decay', '200');
+      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
+      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
       hotspots.forEach(h => h.classList.remove('mobile-hotspot-disabled'));
     }
   };
 
-  // Run on first load
   applyCameraLock();
-
   window.addEventListener('resize', debounce(() => {
     applyCameraLock();
+    // If a hotspot is selected, stay in orbit mode; otherwise re-lock
+    if (selectedHotspot) {
+      enterHotspotOrbitMode();
+    }
   }, 200));
 
-
-
-  // the easiest method to handle the fading natively on model viewer is looking at the 'data-visible'
-  // model viewer sets 'data-visible' to true or false.
-
+  // ─────────────────────────────────────────
+  // HOTSPOT VISIBILITY OBSERVER
+  // ─────────────────────────────────────────
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'attributes' && mutation.attributeName === 'data-visible') {
         const h = mutation.target;
-        // modelViewer natively sets data-visible=false when strongly pointing away
-        // However, instead of hiding entirely we modify its style according to requirements
-        if (h.dataset.visible === 'false' || h.dataset.visible === false || !h.hasAttribute('data-visible')) {
+        if (h.dataset.visible === 'false' || !h.hasAttribute('data-visible')) {
           h.classList.add('angled-away');
         } else {
           h.classList.remove('angled-away');
@@ -539,24 +532,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  hotspots.forEach(h => {
-    // Override the native hide behaviour:
-    // Model-viewer naturally sets opacity to 0 via their default rules in CSS or JS. 
-    // We handle it via CSS overriding and the MutationObserver monitoring the data tag.
+  hotspots.forEach(h => observer.observe(h, { attributes: true }));
 
-    // Inject a <style> tag if not already injected that forces model-viewer to not hide the buttons completely when 'data-visible' is false.
-    observer.observe(h, { attributes: true });
-  });
-
-  // Model viewer naturally hides buttons that aren't visible with a built-in style. 
-  // We need to override this behavior so our CSS opacity transition works.
   const style = document.createElement('style');
   style.textContent = `
     .Hotspot:not([data-visible]) {
       display: inline-flex !important;
       visibility: visible !important;
     }
-    
     .Hotspot:not([data-visible]) > * {
       opacity: 1 !important;
       pointer-events: auto !important;
@@ -565,90 +548,61 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
   document.head.appendChild(style);
 
-
-  // --- Mobile Location FAB ---
-  const mobileLocBtn = document.getElementById('mobile-location-btn');
-  if (mobileLocBtn) {
-    mobileLocBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      // Locate Hotspot 1 (Lobby / You are here marker) natively in the DOM list
-      const youAreHereHotspot = Array.from(hotspots).find(h => {
-        const numWrap = h.querySelector('.hotspot-number');
-        return numWrap && numWrap.textContent.trim() === '1';
-      });
-      if (youAreHereHotspot) {
-        youAreHereHotspot.click(); // Triggers existing annotationClicked auto-focus
-      }
-    });
-  }
-
-
-
-
-
-  // --- Developer Settings HUD Logic ---
+  // ─────────────────────────────────────────
+  // DEV OVERLAY
+  // ─────────────────────────────────────────
   const updateDevOverlay = () => {
-    const orbit = modelViewer.getCameraOrbit();
+    const orbit  = modelViewer.getCameraOrbit();
     const target = modelViewer.getCameraTarget();
-    const fov = modelViewer.getFieldOfView();
-
+    const fov    = modelViewer.getFieldOfView();
     const thetaDeg = (orbit.theta * 180 / Math.PI).toFixed(2);
-    const phiDeg = (orbit.phi * 180 / Math.PI).toFixed(2);
-    const radius = orbit.radius.toFixed(2);
-
-    const orbitStr = `${thetaDeg}deg ${phiDeg}deg ${radius}m`;
+    const phiDeg   = (orbit.phi   * 180 / Math.PI).toFixed(2);
+    const radius   = orbit.radius.toFixed(2);
+    const orbitStr  = `${thetaDeg}deg ${phiDeg}deg ${radius}m`;
     const targetStr = `${target.x.toFixed(2)}m ${target.y.toFixed(2)}m ${target.z.toFixed(2)}m`;
-    const fovStr = `${fov.toFixed(2)}deg`;
-
-    const zoomSens = modelViewer.getAttribute('zoom-sensitivity') || "Default";
+    const fovStr    = `${fov.toFixed(2)}deg`;
+    const zoomSens  = modelViewer.getAttribute('zoom-sensitivity') || "Default";
     const orbitSens = modelViewer.getAttribute('orbit-sensitivity') || "Default";
     let sizeStr = "Evaluating...";
     const size = modelViewer.getDimensions();
-    if (size && size.x) {
-      sizeStr = `${size.x.toFixed(2)}m x ${size.y.toFixed(2)}m x ${size.z.toFixed(2)}m`;
-    }
+    if (size && size.x) sizeStr = `${size.x.toFixed(2)}m x ${size.y.toFixed(2)}m x ${size.z.toFixed(2)}m`;
 
-    const devOrbit = document.getElementById('dev-orbit');
-    const devTarget = document.getElementById('dev-target');
-    const devFov = document.getElementById('dev-fov');
-    const devZoom = document.getElementById('dev-zoom');
+    const devOrbit    = document.getElementById('dev-orbit');
+    const devTarget   = document.getElementById('dev-target');
+    const devFov      = document.getElementById('dev-fov');
+    const devZoom     = document.getElementById('dev-zoom');
     const devOrbitSens = document.getElementById('dev-orbit-sens');
-    const devSize = document.getElementById('dev-size');
-
+    const devSize     = document.getElementById('dev-size');
     if (devOrbit && devTarget && devFov) {
-      devOrbit.innerText = orbitStr;
+      devOrbit.innerText  = orbitStr;
       devTarget.innerText = targetStr;
-      devFov.innerText = fovStr;
+      devFov.innerText    = fovStr;
     }
-    if (devZoom) devZoom.innerText = zoomSens;
+    if (devZoom)     devZoom.innerText     = zoomSens;
     if (devOrbitSens) devOrbitSens.innerText = orbitSens;
-    if (devSize) devSize.innerText = sizeStr;
+    if (devSize)     devSize.innerText     = sizeStr;
   };
 
+  // ─────────────────────────────────────────
+  // CAMERA-CHANGE: pan clamp
+  // ─────────────────────────────────────────
   modelViewer.addEventListener('camera-change', (e) => {
     updateDevOverlay();
-
-    // Pan Restrictions (Clamps X and Z to keep model in view)
     const target = modelViewer.getCameraTarget();
     let clamped = false;
     const BOUND_X = 45;
     const BOUND_Z = 65;
-
     let nx = target.x;
     let nz = target.z;
 
-    if (nx > BOUND_X) { nx = BOUND_X; clamped = true; }
+    if (nx > BOUND_X)  { nx = BOUND_X;  clamped = true; }
     if (nx < -BOUND_X) { nx = -BOUND_X; clamped = true; }
-    
-    // Only strictly lock the Y/Z plane to a 2D-like slider if the map is completely fully deselected 
+
     if (window.innerWidth <= 768 && !selectedHotspot) {
-      // Complete vertical lock on mobile (Z-axis). 8.5m is the starting depth.
-      if (Math.abs(nz - 8.5) > 0.01) {
-        nz = 8.5;
-        clamped = true;
-      }
+      // Full Z lock in base mode
+      if (Math.abs(nz - 8.5) > 0.01) { nz = 8.5; clamped = true; }
     } else {
-      if (nz > BOUND_Z) { nz = BOUND_Z; clamped = true; }
+      if (nz > BOUND_Z)  { nz = BOUND_Z;  clamped = true; }
       if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
     }
 
@@ -657,13 +611,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- Custom Mobile Horizontal Scroll (1-Finger) ---
+  // ─────────────────────────────────────────
+  // CUSTOM MOBILE 1-FINGER HORIZONTAL SCROLL
+  // Only active when NO hotspot is selected
+  // ─────────────────────────────────────────
   window.isCustomScrolling = false;
   let scrollStartX = 0;
   let startCameraX = 0;
 
   mv.addEventListener('touchstart', (e) => {
-    if (window.innerWidth > 768 || e.touches.length !== 1) {
+    // Only intercept single-finger touches in base (no hotspot selected) mode on mobile
+    if (window.innerWidth > 768 || e.touches.length !== 1 || selectedHotspot) {
       window.isCustomScrolling = false;
       return;
     }
@@ -673,51 +631,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 
   mv.addEventListener('touchmove', (e) => {
-    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1) return;
-    
-    // Auto-deselect any strict hotspot interaction if user decides to scroll away
-    if (selectedHotspot) {
-      deselectAll();
-      // Ensure the horizontal base snaps appropriately
-      startCameraX = mv.getCameraTarget().x; 
-    }
+    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1 || selectedHotspot) return;
 
     const deltaX = e.touches[0].clientX - scrollStartX;
-    
-    // Scale horizontal move speed based on zoom so it always feels 1:1 mapped to finger
-    const radiusStr = mv.getCameraOrbit().radius; 
+    const radiusStr = mv.getCameraOrbit().radius;
     let radius = 100;
-    if (radiusStr) {
-      radius = parseFloat(radiusStr);
-    }
-    const panSpeed = 0.0016 * radius; // Sweet spot for scroll speed
+    if (radiusStr) radius = parseFloat(radiusStr);
+    const panSpeed = 0.0016 * radius;
 
     let newX = startCameraX - (deltaX * panSpeed);
-
-    // Hard bounds on the building horizontally
-    if (newX > 45) newX = 45;
+    if (newX > 45)  newX = 45;
     if (newX < -45) newX = -45;
 
-    // Lock Y (-1.3) and Z (8.5) explicitly so there's absolutely 0 vertical drifting
     mv.cameraTarget = `${newX}m -1.3m 8.5m`;
   }, { passive: true });
 
   mv.addEventListener('touchend', () => {
     window.isCustomScrolling = false;
   });
+
   modelViewer.addEventListener('load', updateDevOverlay);
-
-
 
   const copyBtn = document.getElementById('dev-copy-btn');
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
-      const orbitStr = document.getElementById('dev-orbit').innerText;
+      const orbitStr  = document.getElementById('dev-orbit').innerText;
       const targetStr = document.getElementById('dev-target').innerText;
-      const fovStr = document.getElementById('dev-fov').innerText;
-
+      const fovStr    = document.getElementById('dev-fov').innerText;
       const copyString = `camera-orbit="${orbitStr}"\ncamera-target="${targetStr}"\nfield-of-view="${fovStr}"`;
-
       navigator.clipboard.writeText(copyString).then(() => {
         const orig = copyBtn.innerText;
         copyBtn.innerText = "Copied!";
@@ -726,47 +667,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Mobile Search Keyboard Auto-Recenter ---
+  // ─────────────────────────────────────────
+  // SEARCH — keyboard zoom out + restore on blur
+  // ─────────────────────────────────────────
   const mobileSearchInputRef = document.querySelector('.search-pill-input');
   if (mobileSearchInputRef) {
     mobileSearchInputRef.addEventListener('focus', () => {
-      // Glides camera to starter view with zoomed out perspective by 65% to accommodate keyboard 
-      modelViewer.cameraOrbit = "360deg 45deg 165m";
-      modelViewer.cameraTarget = "0m -1.3m 8.5m";
-      modelViewer.fieldOfView = "70deg";
+      mv.cameraOrbit  = "360deg 45deg 165m";
+      mv.cameraTarget = START_TARGET;
+      mv.fieldOfView  = START_FOV;
     });
-    
     mobileSearchInputRef.addEventListener('blur', () => {
-      // "When out of the search bar the camera goes back to starting position"
-      modelViewer.cameraOrbit = "360deg 45deg 100m";
-      modelViewer.cameraTarget = "0m -1.3m 8.5m";
-      modelViewer.fieldOfView = "70deg";
+      resetCamera();
     });
   }
 
-  // --- Mobile Reset View Button ---
+  // ─────────────────────────────────────────
+  // RECENTER BUTTON
+  // Full reset: deselect hotspot + restore start camera
+  // ─────────────────────────────────────────
   const mobileResetBtn = document.getElementById('mobile-reset-btn');
   if (mobileResetBtn) {
     mobileResetBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      // Unbind any active hotspots
-      deselectAll();
-      // Enforce the standard saved locked 2D start position on reset explicitly via frame request
-      requestAnimationFrame(() => {
-        modelViewer.cameraOrbit = "360deg 45deg 100m";
-        modelViewer.cameraTarget = "0m -1.3m 8.5m";
-        modelViewer.fieldOfView = "70deg";
-      });
+      deselectAll(); // handles enterLockedMode() + resetCamera()
     });
   }
-  // --- Custom Gesture Tutorial Overlay ---
+
+  // ─────────────────────────────────────────
+  // GESTURE TUTORIAL OVERLAY
+  // ─────────────────────────────────────────
   modelViewer.addEventListener('load', () => {
-    // Show the tutorial prompt securely 1.2s after load completes natively
     setTimeout(() => {
       const prompt = document.getElementById('gesture-prompt-overlay');
-      if (prompt) {
-        prompt.classList.add('show-prompt');
-      }
+      if (prompt) prompt.classList.add('show-prompt');
     }, 1200);
   });
 
@@ -776,62 +710,36 @@ document.addEventListener('DOMContentLoaded', () => {
       prompt.classList.remove('show-prompt');
       setTimeout(() => {
         if (prompt) prompt.style.display = 'none';
-        // Show legend prompt after gesture prompt is hidden
         showLegendPrompt();
       }, 600);
     }
   };
 
-  // --- Legend Prompt Overlay ---
   let legendPromptDismissed = false;
   const legendPromptEl = document.getElementById('legend-prompt-overlay');
 
   const showLegendPrompt = () => {
-    // Only show if not already dismissed
     if (legendPromptDismissed) return;
-
-    if (legendPromptEl) {
-      legendPromptEl.classList.add('show-prompt');
-    }
-    if (legendBtn) {
-      legendBtn.classList.add('pulsating');
-    }
-
-    // Auto-dismiss after 5 seconds if not interacted with
-    setTimeout(() => {
-      if (!legendPromptDismissed) {
-        hideLegendPrompt();
-      }
-    }, 5000);
+    if (legendPromptEl) legendPromptEl.classList.add('show-prompt');
+    if (legendBtn) legendBtn.classList.add('pulsating');
+    setTimeout(() => { if (!legendPromptDismissed) hideLegendPrompt(); }, 5000);
   };
 
   const hideLegendPrompt = () => {
     legendPromptDismissed = true;
-
     if (legendPromptEl && legendPromptEl.classList.contains('show-prompt')) {
       legendPromptEl.classList.remove('show-prompt');
-      setTimeout(() => {
-        if (legendPromptEl) legendPromptEl.style.display = 'none';
-      }, 500);
+      setTimeout(() => { if (legendPromptEl) legendPromptEl.style.display = 'none'; }, 500);
     }
-    if (legendBtn) {
-      legendBtn.classList.remove('pulsating');
-    }
+    if (legendBtn) legendBtn.classList.remove('pulsating');
   };
 
-  // Dismiss legend prompt on legend button click
-  if (legendBtn) {
-    legendBtn.addEventListener('click', () => {
-      hideLegendPrompt();
-    });
-  }
+  if (legendBtn) legendBtn.addEventListener('click', () => hideLegendPrompt());
 
   modelViewer.addEventListener('pointerdown', hideGesturePrompt);
   modelViewer.addEventListener('wheel', hideGesturePrompt);
   modelViewer.addEventListener('camera-change', (e) => {
-    if (e.detail.source === 'user-interaction') {
-      hideGesturePrompt();
-    }
+    if (e.detail.source === 'user-interaction') hideGesturePrompt();
   });
 
 });
