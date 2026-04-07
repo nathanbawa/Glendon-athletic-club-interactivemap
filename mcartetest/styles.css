@@ -1981,6 +1981,27 @@ model-viewer>.Hotspot.faded-out {
   animation: fadeLeftArrow 1.4s infinite ease-in-out;
 }
 
+/* Dynamic Itinerary Trigger Button */
+#itinerary-btn {
+  display: none; /* toggled to flex by JS */
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  min-width: 120px;
+  height: 60px;
+  border-radius: 999px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#itinerary-btn.show-itinerary {
+  display: flex;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .hint-arrow.right {
   animation: fadeRightArrow 1.4s infinite ease-in-out;
 }
