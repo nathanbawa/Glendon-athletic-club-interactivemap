@@ -37,92 +37,203 @@ document.addEventListener('DOMContentLoaded', () => {
   // WAYPOINT ROUTE SYSTEM
   // ─────────────────────────────────────────
   const WAYPOINTS = [
-    { id:24, label:'Lobby', key:'1', px:313, py:538, nx:-0.55, nz:16.54 },
-    { id:25, label:'Swimming Pool', key:'3', px:111, py:323, nx:-22.76, nz:-5.47 },
-    { id:26, label:'Weight Room', key:'2', px:504, py:323, nx:16.18, nz:-3.7 },
-    { id:27, label:'Stretching Room', key:'4', px:507, py:518, nx:20.85, nz:16.97 },
-    { id:28, label:'Spinning Room', key:'5', px:577, py:525, nx:27.99, nz:16.7 },
-    { id:29, label:'Boxing Room', key:'6', px:458, py:524, nx:14.43, nz:16.71 },
-    { id:30, label:'Golf Court', key:'7', px:390, py:525, nx:8.44, nz:16.72 },
-    { id:31, label:'Squash Court', key:'8', px:197, py:117, nx:-17.5, nz:-28.07 },
-    { id:32, label:'M.Changing Room', key:'10', px:275, py:260, nx:-9.94, nz:14.84 },
-    { id:33, label:'W.Changing Room', key:'11', px:270, py:376, nx:-10, nz:19.78 },
-    { id:34, label:'W.Locker Room', key:'12', px:214, py:504, nx:-5.08, nz:0.56 },
-    { id:35, label:'M.Locker Room', key:'13', px:213, py:524, nx:-5.57, nz:-13.43 },
-    { id:36, label:'Stairs 14', key:'14', px:315, py:456, nx:-2.01, nz:8.5 },
-    { id:37, label:'Stairs 15', key:'15', px:583, py:414, nx:27.95, nz:3.72 },
-    { id:38, label:'Stairs 16', key:'16', px:100, py:25, nx:-23.99, nz:-38.73 },
-    { id:39, label:'c39', key:'c39', px:356, py:177, nx:0, nz:0 },
-    { id:40, label:'c40', key:'c40', px:345, py:279, nx:0, nz:0 },
-    { id:41, label:'c41', key:'c41', px:357, py:279, nx:0, nz:0 },
-    { id:42, label:'c42', key:'c42', px:357, py:368, nx:0, nz:0 },
-    { id:43, label:'c43', key:'c43', px:346, py:367, nx:0, nz:0 },
-    { id:44, label:'c44', key:'c44', px:357, py:448, nx:0, nz:0 },
-    { id:45, label:'c45', key:'c45', px:366, py:448, nx:0, nz:0 },
-    { id:46, label:'c46', key:'c46', px:367, py:469, nx:0, nz:0 },
-    { id:47, label:'c47', key:'c47', px:359, py:491, nx:0, nz:0 },
-    { id:48, label:'c48', key:'c48', px:316, py:492, nx:0, nz:0 },
-    { id:49, label:'c49', key:'c49', px:357, py:478, nx:0, nz:0 },
-    { id:50, label:'c50', key:'c50', px:315, py:477, nx:0, nz:0 },
-    { id:51, label:'c51', key:'c51', px:199, py:478, nx:0, nz:0 },
-    { id:52, label:'c52', key:'c52', px:172, py:492, nx:0, nz:0 },
-    { id:53, label:'c53', key:'c53', px:171, py:478, nx:0, nz:0 },
-    { id:54, label:'c54', key:'c54', px:172, py:508, nx:0, nz:0 },
-    { id:55, label:'c55', key:'c55', px:175, py:526, nx:0, nz:0 },
-    { id:56, label:'c56', key:'c56', px:401, py:477, nx:0, nz:0 },
-    { id:57, label:'c57', key:'c57', px:465, py:477, nx:0, nz:0 },
-    { id:58, label:'c58', key:'c58', px:516, py:476, nx:0, nz:0 },
-    { id:59, label:'c59', key:'c59', px:558, py:478, nx:0, nz:0 },
-    { id:60, label:'c60', key:'c60', px:402, py:463, nx:0, nz:0 },
-    { id:61, label:'c61', key:'c61', px:462, py:461, nx:0, nz:0 },
-    { id:62, label:'c62', key:'c62', px:515, py:462, nx:0, nz:0 },
-    { id:63, label:'c63', key:'c63', px:557, py:463, nx:0, nz:0 },
-    { id:64, label:'c64', key:'c64', px:572, py:465, nx:0, nz:0 },
-    { id:65, label:'c65', key:'c65', px:584, py:465, nx:0, nz:0 },
-    { id:66, label:'c66', key:'c66', px:506, py:443, nx:0, nz:0 },
-    { id:67, label:'c67', key:'c67', px:503, py:383, nx:0, nz:0 },
-    { id:68, label:'c68', key:'c68', px:438, py:445, nx:0, nz:0 },
-    { id:69, label:'c69', key:'c69', px:361, py:122, nx:0, nz:0 },
-    { id:70, label:'c70', key:'c70', px:356, py:150, nx:0, nz:0 },
-    { id:71, label:'c71', key:'c71', px:354, py:133, nx:0, nz:0 },
-    { id:72, label:'c72', key:'c72', px:320, py:132, nx:0, nz:0 },
-    { id:73, label:'c73', key:'c73', px:310, py:135, nx:0, nz:0 },
-    { id:74, label:'c74', key:'c74', px:308, py:91, nx:0, nz:0 },
-    { id:75, label:'c75', key:'c75', px:322, py:91, nx:0, nz:0 },
-    { id:76, label:'c76', key:'c76', px:306, py:57, nx:0, nz:0 },
-    { id:77, label:'c77', key:'c77', px:288, py:57, nx:0, nz:0 },
-    { id:78, label:'c78', key:'c78', px:230, py:56, nx:0, nz:0 },
-    { id:79, label:'c79', key:'c79', px:197, py:56, nx:0, nz:0 },
-    { id:80, label:'c80', key:'c80', px:358, py:518, nx:0, nz:0 },
-    { id:81, label:'c81', key:'c81', px:356, py:536, nx:0, nz:0 },
-    { id:82, label:'c82', key:'c82', px:313, py:507, nx:0, nz:0 },
-    { id:83, label:'c83', key:'c83', px:304, py:280, nx:0, nz:0 },
-    { id:84, label:'c84', key:'c84', px:279, py:283, nx:0, nz:0 },
-    { id:85, label:'c85', key:'c85', px:128, py:382, nx:0, nz:0 }
+    { id:24, label:'Lobby', key:'1', nx:-0.55, nz:16.54, ny: -1.25 },
+    { id:25, label:'Swimming Pool', key:'3', nx:-22.76, nz:-5.47, ny: -1.25 },
+    { id:26, label:'Weight Room', key:'2', nx:16.18, nz:-3.7, ny: -1.25 },
+    { id:27, label:'Stretching Room', key:'4', nx:20.85, nz:16.97, ny: -1.25 },
+    { id:28, label:'Spinning Room', key:'5', nx:27.99, nz:16.7, ny: -1.25 },
+    { id:29, label:'Boxing Room', key:'6', nx:14.43, nz:16.71, ny: -1.25 },
+    { id:30, label:'Golf Court', key:'7', nx:8.44, nz:16.72, ny: -1.25 },
+    { id:31, label:'Squash Court', key:'8', nx:-17.5, nz:-28.07, ny: -1.25 },
+    { id:32, label:'M.Changing Room', key:'10', nx:-9.94, nz:14.84, ny: -1.25 },
+    { id:33, label:'W.Changing Room', key:'11', nx:-10, nz:19.78, ny: -1.25 },
+    { id:34, label:'W.Locker Room', key:'12', nx:-5.08, nz:0.56, ny: -1.25 },
+    { id:35, label:'M.Locker Room', key:'13', nx:-5.57, nz:-13.43, ny: -1.25 },
+    { id:36, label:'Stairs 14', key:'14', nx:-2.01, nz:8.5, ny: -1.25 },
+    { id:37, label:'Stairs 15', key:'15', nx:27.95, nz:3.72, ny: -1.25 },
+    { id:38, label:'Stairs 16', key:'16', nx:-23.99, nz:-38.73, ny: -1.25 }
   ];
 
-  const CONNECTIONS = [
-    [41,42],[44,45],[42,44],[45,68],[68,66],[66,67],[44,49],[49,46],[46,60],[60,61],[61,62],[62,63],[63,64],[64,65],[49,50],[50,48],[48,82],[49,47],[47,80],[80,81],[50,51],[51,53],[53,52],[52,54],[54,55],[41,40],[41,39],[39,70],[70,71],[71,69],[71,72],[72,73],[73,74],[74,75],[74,76],[76,77],[77,78],[78,79],[79,31],[40,83],[83,84],[84,32],[42,43],[43,33],[60,56],[56,30],[61,57],[57,29],[62,58],[58,27],[63,59],[59,28],[65,37],[50,36],[53,85],[85,25],[55,35],[54,34],[24,82],[82,48],[82,50]
+  const NEW_NODES = [
+    { id:102, type:'lobycbonnection', nx:0.229, nz:18.117, ny:-2.699 },
+    { id:103, type:'lobycbonnection', nx:3.087, nz:18.456, ny:-2.699 },
+    { id:104, type:'lobycbonnection', nx:3.340, nz:15.883, ny:-2.699 },
+    { id:105, type:'lobycbonnection', nx:3.615, nz:13.207, ny:-2.699 },
+    { id:106, type:'halway', nx:4.041, nz:10.653, ny:-2.699 },
+    { id:107, type:'halway', nx:3.879, nz:7.924, ny:-2.699 },
+    { id:108, type:'halway', nx:3.812, nz:4.425, ny:-2.699 },
+    { id:109, type:'halway', nx:3.523, nz:0.613, ny:-2.699 },
+    { id:110, type:'halway', nx:3.561, nz:-2.420, ny:-2.699 },
+    { id:111, type:'halway', nx:3.438, nz:-5.189, ny:-2.699 },
+    { id:112, type:'halway', nx:3.940, nz:-8.366, ny:-2.699 },
+    { id:113, type:'halway', nx:3.812, nz:-10.943, ny:-2.699 },
+    { id:114, type:'halway', nx:3.633, nz:-13.022, ny:-2.699 },
+    { id:115, type:'halway', nx:3.687, nz:-15.172, ny:-2.699 },
+    { id:116, type:'halway', nx:3.604, nz:-18.018, ny:-2.699 },
+    { id:117, type:'halway', nx:3.783, nz:-20.549, ny:-2.699 },
+    { id:118, type:'halway', nx:3.766, nz:-22.969, ny:-2.699 },
+    { id:119, type:'halway', nx:3.630, nz:-25.201, ny:-2.699 },
+    { id:120, type:'halway', nx:0.230, nz:-26.110, ny:-2.699 },
+    { id:121, type:'halway', nx:-2.009, nz:-25.759, ny:-2.699 },
+    { id:122, type:'halway', nx:-1.600, nz:-27.931, ny:-2.699 },
+    { id:123, type:'halway', nx:-1.512, nz:-31.432, ny:-2.699 },
+    { id:124, type:'halway', nx:-1.290, nz:-34.217, ny:-2.699 },
+    { id:125, type:'squashcourtconnection', nx:-4.274, nz:-34.545, ny:-2.699 },
+    { id:126, type:'squashcourtconnection', nx:-7.669, nz:-34.680, ny:-2.699 },
+    { id:127, type:'squashcourtconnection', nx:-10.356, nz:-34.696, ny:-2.699 },
+    { id:128, type:'squashcourtconnection', nx:-13.446, nz:-34.824, ny:-2.699 },
+    { id:129, type:'squashcourtconnection', nx:-13.661, nz:-30.266, ny:-2.699 },
+    { id:130, type:'weightroom connection', nx:6.913, nz:7.422, ny:-2.699 },
+    { id:131, type:'weightroom connection', nx:10.389, nz:7.471, ny:-2.699 },
+    { id:132, type:'weightroom connection', nx:15.891, nz:7.532, ny:-2.699 },
+    { id:133, type:'weightroom connection', nx:15.832, nz:3.786, ny:-2.699 },
+    { id:134, type:'weightroom connection', nx:16.008, nz:1.307, ny:-2.699 },
+    { id:135, type:'weightroom connection', nx:16.250, nz:-1.154, ny:-2.699 },
+    { id:136, type:'golfcourtconnection', nx:6.860, nz:9.990, ny:-2.699 },
+    { id:137, type:'halway', nx:11.212, nz:9.897, ny:-2.699 },
+    { id:138, type:'boxingroomconnection', nx:14.994, nz:10.059, ny:-2.699 },
+    { id:139, type:'halway', nx:18.148, nz:9.896, ny:-2.699 },
+    { id:140, type:'halway', nx:20.216, nz:9.838, ny:-2.699 },
+    { id:141, type:'halway', nx:21.552, nz:10.029, ny:-2.699 },
+    { id:142, type:'halway', nx:23.351, nz:9.995, ny:-2.699 },
+    { id:143, type:'halway', nx:25.382, nz:10.125, ny:-2.699 },
+    { id:144, type:'halway', nx:26.963, nz:9.937, ny:-2.699 },
+    { id:145, type:'halway', nx:28.448, nz:9.735, ny:-2.699 },
+    { id:146, type:'stairsconnection', nx:28.430, nz:8.694, ny:-2.699 },
+    { id:147, type:'stairsconnection', nx:28.464, nz:7.244, ny:-2.699 },
+    { id:148, type:'stairsconnection', nx:28.467, nz:5.683, ny:-2.699 },
+    { id:149, type:'halway', nx:2.102, nz:10.920, ny:-2.699 },
+    { id:150, type:'halway', nx:-0.070, nz:10.872, ny:-2.699 },
+    { id:151, type:'halway', nx:-1.815, nz:10.974, ny:-2.699 },
+    { id:152, type:'halway', nx:-3.516, nz:10.953, ny:-2.699 },
+    { id:153, type:'halway', nx:-5.550, nz:11.256, ny:-2.699 },
+    { id:154, type:'halway', nx:-7.501, nz:11.410, ny:-2.699 },
+    { id:155, type:'halway', nx:-9.304, nz:11.356, ny:-2.699 },
+    { id:156, type:'halway', nx:-10.844, nz:11.471, ny:-2.699 },
+    { id:157, type:'halway', nx:-12.300, nz:11.423, ny:-2.699 },
+    { id:158, type:'halway', nx:-14.136, nz:11.816, ny:-2.699 },
+    { id:159, type:'m.changingroomconection', nx:-15.364, nz:13.258, ny:-2.699 },
+    { id:160, type:'m.changingroomconection', nx:-15.167, nz:15.867, ny:-2.699 },
+    { id:161, type:'m.changingroomconection', nx:-13.235, nz:15.805, ny:-2.699 },
+    { id:162, type:'m.changingroomconection', nx:-11.724, nz:15.868, ny:-2.699 },
+    { id:163, type:'w.changingroomconection', nx:-15.003, nz:17.607, ny:-2.699 },
+    { id:164, type:'w.changingroomconection', nx:-13.022, nz:17.785, ny:-2.699 },
+    { id:165, type:'w.changingroomconection', nx:-11.687, nz:17.929, ny:-2.699 },
+    { id:166, type:'halway', nx:5.485, nz:10.096, ny:-2.699 },
+    { id:167, type:'golfcourtconnection', nx:8.332, nz:10.209, ny:-2.699 },
+    { id:168, type:'golfcourtconnection', nx:8.407, nz:11.803, ny:-2.699 },
+    { id:169, type:'golfcourtconnection', nx:8.378, nz:13.349, ny:-2.699 },
+    { id:170, type:'halway', nx:13.203, nz:9.956, ny:-2.699 },
+    { id:171, type:'boxingroomconection', nx:14.896, nz:11.774, ny:-2.699 },
+    { id:172, type:'boxingroomconection', nx:14.666, nz:13.632, ny:-2.699 },
+    { id:173, type:'stretchingroomconection', nx:20.397, nz:11.532, ny:-2.699 },
+    { id:174, type:'stretchingroomconection', nx:20.373, nz:12.778, ny:-2.699 },
+    { id:175, type:'stretchingroomconection', nx:20.511, nz:14.238, ny:-2.699 },
+    { id:176, type:'spinningroomconection', nx:27.065, nz:11.507, ny:-2.699 },
+    { id:177, type:'spinningroomconection', nx:26.978, nz:12.932, ny:-2.699 },
+    { id:178, type:'spinningroomconection', nx:26.951, nz:14.374, ny:-2.699 },
+    { id:179, type:'stairsconection', nx:1.935, nz:9.674, ny:-2.699 },
+    { id:180, type:'stairsconnection', nx:1.894, nz:8.444, ny:-2.699 },
+    { id:181, type:'squashcourtconnection', nx:-13.493, nz:-32.581, ny:-2.699 },
+    { id:182, type:'stairsconnection', nx:-16.344, nz:-34.765, ny:-2.699 },
+    { id:183, type:'stairsconnection', nx:-18.329, nz:-34.479, ny:-2.699 },
+    { id:184, type:'stairsconnection', nx:-20.023, nz:-34.434, ny:-2.699 },
+    { id:185, type:'stairsconnection', nx:-21.987, nz:-34.224, ny:-2.699 },
+    { id:186, type:'stairsconnection', nx:-24.579, nz:-34.981, ny:-2.699 },
+    { id:187, type:'w.lockerroomconnection', nx:2.386, nz:-0.980, ny:1.176 },
+    { id:188, type:'w.lockerroomconnection', nx:1.264, nz:-0.972, ny:-2.699 },
+    { id:189, type:'w.lockerroomconnection', nx:0.267, nz:-0.815, ny:-2.699 },
+    { id:190, type:'w.lockerroomconnection', nx:-0.716, nz:-0.627, ny:-2.699 },
+    { id:191, type:'M.lockerroomconnection', nx:2.035, nz:-10.768, ny:-2.699 },
+    { id:192, type:'M.lockerroomconnection', nx:0.934, nz:-10.813, ny:-2.699 },
+    { id:193, type:'M.lockerroomconnection', nx:-0.116, nz:-10.701, ny:-2.699 },
+    { id:194, type:'swimmingpoolconnection', nx:-14.335, nz:10.203, ny:-2.699 },
+    { id:196, type:'swimmingpoolconnection', nx:-14.422, nz:7.511, ny:-2.699 },
+    { id:197, type:'swimmingpoolconnection', nx:-14.618, nz:4.905, ny:-2.699 },
+    { id:198, type:'swimmingpoolconnection', nx:-14.724, nz:2.616, ny:-2.699 },
+    { id:199, type:'swimmingpoolconnection', nx:-14.591, nz:0.915, ny:-2.699 }
   ];
+
+  NEW_NODES.forEach(n => WAYPOINTS.push(n));
 
   const waypointMap = {};
   WAYPOINTS.forEach(w => waypointMap[w.id] = w);
 
+  const _dist = (n1, n2) => Math.hypot(n1.nx - n2.nx, n1.nz - n2.nz);
+  const CONNECTIONS = [];
+
+  const graphNodes = NEW_NODES; 
+  const halwayNodes = graphNodes.filter(g => g.type === 'halway');
+  
+  // 1. Weave identical groups cleanly within 6.5 meters natively (fixes large trace gaps)
+  for(let i = 0; i < graphNodes.length; i++) {
+    for(let j = i+1; j < graphNodes.length; j++) {
+      const A = graphNodes[i], B = graphNodes[j];
+      if (_dist(A, B) < 6.5) { 
+        if (A.type === 'halway' && B.type === 'halway') CONNECTIONS.push([A.id, B.id]);
+        else if (A.type === B.type && A.type !== 'halway') CONNECTIONS.push([A.id, B.id]);
+      }
+    }
+  }
+
+  // 2. Safely bridge each isolated Room-Connection group into the nearest available Hallway skeleton point linearly
+  const uniqueTypes = [...new Set(graphNodes.filter(g => g.type !== 'halway').map(g => g.type))];
+  uniqueTypes.forEach(type => {
+      const typeNodes = graphNodes.filter(g => g.type === type);
+      let bestRoomNode = null, bestHallNode = null, minD = Infinity;
+
+      typeNodes.forEach(rn => {
+         halwayNodes.forEach(hn => {
+            let d = _dist(rn, hn);
+            if (d < minD) { minD = d; bestRoomNode = rn; bestHallNode = hn; }
+            if (d < 3.2) CONNECTIONS.push([rn.id, hn.id]);
+         });
+      });
+      if (bestRoomNode && bestHallNode) CONNECTIONS.push([bestRoomNode.id, bestHallNode.id]);
+  });
+
+  const MAP_ALIAS = {
+    '1': ['lobycbonnection'],
+    '3': ['swimmingpoolconnection'],
+    '2': ['weightroom connection'],
+    '4': ['stretchingroomconection'],
+    '5': ['spinningroomconection'],
+    '6': ['boxingroomconnection', 'boxingroomconection'],
+    '7': ['golfcourtconnection'],
+    '8': ['squashcourtconnection'],
+    '10': ['m.changingroomconection'],
+    '11': ['w.changingroomconection'],
+    '12': ['w.lockerroomconnection'],
+    '13': ['M.lockerroomconnection'],
+    '14': ['stairsconnection', 'stairsconection'],
+    '15': ['stairsconnection', 'stairsconection'],
+    '16': ['stairsconnection', 'stairsconection']
+  };
+
+  // 3. Bond original static visual destinations perfectly into the parsed annotation layer
+  WAYPOINTS.filter(w => w.id < 100).forEach(room => {
+    const aliases = MAP_ALIAS[room.key] || [];
+    const viable = graphNodes.filter(g => aliases.includes(g.type)).sort((a,b) => _dist(room, a) - _dist(room, b));
+    if (viable.length > 0) CONNECTIONS.push([room.id, viable[0].id]);
+  });
+
   const adjacency = {};
   WAYPOINTS.forEach(w => adjacency[w.id] = []);
   CONNECTIONS.forEach(([a, b]) => {
+    if (!adjacency[a]) adjacency[a] = [];
+    if (!adjacency[b]) adjacency[b] = [];
     adjacency[a].push(b);
     adjacency[b].push(a);
   });
 
   function astar(startId, endId) {
-    const dist = (a, b) => Math.hypot(waypointMap[a].px - waypointMap[b].px, waypointMap[a].py - waypointMap[b].py);
+    const dist = (a, b) => Math.hypot(waypointMap[a].nx - waypointMap[b].nx, waypointMap[a].nz - waypointMap[b].nz);
     const open = new Set([startId]);
     const cameFrom = {};
     const gScore = { [startId]: 0 };
     const fScore = { [startId]: dist(startId, endId) };
     while (open.size) {
-      let current = [...open].reduce((a, b) => (fScore[a] || Infinity) < (fScore[b] || Infinity) ? a : b);
+      let current = [...open].reduce((a, b) => (fScore[a] ?? Infinity) < (fScore[b] ?? Infinity) ? a : b);
       if (current === endId) {
         const path = [];
         while (current !== undefined) { path.unshift(current); current = cameFrom[current]; }
@@ -130,8 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       open.delete(current);
       for (const neighbor of (adjacency[current] || [])) {
-        const tentative = (gScore[current] || 0) + dist(current, neighbor);
-        if (tentative < (gScore[neighbor] || Infinity)) {
+        const tentative = (gScore[current] ?? 0) + dist(current, neighbor);
+        if (tentative < (gScore[neighbor] ?? Infinity)) {
           cameFrom[neighbor] = current;
           gScore[neighbor] = tentative;
           fScore[neighbor] = tentative + dist(neighbor, endId);
@@ -147,70 +258,107 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const routeSVG = document.getElementById('route-overlay');
-
-  function drawRoute(pathIds) {
-    if (!routeSVG) return;
-    routeSVG.innerHTML = '';
-    if (!pathIds || pathIds.length < 2) return;
-    const REF_W = 640, REF_H = 640;
-    const scaleX = window.innerWidth / REF_W;
-    const scaleY = window.innerHeight / REF_H;
-    const points = pathIds.map(id => {
-      const w = waypointMap[id];
-      return { x: w.px * scaleX, y: w.py * scaleY };
-    });
-    const d = points.map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`)).join(' ');
-    const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    shadow.setAttribute('d', d);
-    shadow.setAttribute('stroke', 'rgba(0,0,0,0.25)');
-    shadow.setAttribute('stroke-width', '6');
-    shadow.setAttribute('fill', 'none');
-    shadow.setAttribute('stroke-linecap', 'round');
-    shadow.setAttribute('stroke-linejoin', 'round');
-    routeSVG.appendChild(shadow);
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', d);
-    path.setAttribute('stroke', '#E31837');
-    path.setAttribute('stroke-width', '4');
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke-linecap', 'round');
-    path.setAttribute('stroke-linejoin', 'round');
-    routeSVG.appendChild(path);
-    const startDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    startDot.setAttribute('cx', points[0].x);
-    startDot.setAttribute('cy', points[0].y);
-    startDot.setAttribute('r', '7');
-    startDot.setAttribute('fill', '#1D9E75');
-    startDot.setAttribute('stroke', 'white');
-    startDot.setAttribute('stroke-width', '2');
-    routeSVG.appendChild(startDot);
-    const endDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    endDot.setAttribute('cx', points[points.length - 1].x);
-    endDot.setAttribute('cy', points[points.length - 1].y);
-    endDot.setAttribute('r', '7');
-    endDot.setAttribute('fill', '#E31837');
-    endDot.setAttribute('stroke', 'white');
-    endDot.setAttribute('stroke-width', '2');
-    routeSVG.appendChild(endDot);
-    setTimeout(() => {
-      const totalLength = path.getTotalLength();
-      if (!totalLength || totalLength < 1) return;
-      path.setAttribute('stroke-dasharray', totalLength);
-      path.setAttribute('stroke-dashoffset', totalLength);
-      requestAnimationFrame(() => {
-        path.style.transition = 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)';
-        path.setAttribute('stroke-dashoffset', '0');
-      });
-    }, 50);
-  }
+  let currentRoutePathIds = [];
+  let routeDrawLoop = null;
 
   function clearRoute() {
     if (routeSVG) routeSVG.innerHTML = '';
+    document.querySelectorAll('.routing-hotspot').forEach(el => el.remove());
+    if (routeDrawLoop) {
+      cancelAnimationFrame(routeDrawLoop);
+      routeDrawLoop = null;
+    }
+    currentRoutePathIds = [];
   }
 
-  let currentRoutePathIds = [];
+  function drawRoute(pathIds) {
+    clearRoute();
+    if (!pathIds || pathIds.length < 2) return;
+
+    currentRoutePathIds = pathIds;
+
+    // Inject temporary hotspots precisely tracking world-floor elevation
+    pathIds.forEach((id) => {
+      const w = waypointMap[id];
+      const h = document.createElement('div');
+      h.className = 'routing-hotspot';
+      // Native model-viewer tracker REQUIRES "hotspot-" prefix strictly!
+      h.slot = `hotspot-route-${id}`;
+      const py = w.ny !== undefined ? w.ny.toFixed(2) : '-1.15';
+      h.dataset.position = `${w.nx.toFixed(2)} ${py} ${w.nz.toFixed(2)}`;
+      h.dataset.normal = "0 1 0";
+      h.style.width = '0px';
+      h.style.height = '0px';
+      h.style.pointerEvents = 'none';
+      mv.appendChild(h);
+    });
+
+    // Begin render lock
+    if (!routeDrawLoop) loopRouteSVG();
+  }
+
+  function loopRouteSVG() {
+    if (currentRoutePathIds && currentRoutePathIds.length > 0) {
+      updateRouteSVG();
+      routeDrawLoop = requestAnimationFrame(loopRouteSVG);
+    } else {
+      routeDrawLoop = null;
+    }
+  }
+
+  function updateRouteSVG() {
+    if (!currentRoutePathIds || currentRoutePathIds.length < 2) return;
+    
+    // Pull the absolute screen coordinates rendered natively by model-viewer's projection matrix
+    const points = currentRoutePathIds.map(id => {
+      const h = mv.querySelector(`[slot="hotspot-route-${id}"]`);
+      if (!h) return null;
+      const rect = h.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0 && rect.left === 0) return null; // ModelViewer parses pending slots
+      return { x: rect.left, y: rect.top };
+    }).filter(p => p !== null);
+
+    if (points.length < 2) return;
+    
+    // Ensure perfectly straight segments natively matching original coordinates unconditionally
+    const d = points.map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`)).join(' ');
+
+    if (!routeSVG) return;
+
+    let mainPath = document.getElementById('animated-route-path');
+    let startCircle = routeSVG.querySelector('.route-start');
+    let endCircle = routeSVG.querySelector('.route-end');
+
+    if (!mainPath) {
+      // Native angular trace using dotted red layout globally plus small animating box tracer sequence
+      routeSVG.innerHTML = `
+        <defs>
+          <path id="route-path-ref"></path>
+        </defs>
+        <path id="animated-route-path" stroke="#E31837" stroke-dasharray="8 8" stroke-width="6" fill="none" stroke-linecap="square" stroke-linejoin="miter"></path>
+        <circle class="route-start" r="6" fill="#1D9E75" stroke="white" stroke-width="2"></circle>
+        <circle class="route-end" r="6" fill="#E31837" stroke="white" stroke-width="2"></circle>
+        <rect id="route-runner" width="12" height="12" fill="#E31837" x="-6" y="-6" rx="2" ry="2" stroke="white" stroke-width="2" filter="drop-shadow(0 0 6px rgba(227,24,55,0.8))">
+          <animateMotion dur="3.5s" repeatCount="indefinite">
+             <mpath href="#route-path-ref"/>
+          </animateMotion>
+        </rect>
+      `;
+      mainPath = document.getElementById('animated-route-path');
+      startCircle = routeSVG.querySelector('.route-start');
+      endCircle = routeSVG.querySelector('.route-end');
+    }
+
+    mainPath.setAttribute('d', d);
+    routeSVG.querySelector('#route-path-ref').setAttribute('d', d);
+    startCircle.setAttribute('cx', points[0].x);
+    startCircle.setAttribute('cy', points[0].y);
+    endCircle.setAttribute('cx', points[points.length-1].x);
+    endCircle.setAttribute('cy', points[points.length-1].y);
+  }
+
   window.addEventListener('resize', () => {
-    if (currentRoutePathIds && currentRoutePathIds.length) drawRoute(currentRoutePathIds);
+    // Vector paths now natively inherit resize scale shifts through modelViewer matrix!
   });
 
   // ─────────────────────────────────────────
