@@ -30,7 +30,7 @@ model-viewer {
 html,
 body {
   font-family: 'Inter', sans-serif;
-  background: #E5E5E5;
+  background: radial-gradient(ellipse at center, #c8c8c8 0%, #a8a8a8 60%, #888888 100%);
   color: #000;
   overflow: hidden;
 }
@@ -89,7 +89,7 @@ body {
   margin-right: 8px;
   width: 230px;
   min-height: 150px;
-  background-color: rgba(242, 242, 242, 0.85);
+  background-color: rgba(242, 242, 242, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 10px;
@@ -118,9 +118,10 @@ body {
 }
 
 .card__front-text {
-  font-weight: 700;
-  color: #333;
+  font-weight: 800;
+  color: #000;
   font-size: 16px;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 1);
   transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   pointer-events: none;
 }
@@ -139,7 +140,7 @@ body {
   height: 100%;
   padding: 12px;
   box-sizing: border-box;
-  background-color: rgba(242, 242, 242, 0.85);
+  background-color: rgba(242, 242, 242, 0.45);
   transform: rotateX(-90deg);
   transform-origin: bottom;
   display: flex;
@@ -156,15 +157,18 @@ body {
 .card__title {
   margin: 0;
   font-size: 15px;
-  color: #333;
-  font-weight: 700;
+  color: #000;
+  font-weight: 800;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 1);
   padding-right: 24px;
 }
 
 .card__description {
   margin: 8px 0 0;
   font-size: 11px;
-  color: #555;
+  color: #111;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 1);
   line-height: 1.4;
   overflow-y: auto;
   flex-grow: 1;
@@ -1964,7 +1968,7 @@ model-viewer>.Hotspot.faded-out {
   opacity: 0;
   transition: opacity 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .Hotspot.selected .hotspot-hint:not(.hint-hiding) {
@@ -1983,7 +1987,8 @@ model-viewer>.Hotspot.faded-out {
 
 /* Dynamic Itinerary Trigger Button */
 #itinerary-btn {
-  display: none; /* toggled to flex by JS */
+  display: none;
+  /* toggled to flex by JS */
   position: fixed;
   bottom: 90px;
   left: 50%;
@@ -2012,16 +2017,37 @@ model-viewer>.Hotspot.faded-out {
 }
 
 @keyframes swingFinger {
-  0%, 100% { transform: translateX(7px); }
-  50% { transform: translateX(-7px); }
+
+  0%,
+  100% {
+    transform: translateX(7px);
+  }
+
+  50% {
+    transform: translateX(-7px);
+  }
 }
 
 @keyframes fadeLeftArrow {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeRightArrow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.2;
+  }
 }
