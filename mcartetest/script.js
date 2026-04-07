@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // STARTING CAMERA STATE
   // Captured once on load — used by recenter, outside-click, deselect
   // ─────────────────────────────────────────
-  const START_ORBIT  = "360deg 45deg 100m";
+  const START_ORBIT  = "0deg 45deg 100m";
   const START_TARGET = "0m -1.3m 8.5m";
   const START_FOV    = "70deg";
 
@@ -28,9 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function resetCamera() {
+    modelViewer.removeAttribute('min-camera-orbit');
+    modelViewer.removeAttribute('max-camera-orbit');
+    modelViewer.removeAttribute('interpolation-decay');
     modelViewer.cameraOrbit  = START_ORBIT;
     modelViewer.cameraTarget = START_TARGET;
     modelViewer.fieldOfView  = START_FOV;
+    modelViewer.jumpCameraToGoal(); // Fixes sticky snap interpolation locally unconditionally
+    if (typeof applyCameraLock === 'function') setTimeout(applyCameraLock, 50);
   }
 
   // ─────────────────────────────────────────
@@ -177,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 2. Safely bridge each isolated Room-Connection group into the nearest available Hallway skeleton point linearly
+  let elbowCounter = 200;
   const uniqueTypes = [...new Set(graphNodes.filter(g => g.type !== 'halway').map(g => g.type))];
   uniqueTypes.forEach(type => {
       const typeNodes = graphNodes.filter(g => g.type === type);
@@ -186,10 +192,19 @@ document.addEventListener('DOMContentLoaded', () => {
          halwayNodes.forEach(hn => {
             let d = _dist(rn, hn);
             if (d < minD) { minD = d; bestRoomNode = rn; bestHallNode = hn; }
-            if (d < 3.2) CONNECTIONS.push([rn.id, hn.id]);
+            if (d < 3.2) {
+               // Dynamically inject sharp 90-degree tracking elbow corner natively
+               const elbow = { id: elbowCounter++, type:'elbow', nx:rn.nx, ny:rn.ny, nz:hn.nz };
+               WAYPOINTS.push(elbow); waypointMap[elbow.id] = elbow;
+               CONNECTIONS.push([rn.id, elbow.id]); CONNECTIONS.push([elbow.id, hn.id]);
+            }
          });
       });
-      if (bestRoomNode && bestHallNode) CONNECTIONS.push([bestRoomNode.id, bestHallNode.id]);
+      if (bestRoomNode && bestHallNode) {
+         const elbow = { id: elbowCounter++, type:'elbow', nx:bestRoomNode.nx, ny:bestRoomNode.ny, nz:bestHallNode.nz };
+         WAYPOINTS.push(elbow); waypointMap[elbow.id] = elbow;
+         CONNECTIONS.push([bestRoomNode.id, elbow.id]); CONNECTIONS.push([elbow.id, bestHallNode.id]);
+      }
   });
 
   const MAP_ALIAS = {
@@ -214,7 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
   WAYPOINTS.filter(w => w.id < 100).forEach(room => {
     const aliases = MAP_ALIAS[room.key] || [];
     const viable = graphNodes.filter(g => aliases.includes(g.type)).sort((a,b) => _dist(room, a) - _dist(room, b));
-    if (viable.length > 0) CONNECTIONS.push([room.id, viable[0].id]);
+    if (viable.length > 0) {
+       const v = viable[0];
+       // Embed orthogonal terminating joint to visually preserve sharp square traces directly connecting into the click-dot
+       const elbow = { id: elbowCounter++, type:'elbow', nx:room.nx, ny:room.ny, nz:v.nz };
+       WAYPOINTS.push(elbow); waypointMap[elbow.id] = elbow;
+       CONNECTIONS.push([room.id, elbow.id]); CONNECTIONS.push([elbow.id, v.id]);
+    }
   });
 
   const adjacency = {};
@@ -525,7 +546,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Allow orbit-only when hotspot is selected
-    enterHotspotOrbitMode();
+    mv.setAttribute('min-camera-orbit', 'auto 20deg 40m');
+    mv.setAttribute('max-camera-orbit', 'auto 75deg 150m');
 
     mv.autoRotate = false;
 
@@ -550,7 +572,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // DESELECT — always resets camera to start
   // ─────────────────────────────────────────
-  const deselectAll = () => {
+  const deselectAll = (fullReset = true) => {
+    if (window.itineraryDelay) clearTimeout(window.itineraryDelay);
+    if (window.itineraryOrbit) clearTimeout(window.itineraryOrbit);
     selectedHotspot = null;
     hotspots.forEach(h => h.classList.remove('selected', 'faded-out'));
     mv.autoRotate = false;
@@ -576,9 +600,9 @@ document.addEventListener('DOMContentLoaded', () => {
       itineraryBtn.classList.remove('show-itinerary');
     }
 
-    // Re-lock camera and reset to starting position
-    enterLockedMode();
-    resetCamera();
+    // Re-lock camera natively allowing slight zoom-out but clamping strict boundaries
+    if (typeof applyCameraLock === 'function') applyCameraLock();
+    if (fullReset) resetCamera();
   };
 
   // ─────────────────────────────────────────
@@ -597,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   mv.addEventListener('click', (e) => {
     if (e.target === mv) {
-      deselectAll(); // already calls resetCamera() + enterLockedMode()
+      deselectAll(false); // Gracefully unlock constraints to allow zoom-out without violently snapping array limits
     }
   });
 
@@ -650,24 +674,53 @@ document.addEventListener('DOMContentLoaded', () => {
     searchPillNode.addEventListener('focus', () => {
       if (legendMenu) legendMenu.classList.remove('show');
     });
+    const SYNONYMS = {
+      'weight room': ['gym', 'fitness', 'workout', 'weights', 'lifting'],
+      'spinning room': ['cycling', 'bike', 'spin', 'cardio'],
+      'swimming pool': ['swim', 'water', 'lane', 'aquatics'],
+      'stretching room': ['stretch', 'yoga', 'warmup', 'pilates'],
+      'squash court': ['racket', 'tennis', 'wall'],
+      'boxing room': ['box', 'fight', 'ring', 'sparring'],
+      'golf court': ['putt', 'swing', 'club', 'golf'],
+      'locker room': ['lockers', 'change', 'shower', 'washroom'],
+      'changing room': ['change', 'clothes', 'dressing'],
+      'lobby': ['entrance', 'front', 'desk', 'reception']
+    };
+
     searchPillNode.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
       hotspots.forEach(h => {
         const labelText = h.querySelector('.hotspot-label');
         if (!labelText) return;
-        if (query === '' || labelText.textContent.toLowerCase().includes(query)) {
-          h.classList.remove('faded-out');
+        
+        const baseName = labelText.textContent.toLowerCase().trim();
+        let isMatch = false;
+        
+        if (query === '' || baseName.includes(query)) {
+          isMatch = true;
         } else {
-          h.classList.add('faded-out');
+          // Check synonym aliases dynamically
+          for (const [key, aliases] of Object.entries(SYNONYMS)) {
+            if (baseName.includes(key)) {
+              if (aliases.some(alias => alias.includes(query) || query.includes(alias))) {
+                isMatch = true;
+                break;
+              }
+            }
+          }
         }
+        
+        if (isMatch) h.classList.remove('faded-out');
+        else h.classList.add('faded-out');
       });
     });
   }
 
   // ─────────────────────────────────────────
-  // MODEL LOAD
+  // MODEL LOAD & GRAPH CLEANUP
   // ─────────────────────────────────────────
   modelViewer.addEventListener('load', () => {
+    // 1. Elevate Hotspots cleanly
     hotspots.forEach(h => {
       if (h.dataset.position) {
         const pos = h.dataset.position.split(' ');
@@ -677,6 +730,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    try {
+      if (modelViewer.model && modelViewer.model.materials) {
+         modelViewer.model.materials.forEach(mat => {
+            const n = mat.name.toLowerCase();
+            if (n.includes('void') || n.includes('background')) {
+               mat.setAlphaMode('OPAQUE');
+            }
+         });
+      }
+
+      const symbols = Object.getOwnPropertySymbols(modelViewer);
+      const sceneSymbol = symbols.find(s => s.toString() === 'Symbol(scene)');
+      if (sceneSymbol && modelViewer[sceneSymbol]) {
+        modelViewer[sceneSymbol].traverse((child) => {
+          if (child.isMesh) {
+            const name = child.name.toLowerCase();
+            const mName = (child.material && child.material.name) ? child.material.name.toLowerCase() : '';
+            if (name.includes('plane') || name.includes('background') || mName.includes('void')) {
+              child.visible = true; 
+            }
+          }
+        });
+      }
+    } catch(err) {}
 
     const screen = document.getElementById('loading-screen');
     if (screen) {
@@ -713,8 +791,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mv.removeAttribute('disable-pan');
       mv.removeAttribute('zoom-sensitivity');
       mv.setAttribute('interpolation-decay', '200');
-      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
-      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
+      mv.setAttribute('min-camera-orbit', 'auto 0deg 50m');
+      mv.setAttribute('max-camera-orbit', 'auto 75deg 150m');
       hotspots.forEach(h => h.classList.remove('mobile-hotspot-disabled'));
     }
   };
@@ -810,13 +888,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nx > BOUND_X)  { nx = BOUND_X;  clamped = true; }
     if (nx < -BOUND_X) { nx = -BOUND_X; clamped = true; }
 
-    if (window.innerWidth <= 768 && !selectedHotspot) {
-      // Full Z lock in base mode
-      if (Math.abs(nz - 8.5) > 0.01) { nz = 8.5; clamped = true; }
-    } else {
-      if (nz > BOUND_Z)  { nz = BOUND_Z;  clamped = true; }
-      if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
-    }
+    if (nz > BOUND_Z)  { nz = BOUND_Z;  clamped = true; }
+    if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
 
     if (clamped && e.detail.source === 'user-interaction') {
       modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
@@ -835,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   mv.addEventListener('touchstart', (e) => {
     // Only intercept single-finger touches in base (no hotspot selected) mode on mobile
-    if (window.innerWidth > 768 || selectedHotspot) {
+    if (window.innerWidth > 768 || (selectedHotspot && (!currentRoutePathIds || !currentRoutePathIds.length))) {
       window.isCustomScrolling = false;
       return;
     }
@@ -851,17 +924,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const currentOrbit = mv.getCameraOrbit();
       const t = (currentOrbit.theta * 180 / Math.PI).toFixed(1);
       mv.setAttribute('min-camera-orbit', `${t}deg 45deg 40m`);
-      mv.setAttribute('max-camera-orbit', `${t}deg 85deg 180m`);
+      mv.setAttribute('max-camera-orbit', `${t}deg 75deg 150m`);
     } else if (e.touches.length >= 2) {
       window.isCustomScrolling = false;
       // Allow freedom for two finger native rotation twists to execute perfectly
-      mv.setAttribute('min-camera-orbit', 'auto 45deg 40m');
-      mv.setAttribute('max-camera-orbit', 'auto 85deg 180m');
+      mv.setAttribute('min-camera-orbit', 'auto 0deg 50m');
+      mv.setAttribute('max-camera-orbit', 'auto 75deg 150m');
     }
   }, { passive: true });
 
   mv.addEventListener('touchmove', (e) => {
-    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1 || selectedHotspot) return;
+    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1 || (selectedHotspot && (!currentRoutePathIds || !currentRoutePathIds.length))) return;
 
     const deltaX = e.touches[0].clientX - scrollStartX;
     const deltaY = e.touches[0].clientY - scrollStartY;
@@ -963,8 +1036,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!targetWaypoint) return;
 
       // Clear any locked ranges to allow top-down camera pitch natively
-      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
-      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
+      mv.setAttribute('min-camera-orbit', 'auto 0deg 50m');
+      mv.setAttribute('max-camera-orbit', 'auto 75deg 150m');
 
       // Ensure camera transitions smoothly
       mv.setAttribute('interpolation-decay', '400');
@@ -975,10 +1048,27 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const pathIds = astar(24, targetWaypoint.id);
-      console.log('PATH:', pathIds, 'start:24 end:', targetWaypoint.id);
       if (pathIds && pathIds.length > 0) {
         currentRoutePathIds = pathIds;
         drawRoute(pathIds);
+
+        // Cancel any pending cinematic timeouts if user clicks multiple itineraries rapidly
+        if (window.itineraryDelay) clearTimeout(window.itineraryDelay);
+        if (window.itineraryOrbit) clearTimeout(window.itineraryOrbit);
+        
+        // Wait 3.5 seconds for the user to visually digest the entire raw drawn top-down route
+        window.itineraryDelay = setTimeout(() => {
+          // Drop down smoothly to 45 degree angle maintaining existing X-axis rotation natively
+          mv.setAttribute('interpolation-decay', '600');
+          mv.cameraOrbit = "auto 45deg 120m";
+          
+          // Initiate slow continuous spin effect automatically
+          window.itineraryOrbit = setTimeout(() => {
+             mv.setAttribute('auto-rotate-delay', '0');
+             mv.setAttribute('rotation-per-second', '12deg'); 
+             mv.autoRotate = true;
+          }, 1500); // 1.5s after the pitch drop begins
+        }, 3500);
       }
     });
   }
@@ -1015,10 +1105,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (legendBtn) legendBtn.addEventListener('click', () => hideLegendPrompt());
 
-  modelViewer.addEventListener('pointerdown', hideGesturePrompt);
-  modelViewer.addEventListener('wheel', hideGesturePrompt);
+  const cancelCinematic = () => {
+    if (window.itineraryDelay) clearTimeout(window.itineraryDelay);
+    if (window.itineraryOrbit) clearTimeout(window.itineraryOrbit);
+  };
+
+  modelViewer.addEventListener('pointerdown', () => { hideGesturePrompt(); cancelCinematic(); });
+  modelViewer.addEventListener('wheel', () => { hideGesturePrompt(); cancelCinematic(); });
   modelViewer.addEventListener('camera-change', (e) => {
-    if (e.detail.source === 'user-interaction') hideGesturePrompt();
+    if (e.detail.source === 'user-interaction') { hideGesturePrompt(); cancelCinematic(); }
   });
 
 });
