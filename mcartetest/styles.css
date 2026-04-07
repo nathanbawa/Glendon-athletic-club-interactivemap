@@ -1942,3 +1942,63 @@ model-viewer>.Hotspot.faded-out {
 .Hotspot.mobile-hotspot-disabled {
   pointer-events: none !important;
 }
+
+/* Hotspot Drag Hint */
+.hotspot-hint {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 20px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.Hotspot.selected .hotspot-hint:not(.hint-hiding) {
+  opacity: 1;
+}
+
+.hint-arrow {
+  opacity: 0.2;
+}
+
+.hint-arrow.left {
+  animation: fadeLeftArrow 1.4s infinite ease-in-out;
+}
+
+.hint-arrow.right {
+  animation: fadeRightArrow 1.4s infinite ease-in-out;
+}
+
+.hint-finger {
+  display: inline-block;
+  animation: swingFinger 1.4s infinite ease-in-out;
+}
+
+@keyframes swingFinger {
+  0%, 100% { transform: translateX(7px); }
+  50% { transform: translateX(-7px); }
+}
+
+@keyframes fadeLeftArrow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes fadeRightArrow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
