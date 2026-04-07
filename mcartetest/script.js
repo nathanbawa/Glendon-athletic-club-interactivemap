@@ -202,11 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const mv = modelViewer;
 
   function enterLockedMode() {
-    // Re-apply the tight angle lock — pan disabled, no rotation by default
     if (window.innerWidth <= 768) {
       mv.setAttribute('disable-pan', '');
-      mv.setAttribute('min-camera-orbit', 'auto 45deg 40m'); // Theta opened for 2-finger twist
-      mv.setAttribute('max-camera-orbit', 'auto 85deg 180m'); // Prevents going overtop 
+      // Theta locked to exactly 360deg — hold-swipe CANNOT tilt the camera
+      mv.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m');
+      mv.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m');
       mv.setAttribute('zoom-sensitivity', '1.2');
       mv.setAttribute('interpolation-decay', '100');
     } else {
@@ -306,7 +306,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!hint) {
         hint = document.createElement('div');
         hint.className = 'hotspot-hint';
-        hint.innerHTML = '<span class="hint-arrow left">‹</span><span class="hint-finger">👆</span><span class="hint-arrow right">›</span>';
+        hint.innerHTML = `
+          <span class="hint-arrow left">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 2 A5 5 0 0 0 3 2" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              <polyline points="2.2,0.8 3,2.4 4.8,1.8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </span>
+          <span class="hint-finger">👆</span>
+          <span class="hint-arrow right">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 2 A5 5 0 0 1 9 2" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              <polyline points="9.8,0.8 9,2.4 7.2,1.8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </span>`;
         marker.appendChild(hint);
       }
       
