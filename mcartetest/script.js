@@ -634,12 +634,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─────────────────────────────────────────
-  // CUSTOM MOBILE 1-FINGER HORIZONTAL SCROLL
+  // CUSTOM MOBILE 1-FINGER X/Z SCROLL
   // Only active when NO hotspot is selected
   // ─────────────────────────────────────────
   window.isCustomScrolling = false;
   let scrollStartX = 0;
+  let scrollStartY = 0;
   let startCameraX = 0;
+  let startCameraZ = 0;
 
   mv.addEventListener('touchstart', (e) => {
     // Only intercept single-finger touches in base (no hotspot selected) mode on mobile
@@ -651,7 +653,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.touches.length === 1) {
       window.isCustomScrolling = true;
       scrollStartX = e.touches[0].clientX;
+      scrollStartY = e.touches[0].clientY;
       startCameraX = mv.getCameraTarget().x;
+      startCameraZ = mv.getCameraTarget().z;
 
       // Aggressively lock theta around the current angle so the finger drag acts purely as a 2D pan slider natively!
       const currentOrbit = mv.getCameraOrbit();
@@ -670,16 +674,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1 || selectedHotspot) return;
 
     const deltaX = e.touches[0].clientX - scrollStartX;
-    const radiusStr = mv.getCameraOrbit().radius;
+    const deltaY = e.touches[0].clientY - scrollStartY;
+
+    const orbit = mv.getCameraOrbit();
+    const radiusStr = orbit.radius;
     let radius = 100;
     if (radiusStr) radius = parseFloat(radiusStr);
     const panSpeed = 0.0016 * radius;
 
-    let newX = startCameraX - (deltaX * panSpeed);
+    // Map screen drag accurately via trig to world 3D vectors based on exact current camera orientation
+    const theta = orbit.theta;
+    const mapDX = deltaX * Math.cos(theta) - deltaY * Math.sin(theta);
+    const mapDZ = deltaX * Math.sin(theta) + deltaY * Math.cos(theta);
+
+    let newX = startCameraX - (mapDX * panSpeed);
+    let newZ = startCameraZ - (mapDZ * panSpeed);
+    
     if (newX > 45)  newX = 45;
     if (newX < -45) newX = -45;
+    if (newZ > 65)  newZ = 65;
+    if (newZ < -65) newZ = -65;
 
-    mv.cameraTarget = `${newX}m -1.3m 8.5m`;
+    mv.cameraTarget = `${newX}m -1.3m ${newZ}m`;
   }, { passive: true });
 
   mv.addEventListener('touchend', () => {
