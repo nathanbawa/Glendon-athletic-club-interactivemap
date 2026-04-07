@@ -151,9 +151,9 @@
 
   <!-- <model-viewer> HTML element -->
   <model-viewer id="mv" src="testmapvoidbackgroung5_compressed.glb" camera-controls interaction-prompt="none"
-    camera-orbit="360deg 45deg 100m" camera-target="0m -1.3m 8.5m" field-of-view="70deg"
+    camera-orbit="0deg 45deg 100m" camera-target="0m -1.3m 8.5m" field-of-view="70deg"
     min-camera-orbit="auto 0deg 20m" max-camera-orbit="auto 90deg 150m" interpolation-decay="200" pan-sensitivity="1.8"
-    shadow-intensity="1" bounds="tight" disable-tap loading="eager" reveal="auto" tone-mapping="neutral"
+    shadow-intensity="1.3" shadow-softness="0.5" bounds="tight" disable-tap loading="eager" reveal="auto" tone-mapping="neutral"
     poster="poster.webp" touch-action="pan-y" ar ar-modes="webxr scene-viewer quick-look">
     <div id="info-dropdown-container" style="position: absolute; top: 20px; right: 12px; z-index: 1000;">
       <div role="button" id="info-dropdown-trigger" class="search-pill info-pill-override"
@@ -357,7 +357,6 @@
       </div>
     </div>
   </div>
-
   <script defer src="script.js?v=9"></script>
   <!-- Loads <model-viewer> for browsers: -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.2.0/model-viewer.min.js"></script>
