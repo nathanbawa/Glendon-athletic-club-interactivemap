@@ -202,11 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const mv = modelViewer;
 
   function enterLockedMode() {
-    // Re-apply the tight angle lock — pan disabled, no rotation
+    // Re-apply the tight angle lock — pan disabled, no rotation by default
     if (window.innerWidth <= 768) {
       mv.setAttribute('disable-pan', '');
-      mv.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m');
-      mv.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m');
+      mv.setAttribute('min-camera-orbit', 'auto 45deg 40m'); // Theta opened for 2-finger twist
+      mv.setAttribute('max-camera-orbit', 'auto 85deg 180m'); // Prevents going overtop 
       mv.setAttribute('zoom-sensitivity', '1.2');
       mv.setAttribute('interpolation-decay', '100');
     } else {
@@ -220,11 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function enterHotspotOrbitMode() {
     // Free theta+phi so the user can orbit around the selected hotspot
-    // but keep zoom range same so they can't fly away
+    // but limit height strictly
     mv.removeAttribute('disable-pan');
-    mv.setAttribute('min-camera-orbit', 'auto auto 20m');
-    mv.setAttribute('max-camera-orbit', 'auto auto 150m');
-    mv.setAttribute('interpolation-decay', '150');
+    mv.setAttribute('min-camera-orbit', 'auto 45deg 20m'); // No top down
+    mv.setAttribute('max-camera-orbit', 'auto 85deg 150m');
+    mv.setAttribute('interpolation-decay', '400'); // Smoother slower transition floats
     mv.autoRotate = false;
   }
 
@@ -308,9 +308,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = parseFloat(parts[0]);
         const y = parseFloat(parts[1]);
         const z = parseFloat(parts[2]);
-        // Set target to the hotspot — keeps same vertical/horizontal camera angle
+        // Smooth out the target snapping jump 
+        mv.setAttribute('interpolation-decay', '400');
+        
+        // Set target to the hotspot — keeps same vertical/horizontal camera angle natively
         mv.cameraTarget = `${x}m ${y}m ${z}m`;
-        // Slight zoom in: from 100m → 65m, preserving theta/phi lock
+        // Slight zoom in: from 100m → 65m
         if (window.innerWidth <= 768) {
           mv.cameraOrbit = "360deg 45deg 65m";
         } else {
@@ -621,13 +624,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   mv.addEventListener('touchstart', (e) => {
     // Only intercept single-finger touches in base (no hotspot selected) mode on mobile
-    if (window.innerWidth > 768 || e.touches.length !== 1 || selectedHotspot) {
+    if (window.innerWidth > 768 || selectedHotspot) {
       window.isCustomScrolling = false;
       return;
     }
-    window.isCustomScrolling = true;
-    scrollStartX = e.touches[0].clientX;
-    startCameraX = mv.getCameraTarget().x;
+    
+    if (e.touches.length === 1) {
+      window.isCustomScrolling = true;
+      scrollStartX = e.touches[0].clientX;
+      startCameraX = mv.getCameraTarget().x;
+
+      // Aggressively lock theta around the current angle so the finger drag acts purely as a 2D pan slider natively!
+      const currentOrbit = mv.getCameraOrbit();
+      const t = (currentOrbit.theta * 180 / Math.PI).toFixed(1);
+      mv.setAttribute('min-camera-orbit', `${t}deg 45deg 40m`);
+      mv.setAttribute('max-camera-orbit', `${t}deg 85deg 180m`);
+    } else if (e.touches.length >= 2) {
+      window.isCustomScrolling = false;
+      // Allow freedom for two finger native rotation twists to execute perfectly
+      mv.setAttribute('min-camera-orbit', 'auto 45deg 40m');
+      mv.setAttribute('max-camera-orbit', 'auto 85deg 180m');
+    }
   }, { passive: true });
 
   mv.addEventListener('touchmove', (e) => {
