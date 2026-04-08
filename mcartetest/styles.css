@@ -333,6 +333,7 @@ body {
 .hotspot-icon {
   font-size: 16px;
   margin-left: 4px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
 }
 
 .hotspot-number {
@@ -364,8 +365,10 @@ body {
   margin-left: 0;
   white-space: nowrap;
   transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-left 0.3s ease;
-  font-weight: 600;
-  color: #333;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #222;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.78), 0 0 1px rgba(0, 0, 0, 0.14);
 }
 
 .Hotspot.selected .hotspot-label {
@@ -444,10 +447,11 @@ body {
   pointer-events: none;
   transition: opacity 0.3s ease;
   color: white;
-  font-size: 12px;
+  font-size: 12.5px;
   font-family: Futura, Helvetica Neue, sans-serif;
-  font-weight: 700;
+  font-weight: 800;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .Hotspot:hover .HotspotAnnotation {
@@ -536,23 +540,6 @@ body {
     transform: translateX(-100px);
   }
 }
-
-model-viewer>#ar-prompt {
-  position: absolute;
-  left: 50%;
-  bottom: 60px;
-  animation: elongate 2s infinite ease-in-out alternate;
-  display: none;
-}
-
-model-viewer[ar-status="session-started"]>#ar-prompt {
-  display: block;
-}
-
-model-viewer>#ar-prompt>img {
-  animation: circle 4s linear infinite;
-}
-
 
 #glendon-logo {
   position: fixed;
@@ -893,46 +880,6 @@ hr.divider {
   display: inline-flex !important;
 }
 
-/* Dev Overlay HUD */
-#dev-overlay {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.85);
-  color: #00ff00;
-  font-family: monospace;
-  font-size: 13px;
-  padding: 15px;
-  border-radius: 8px;
-  max-width: 320px;
-  backdrop-filter: blur(5px);
-  pointer-events: auto;
-}
-
-#dev-overlay div {
-  margin-bottom: 5px;
-  word-wrap: break-word;
-  /* Ensure radians don't break overlay */
-}
-
-#dev-copy-btn {
-  margin-top: 10px;
-  background: #333;
-  color: white;
-  border: 1px solid #555;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  width: 100%;
-  font-family: inherit;
-  transition: background 0.2s;
-}
-
-#dev-copy-btn:hover {
-  background: #555;
-}
-
 /* Performance & Mobile Optimizations */
 
 
@@ -1219,53 +1166,6 @@ hr.divider {
   }
 }
 
-/* Developer Settings HUD */
-#dev-overlay {
-  position: fixed;
-  top: 80px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #0f0;
-  font-family: monospace;
-  font-size: 11px;
-  padding: 12px;
-  border-radius: 8px;
-  z-index: 99999;
-  pointer-events: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-#dev-overlay div {
-  margin-bottom: 4px;
-}
-
-#dev-copy-btn {
-  margin-top: 8px;
-  background: #0f0;
-  color: #000;
-  border: none;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-weight: bold;
-  border-radius: 4px;
-  width: 100%;
-}
-
-#dev-copy-btn:active {
-  background: #0a0;
-}
-
-@media (max-width: 768px) {
-  #dev-overlay {
-    top: 75px;
-    left: 10px;
-    font-size: 10px;
-    max-width: calc(100vw - 20px);
-    z-index: 99999;
-    pointer-events: auto;
-  }
-}
-
 /* Mobile Bottom Right Controls (Search + Recenter) */
 .mobile-bottom-right-controls {
   display: none;
@@ -1277,8 +1177,8 @@ hr.divider {
   z-index: 1000;
   flex-direction: column;
   align-items: flex-end;
-  /* Stack aligned natively to right */
-  gap: 16px;
+  /* Keep the control stacks pinned to the same right edge */
+  gap: 14px;
   pointer-events: none;
 }
 
@@ -1291,6 +1191,9 @@ hr.divider {
 .mobile-bottom-right-controls>* {
   pointer-events: auto;
   /* Re-enable for the buttons inside */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-pill {
@@ -1677,8 +1580,9 @@ hr.divider {
   transform: translateY(-4px);
   transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5), background 0.2s;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: #333;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 #mobile-legend-menu li:hover .li-front {
@@ -1754,6 +1658,32 @@ hr.divider {
   /* Glendon Red Icon */
 }
 
+.mobile-control-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  gap: 6px;
+  overflow: visible;
+}
+
+.mobile-reset-stack {
+  width: 60px;
+}
+
+.mobile-control-label {
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  max-width: 82px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
 /* Full Pill Pulsating Ping Animation (Dynamically inherits native color injected via JS variable) */
 @keyframes hotspot-ping {
   0% {
@@ -1816,85 +1746,170 @@ model-viewer>.Hotspot.faded-out {
 }
 
 .gesture-visuals {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 30px;
+  position: relative;
+  width: 156px;
+  min-height: 92px;
   background: rgba(0, 0, 0, 0.7);
-  padding: 15px 30px;
+  padding: 10px 12px;
   border-radius: 12px;
   color: white;
   font-weight: bold;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
 }
 
 .gesture-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   color: white;
 }
 
 .gesture-box span {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.25px;
 }
 
-.gesture-divider {
-  width: 1px;
-  height: 54px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.two-fingers {
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-
-.offset-finger {
+.gesture-step {
   position: absolute;
-  margin-left: 20px;
-  margin-top: 6px;
-  opacity: 0.7;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
 }
 
-.icon-orbit {
-  font-size: 28px;
-  animation: orbit-hand 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  transform-origin: bottom center;
+.gesture-step-navigate {
+  animation: gesture-step-navigate 4.8s ease-in-out infinite;
 }
 
-.icon-pan {
-  font-size: 28px;
-  animation: pan-hand 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+.gesture-step-zoom {
+  animation: gesture-step-zoom 4.8s ease-in-out infinite;
 }
 
-@keyframes orbit-hand {
+.gesture-navigate-icon,
+.gesture-zoom-icon {
+  position: relative;
+  width: 62px;
+  height: 62px;
+}
 
-  0%,
-  100% {
-    transform: translateX(-14px) rotate(-20deg);
+.gesture-finger {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 26px;
+  transform: translate(-50%, -50%);
+}
+
+.gesture-step-navigate .gesture-finger {
+  animation: gesture-navigate-finger 1.6s ease-in-out infinite;
+}
+
+.gesture-arrow {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.gesture-arrow-left {
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.gesture-arrow-right {
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.gesture-arrow-up {
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.gesture-arrow-down {
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.gesture-finger-left {
+  left: 28%;
+  animation: gesture-zoom-left 1.5s ease-in-out infinite;
+}
+
+.gesture-finger-right {
+  left: 72%;
+  animation: gesture-zoom-right 1.5s ease-in-out infinite;
+}
+
+@keyframes gesture-step-navigate {
+  0%, 44% {
+    opacity: 1;
+  }
+
+  48%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes gesture-step-zoom {
+  0%, 48% {
+    opacity: 0;
+  }
+
+  54%, 100% {
+    opacity: 1;
+  }
+}
+
+@keyframes gesture-navigate-finger {
+  0% {
+    transform: translate(-50%, -50%) translate(-14px, 0);
+  }
+
+  25% {
+    transform: translate(-50%, -50%) translate(14px, 0);
   }
 
   50% {
-    transform: translateX(14px) rotate(20deg);
+    transform: translate(-50%, -50%) translate(0, -12px);
+  }
+
+  75% {
+    transform: translate(-50%, -50%) translate(0, 12px);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) translate(-14px, 0);
   }
 }
 
-@keyframes pan-hand {
-
-  0%,
-  100% {
-    transform: translateY(-8px);
+@keyframes gesture-zoom-left {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateX(-12px) scale(1);
   }
 
   50% {
-    transform: translateY(8px);
+    transform: translate(-50%, -50%) translateX(0) scale(0.95);
+  }
+}
+
+@keyframes gesture-zoom-right {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateX(12px) scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) translateX(0) scale(0.95);
   }
 }
 
