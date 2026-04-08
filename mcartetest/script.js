@@ -206,6 +206,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (bestRoomNode && bestHallNode) CONNECTIONS.push([bestRoomNode.id, bestHallNode.id]);
   });
 
+  // Manual bridges for stair routes that need to traverse the squash-side corridor.
+  CONNECTIONS.push([181, 182]);
+  CONNECTIONS.push([181, 183]);
+  CONNECTIONS.push([145, 146]);
+  CONNECTIONS.push([146, 147]);
+  CONNECTIONS.push([147, 148]);
+
   const MAP_ALIAS = {
     '1': ['lobycbonnection'],
     '3': ['swimmingpoolconnection'],
@@ -562,6 +569,20 @@ document.addEventListener('DOMContentLoaded', () => {
       h._hintTimer = setTimeout(() => {
         hint.classList.add('hint-hiding');
       }, 2500);
+
+      let recenterHint = marker.querySelector('.hotspot-recenter-hint');
+      if (!recenterHint) {
+        recenterHint = document.createElement('div');
+        recenterHint.className = 'hotspot-recenter-hint';
+        recenterHint.innerHTML = `<span class="recenter-hint-hand">👆</span><span>Tap outside to recenter</span>`;
+        marker.appendChild(recenterHint);
+      }
+
+      recenterHint.classList.add('show-recenter-hint');
+      if (h._recenterHintTimer) clearTimeout(h._recenterHintTimer);
+      h._recenterHintTimer = setTimeout(() => {
+        recenterHint.classList.remove('show-recenter-hint');
+      }, 3200);
     }
 
     // ── Camera: pan to the hotspot position, keep the starting angle (360deg 45deg),
@@ -604,9 +625,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (itineraryBtn) {
       if (h.classList.contains('legend-only-hotspot')) {
         itineraryBtn.classList.remove('show-itinerary');
+        itineraryBtn.classList.remove('pulse-itinerary');
         delete itineraryBtn.dataset.targetSlot;
       } else {
         itineraryBtn.classList.add('show-itinerary');
+        itineraryBtn.classList.remove('pulse-itinerary');
+        void itineraryBtn.offsetWidth;
+        itineraryBtn.classList.add('pulse-itinerary');
         itineraryBtn.dataset.targetSlot = h.slot;
       }
     }
@@ -650,6 +675,11 @@ document.addEventListener('DOMContentLoaded', () => {
     isItineraryMode = false;
     selectedHotspot = null;
     hotspots.forEach(h => h.classList.remove('selected', 'faded-out'));
+    hotspots.forEach(h => {
+      const recenterHint = h.querySelector('.hotspot-recenter-hint');
+      if (recenterHint) recenterHint.classList.remove('show-recenter-hint');
+      if (h._recenterHintTimer) clearTimeout(h._recenterHintTimer);
+    });
     mv.autoRotate = false;
     clearRoute();
     currentRoutePathIds = [];
@@ -671,6 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const itineraryBtn = document.getElementById('itinerary-btn');
     if (itineraryBtn) {
       itineraryBtn.classList.remove('show-itinerary');
+      itineraryBtn.classList.remove('pulse-itinerary');
       delete itineraryBtn.dataset.targetSlot;
     }
 
@@ -694,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // BACKGROUND CLICK → deselect + recenter
   // ─────────────────────────────────────────
   mv.addEventListener('click', (e) => {
-    if (e.target === mv) {
+    if (e.target === mv && (selectedHotspot || isItineraryMode)) {
       deselectAll(); // already calls resetCamera() + enterLockedMode()
     }
   });
@@ -988,13 +1019,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mobileSearchInputRef = document.querySelector('.search-pill-input');
   if (mobileSearchInputRef) {
     mobileSearchInputRef.addEventListener('focus', () => {
-      applyQuickCameraTransition();
-      mv.cameraOrbit  = "360deg 45deg 165m";
-      mv.cameraTarget = START_TARGET;
-      mv.fieldOfView  = START_FOV;
-    });
-    mobileSearchInputRef.addEventListener('blur', () => {
-      resetCamera();
+      hideGesturePrompt();
     });
   }
 
@@ -1013,11 +1038,81 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // GESTURE TUTORIAL OVERLAY
   // ─────────────────────────────────────────
+  const gesturePromptEl = document.getElementById('gesture-prompt-overlay');
+  const legendPromptEl = document.getElementById('legend-prompt-overlay');
+  const GESTURE_PROMPT_INITIAL_DELAY = 650;
+  const GESTURE_PROMPT_REPEAT_DELAY = 18000;
+  const GESTURE_PROMPT_VISIBLE_MS = 5200;
+  const LEGEND_PROMPT_VISIBLE_MS = 3600;
+  let gesturePromptTimeout = null;
+  let legendPromptTimeout = null;
+  let promptCycleTimeout = null;
+
+  const canShowAmbientPrompts = () => {
+    const infoOpen = container && container.classList.contains('force-show');
+    const searchActive = expandableSearch && expandableSearch.matches(':focus-within');
+    return !selectedHotspot && !isItineraryMode && !infoOpen && !searchActive;
+  };
+
+  const clearPromptCycleTimers = () => {
+    if (gesturePromptTimeout) clearTimeout(gesturePromptTimeout);
+    if (legendPromptTimeout) clearTimeout(legendPromptTimeout);
+    if (promptCycleTimeout) clearTimeout(promptCycleTimeout);
+    gesturePromptTimeout = null;
+    legendPromptTimeout = null;
+    promptCycleTimeout = null;
+  };
+
+  const schedulePromptCycle = (delay = GESTURE_PROMPT_REPEAT_DELAY) => {
+    if (promptCycleTimeout) clearTimeout(promptCycleTimeout);
+    promptCycleTimeout = setTimeout(() => {
+      showGesturePrompt();
+    }, delay);
+  };
+
+  const hideLegendPrompt = () => {
+    if (legendPromptTimeout) clearTimeout(legendPromptTimeout);
+    if (legendPromptEl) legendPromptEl.classList.remove('show-prompt');
+    if (legendBtn) legendBtn.classList.remove('pulsating');
+  };
+
+  const showLegendPrompt = () => {
+    if (!canShowAmbientPrompts()) return;
+    if (legendPromptEl) legendPromptEl.style.display = '';
+    if (legendPromptEl) legendPromptEl.classList.add('show-prompt');
+    if (legendBtn) legendBtn.classList.add('pulsating');
+    if (legendPromptTimeout) clearTimeout(legendPromptTimeout);
+    legendPromptTimeout = setTimeout(() => {
+      hideLegendPrompt();
+      schedulePromptCycle();
+    }, LEGEND_PROMPT_VISIBLE_MS);
+  };
+
+  const hideGesturePrompt = ({ scheduleNext = true } = {}) => {
+    if (gesturePromptTimeout) clearTimeout(gesturePromptTimeout);
+    if (gesturePromptEl) gesturePromptEl.classList.remove('show-prompt');
+    hideLegendPrompt();
+    if (scheduleNext) schedulePromptCycle();
+  };
+
+  const showGesturePrompt = () => {
+    if (!canShowAmbientPrompts()) {
+      schedulePromptCycle();
+      return;
+    }
+    clearPromptCycleTimers();
+    if (gesturePromptEl) {
+      gesturePromptEl.style.display = '';
+      gesturePromptEl.classList.add('show-prompt');
+    }
+    gesturePromptTimeout = setTimeout(() => {
+      hideGesturePrompt({ scheduleNext: false });
+      showLegendPrompt();
+    }, GESTURE_PROMPT_VISIBLE_MS);
+  };
+
   modelViewer.addEventListener('load', () => {
-    setTimeout(() => {
-      const prompt = document.getElementById('gesture-prompt-overlay');
-      if (prompt) prompt.classList.add('show-prompt');
-    }, 1200);
+    schedulePromptCycle(GESTURE_PROMPT_INITIAL_DELAY);
   });
 
   // ─────────────────────────────────────────
@@ -1052,40 +1147,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const hideGesturePrompt = () => {
-    const prompt = document.getElementById('gesture-prompt-overlay');
-    if (prompt && prompt.classList.contains('show-prompt')) {
-      prompt.classList.remove('show-prompt');
-      setTimeout(() => {
-        if (prompt) prompt.style.display = 'none';
-        showLegendPrompt();
-      }, 600);
-    }
-  };
+  if (legendBtn) legendBtn.addEventListener('click', () => {
+    hideLegendPrompt();
+    schedulePromptCycle();
+  });
 
-  let legendPromptDismissed = false;
-  const legendPromptEl = document.getElementById('legend-prompt-overlay');
-
-  const showLegendPrompt = () => {
-    if (legendPromptDismissed) return;
-    if (legendPromptEl) legendPromptEl.classList.add('show-prompt');
-    if (legendBtn) legendBtn.classList.add('pulsating');
-    setTimeout(() => { if (!legendPromptDismissed) hideLegendPrompt(); }, 5000);
-  };
-
-  const hideLegendPrompt = () => {
-    legendPromptDismissed = true;
-    if (legendPromptEl && legendPromptEl.classList.contains('show-prompt')) {
-      legendPromptEl.classList.remove('show-prompt');
-      setTimeout(() => { if (legendPromptEl) legendPromptEl.style.display = 'none'; }, 500);
-    }
-    if (legendBtn) legendBtn.classList.remove('pulsating');
-  };
-
-  if (legendBtn) legendBtn.addEventListener('click', () => hideLegendPrompt());
-
-  modelViewer.addEventListener('pointerdown', hideGesturePrompt);
-  modelViewer.addEventListener('wheel', hideGesturePrompt);
+  modelViewer.addEventListener('pointerdown', () => hideGesturePrompt());
+  modelViewer.addEventListener('wheel', () => hideGesturePrompt());
   modelViewer.addEventListener('camera-change', (e) => {
     if (e.detail.source === 'user-interaction') hideGesturePrompt();
   });
