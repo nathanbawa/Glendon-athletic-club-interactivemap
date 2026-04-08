@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // STARTING CAMERA STATE
   // Captured once on load — used by recenter, outside-click, deselect
   // ─────────────────────────────────────────
-  const START_ORBIT  = "0deg 45deg 100m";
+  const START_ORBIT  = "360deg 45deg 100m";
   const START_TARGET = "0m -1.3m 8.5m";
   const START_FOV    = "70deg";
 
@@ -25,17 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
     'hotspot-7': '12',  // W.Locker
     'hotspot-8': '13',  // M.Locker
     'hotspot-21': '14', // Stairs
+    'hotspot-22': '15', // Stairs
+    'hotspot-23': '16', // Stairs
   };
 
   function resetCamera() {
-    modelViewer.removeAttribute('min-camera-orbit');
-    modelViewer.removeAttribute('max-camera-orbit');
-    modelViewer.removeAttribute('interpolation-decay');
     modelViewer.cameraOrbit  = START_ORBIT;
     modelViewer.cameraTarget = START_TARGET;
     modelViewer.fieldOfView  = START_FOV;
-    modelViewer.jumpCameraToGoal(); // Fixes sticky snap interpolation locally unconditionally
-    if (typeof applyCameraLock === 'function') setTimeout(applyCameraLock, 50);
   }
 
   // ─────────────────────────────────────────
@@ -182,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 2. Safely bridge each isolated Room-Connection group into the nearest available Hallway skeleton point linearly
-  let elbowCounter = 200;
   const uniqueTypes = [...new Set(graphNodes.filter(g => g.type !== 'halway').map(g => g.type))];
   uniqueTypes.forEach(type => {
       const typeNodes = graphNodes.filter(g => g.type === type);
@@ -192,19 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
          halwayNodes.forEach(hn => {
             let d = _dist(rn, hn);
             if (d < minD) { minD = d; bestRoomNode = rn; bestHallNode = hn; }
-            if (d < 3.2) {
-               // Dynamically inject sharp 90-degree tracking elbow corner natively
-               const elbow = { id: elbowCounter++, type:'elbow', nx:rn.nx, ny:rn.ny, nz:hn.nz };
-               WAYPOINTS.push(elbow); waypointMap[elbow.id] = elbow;
-               CONNECTIONS.push([rn.id, elbow.id]); CONNECTIONS.push([elbow.id, hn.id]);
-            }
+            if (d < 3.2) CONNECTIONS.push([rn.id, hn.id]);
          });
       });
-      if (bestRoomNode && bestHallNode) {
-         const elbow = { id: elbowCounter++, type:'elbow', nx:bestRoomNode.nx, ny:bestRoomNode.ny, nz:bestHallNode.nz };
-         WAYPOINTS.push(elbow); waypointMap[elbow.id] = elbow;
-         CONNECTIONS.push([bestRoomNode.id, elbow.id]); CONNECTIONS.push([elbow.id, bestHallNode.id]);
-      }
+      if (bestRoomNode && bestHallNode) CONNECTIONS.push([bestRoomNode.id, bestHallNode.id]);
   });
 
   const MAP_ALIAS = {
@@ -229,13 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
   WAYPOINTS.filter(w => w.id < 100).forEach(room => {
     const aliases = MAP_ALIAS[room.key] || [];
     const viable = graphNodes.filter(g => aliases.includes(g.type)).sort((a,b) => _dist(room, a) - _dist(room, b));
-    if (viable.length > 0) {
-       const v = viable[0];
-       // Embed orthogonal terminating joint to visually preserve sharp square traces directly connecting into the click-dot
-       const elbow = { id: elbowCounter++, type:'elbow', nx:room.nx, ny:room.ny, nz:v.nz };
-       WAYPOINTS.push(elbow); waypointMap[elbow.id] = elbow;
-       CONNECTIONS.push([room.id, elbow.id]); CONNECTIONS.push([elbow.id, v.id]);
-    }
+    if (viable.length > 0) CONNECTIONS.push([room.id, viable[0].id]);
   });
 
   const adjacency = {};
@@ -281,6 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const routeSVG = document.getElementById('route-overlay');
   let currentRoutePathIds = [];
   let routeDrawLoop = null;
+  let routeTraceStart = 0;
+  let routeTraceDuration = 0;
+  let routeRunnerStarted = false;
 
   function clearRoute() {
     if (routeSVG) routeSVG.innerHTML = '';
@@ -289,6 +273,9 @@ document.addEventListener('DOMContentLoaded', () => {
       cancelAnimationFrame(routeDrawLoop);
       routeDrawLoop = null;
     }
+    routeTraceStart = 0;
+    routeTraceDuration = 0;
+    routeRunnerStarted = false;
     currentRoutePathIds = [];
   }
 
@@ -297,6 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!pathIds || pathIds.length < 2) return;
 
     currentRoutePathIds = pathIds;
+    routeTraceStart = performance.now();
+    routeTraceDuration = 0;
+    routeRunnerStarted = false;
 
     // Inject temporary hotspots precisely tracking world-floor elevation
     pathIds.forEach((id) => {
@@ -347,35 +337,70 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!routeSVG) return;
 
     let mainPath = document.getElementById('animated-route-path');
+    let revealPath = document.getElementById('route-reveal-path');
     let startCircle = routeSVG.querySelector('.route-start');
     let endCircle = routeSVG.querySelector('.route-end');
+    let routeRunner = document.getElementById('route-runner');
+    let routeRunnerMotion = document.getElementById('route-runner-motion');
 
     if (!mainPath) {
       // Native angular trace using dotted red layout globally plus small animating box tracer sequence
       routeSVG.innerHTML = `
         <defs>
           <path id="route-path-ref"></path>
+          <mask id="route-reveal-mask">
+            <rect width="100%" height="100%" fill="black"></rect>
+            <path id="route-reveal-path" stroke="white" stroke-width="16" fill="none" stroke-linecap="square" stroke-linejoin="miter"></path>
+          </mask>
         </defs>
-        <path id="animated-route-path" stroke="#E31837" stroke-dasharray="8 8" stroke-width="6" fill="none" stroke-linecap="square" stroke-linejoin="miter"></path>
+        <path id="animated-route-path" stroke="#E31837" stroke-dasharray="8 8" stroke-width="6" fill="none" stroke-linecap="square" stroke-linejoin="miter" mask="url(#route-reveal-mask)"></path>
         <circle class="route-start" r="6" fill="#1D9E75" stroke="white" stroke-width="2"></circle>
-        <circle class="route-end" r="6" fill="#E31837" stroke="white" stroke-width="2"></circle>
-        <rect id="route-runner" width="12" height="12" fill="#E31837" x="-6" y="-6" rx="2" ry="2" stroke="white" stroke-width="2" filter="drop-shadow(0 0 6px rgba(227,24,55,0.8))">
-          <animateMotion dur="3.5s" repeatCount="indefinite">
+        <circle class="route-end" r="6" fill="#E31837" stroke="white" stroke-width="2" opacity="0"></circle>
+        <rect id="route-runner" width="12" height="12" fill="#E31837" x="-6" y="-6" rx="2" ry="2" stroke="white" stroke-width="2" filter="drop-shadow(0 0 6px rgba(227,24,55,0.8))" opacity="0">
+          <animateMotion id="route-runner-motion" begin="indefinite" dur="3.5s" repeatCount="indefinite">
              <mpath href="#route-path-ref"/>
           </animateMotion>
         </rect>
       `;
       mainPath = document.getElementById('animated-route-path');
+      revealPath = document.getElementById('route-reveal-path');
       startCircle = routeSVG.querySelector('.route-start');
       endCircle = routeSVG.querySelector('.route-end');
+      routeRunner = document.getElementById('route-runner');
+      routeRunnerMotion = document.getElementById('route-runner-motion');
     }
 
     mainPath.setAttribute('d', d);
     routeSVG.querySelector('#route-path-ref').setAttribute('d', d);
+    revealPath.setAttribute('d', d);
     startCircle.setAttribute('cx', points[0].x);
     startCircle.setAttribute('cy', points[0].y);
     endCircle.setAttribute('cx', points[points.length-1].x);
     endCircle.setAttribute('cy', points[points.length-1].y);
+
+    const totalLength = revealPath.getTotalLength();
+    if (!routeTraceDuration) {
+      routeTraceDuration = Math.min(2200, Math.max(900, totalLength * 4));
+    }
+
+    const elapsed = Math.max(0, performance.now() - routeTraceStart);
+    const progress = Math.min(elapsed / routeTraceDuration, 1);
+    const revealedLength = totalLength * progress;
+    const hiddenLength = Math.max(totalLength - revealedLength, 0.001);
+
+    revealPath.style.strokeDasharray = `${revealedLength} ${hiddenLength}`;
+    revealPath.style.strokeDashoffset = '0';
+    endCircle.style.opacity = progress > 0.96 ? '1' : '0';
+
+    if (progress >= 1) {
+      routeRunner.style.opacity = '1';
+      if (!routeRunnerStarted && routeRunnerMotion) {
+        routeRunnerStarted = true;
+        routeRunnerMotion.beginElement();
+      }
+    } else {
+      routeRunner.style.opacity = '0';
+    }
   }
 
   window.addEventListener('resize', () => {
@@ -468,6 +493,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedHotspot === h) return;
     selectedHotspot = h;
 
+    document.querySelectorAll('.legend-only-hotspot').forEach(exitHotspot => {
+      if (exitHotspot !== h) exitHotspot.classList.remove('legend-only-active');
+    });
+
     hotspots.forEach(other => {
       other.classList.remove('selected');
       other.style.removeProperty('--ping-color');
@@ -546,8 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Allow orbit-only when hotspot is selected
-    mv.setAttribute('min-camera-orbit', 'auto 20deg 40m');
-    mv.setAttribute('max-camera-orbit', 'auto 75deg 150m');
+    enterHotspotOrbitMode();
 
     mv.autoRotate = false;
 
@@ -556,8 +584,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const itineraryBtn = document.getElementById('itinerary-btn');
     if (itineraryBtn) {
-      itineraryBtn.classList.add('show-itinerary');
-      itineraryBtn.dataset.targetSlot = h.slot;
+      if (h.classList.contains('legend-only-hotspot')) {
+        itineraryBtn.classList.remove('show-itinerary');
+        delete itineraryBtn.dataset.targetSlot;
+      } else {
+        itineraryBtn.classList.add('show-itinerary');
+        itineraryBtn.dataset.targetSlot = h.slot;
+      }
     }
   };
 
@@ -569,12 +602,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  window.triggerLegendOnlyHotspot = (selector) => {
+    const h = document.querySelector(selector);
+    if (h) {
+      h.classList.add('legend-only-active');
+      if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
+      selectHotspot(h);
+    }
+  };
+
+  window.triggerLegendOnlyHotspots = () => {
+    deselectAll();
+    document.querySelectorAll('.legend-only-hotspot').forEach(h => {
+      h.classList.add('legend-only-active');
+      h.classList.remove('faded-out', 'selected');
+    });
+    hotspots.forEach(h => {
+      const hasYouAreHere = h.querySelector('.you-are-here') !== null;
+      if (!h.classList.contains('legend-only-hotspot') && !hasYouAreHere) {
+        h.classList.add('faded-out');
+      }
+    });
+  };
+
   // ─────────────────────────────────────────
   // DESELECT — always resets camera to start
   // ─────────────────────────────────────────
-  const deselectAll = (fullReset = true) => {
-    if (window.itineraryDelay) clearTimeout(window.itineraryDelay);
-    if (window.itineraryOrbit) clearTimeout(window.itineraryOrbit);
+  const deselectAll = () => {
     selectedHotspot = null;
     hotspots.forEach(h => h.classList.remove('selected', 'faded-out'));
     mv.autoRotate = false;
@@ -598,11 +652,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const itineraryBtn = document.getElementById('itinerary-btn');
     if (itineraryBtn) {
       itineraryBtn.classList.remove('show-itinerary');
+      delete itineraryBtn.dataset.targetSlot;
     }
 
-    // Re-lock camera natively allowing slight zoom-out but clamping strict boundaries
-    if (typeof applyCameraLock === 'function') applyCameraLock();
-    if (fullReset) resetCamera();
+    // Re-lock camera and reset to starting position
+    enterLockedMode();
+    resetCamera();
   };
 
   // ─────────────────────────────────────────
@@ -621,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   mv.addEventListener('click', (e) => {
     if (e.target === mv) {
-      deselectAll(false); // Gracefully unlock constraints to allow zoom-out without violently snapping array limits
+      deselectAll(); // already calls resetCamera() + enterLockedMode()
     }
   });
 
@@ -674,53 +729,40 @@ document.addEventListener('DOMContentLoaded', () => {
     searchPillNode.addEventListener('focus', () => {
       if (legendMenu) legendMenu.classList.remove('show');
     });
-    const SYNONYMS = {
-      'weight room': ['gym', 'fitness', 'workout', 'weights', 'lifting'],
-      'spinning room': ['cycling', 'bike', 'spin', 'cardio'],
-      'swimming pool': ['swim', 'water', 'lane', 'aquatics'],
-      'stretching room': ['stretch', 'yoga', 'warmup', 'pilates'],
-      'squash court': ['racket', 'tennis', 'wall'],
-      'boxing room': ['box', 'fight', 'ring', 'sparring'],
-      'golf court': ['putt', 'swing', 'club', 'golf'],
-      'locker room': ['lockers', 'change', 'shower', 'washroom'],
-      'changing room': ['change', 'clothes', 'dressing'],
-      'lobby': ['entrance', 'front', 'desk', 'reception']
+    const SEARCH_SYNONYMS = {
+      'weight room': ['gym', 'gymm', 'fitness', 'workout', 'weights', 'lifting'],
+      'spinning room': ['spinning', 'spin', 'bike', 'bicycle', 'cycling', 'cycle'],
+      'swimming pool': ['pool', 'swim', 'aquatics', 'water'],
+      'stretching room': ['stretching', 'stretch', 'mobility', 'warmup'],
+      'boxing room': ['boxing', 'box', 'fight'],
+      'golf court': ['golf', 'putting', 'swing'],
+      'squash court': ['squash', 'racquet', 'racket'],
+      'lobby': ['entrance', 'entry', 'front desk', 'reception']
     };
-
     searchPillNode.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
       hotspots.forEach(h => {
         const labelText = h.querySelector('.hotspot-label');
         if (!labelText) return;
-        
-        const baseName = labelText.textContent.toLowerCase().trim();
-        let isMatch = false;
-        
-        if (query === '' || baseName.includes(query)) {
-          isMatch = true;
+
+        const label = labelText.textContent.toLowerCase();
+        const synonymMatches = Object.entries(SEARCH_SYNONYMS).some(([name, aliases]) => {
+          return label.includes(name) && aliases.some(alias => alias.includes(query) || query.includes(alias));
+        });
+
+        if (query === '' || label.includes(query) || synonymMatches) {
+          h.classList.remove('faded-out');
         } else {
-          // Check synonym aliases dynamically
-          for (const [key, aliases] of Object.entries(SYNONYMS)) {
-            if (baseName.includes(key)) {
-              if (aliases.some(alias => alias.includes(query) || query.includes(alias))) {
-                isMatch = true;
-                break;
-              }
-            }
-          }
+          h.classList.add('faded-out');
         }
-        
-        if (isMatch) h.classList.remove('faded-out');
-        else h.classList.add('faded-out');
       });
     });
   }
 
   // ─────────────────────────────────────────
-  // MODEL LOAD & GRAPH CLEANUP
+  // MODEL LOAD
   // ─────────────────────────────────────────
   modelViewer.addEventListener('load', () => {
-    // 1. Elevate Hotspots cleanly
     hotspots.forEach(h => {
       if (h.dataset.position) {
         const pos = h.dataset.position.split(' ');
@@ -730,31 +772,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
-
-    try {
-      if (modelViewer.model && modelViewer.model.materials) {
-         modelViewer.model.materials.forEach(mat => {
-            const n = mat.name.toLowerCase();
-            if (n.includes('void') || n.includes('background')) {
-               mat.setAlphaMode('OPAQUE');
-            }
-         });
-      }
-
-      const symbols = Object.getOwnPropertySymbols(modelViewer);
-      const sceneSymbol = symbols.find(s => s.toString() === 'Symbol(scene)');
-      if (sceneSymbol && modelViewer[sceneSymbol]) {
-        modelViewer[sceneSymbol].traverse((child) => {
-          if (child.isMesh) {
-            const name = child.name.toLowerCase();
-            const mName = (child.material && child.material.name) ? child.material.name.toLowerCase() : '';
-            if (name.includes('plane') || name.includes('background') || mName.includes('void')) {
-              child.visible = true; 
-            }
-          }
-        });
-      }
-    } catch(err) {}
 
     const screen = document.getElementById('loading-screen');
     if (screen) {
@@ -791,8 +808,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mv.removeAttribute('disable-pan');
       mv.removeAttribute('zoom-sensitivity');
       mv.setAttribute('interpolation-decay', '200');
-      mv.setAttribute('min-camera-orbit', 'auto 0deg 50m');
-      mv.setAttribute('max-camera-orbit', 'auto 75deg 150m');
+      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
+      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
       hotspots.forEach(h => h.classList.remove('mobile-hotspot-disabled'));
     }
   };
@@ -888,8 +905,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nx > BOUND_X)  { nx = BOUND_X;  clamped = true; }
     if (nx < -BOUND_X) { nx = -BOUND_X; clamped = true; }
 
-    if (nz > BOUND_Z)  { nz = BOUND_Z;  clamped = true; }
-    if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
+    if (window.innerWidth <= 768 && !selectedHotspot) {
+      // Full Z lock in base mode
+      if (Math.abs(nz - 8.5) > 0.01) { nz = 8.5; clamped = true; }
+    } else {
+      if (nz > BOUND_Z)  { nz = BOUND_Z;  clamped = true; }
+      if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
+    }
 
     if (clamped && e.detail.source === 'user-interaction') {
       modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
@@ -908,7 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   mv.addEventListener('touchstart', (e) => {
     // Only intercept single-finger touches in base (no hotspot selected) mode on mobile
-    if (window.innerWidth > 768 || (selectedHotspot && (!currentRoutePathIds || !currentRoutePathIds.length))) {
+    if (window.innerWidth > 768 || selectedHotspot) {
       window.isCustomScrolling = false;
       return;
     }
@@ -924,17 +946,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const currentOrbit = mv.getCameraOrbit();
       const t = (currentOrbit.theta * 180 / Math.PI).toFixed(1);
       mv.setAttribute('min-camera-orbit', `${t}deg 45deg 40m`);
-      mv.setAttribute('max-camera-orbit', `${t}deg 75deg 150m`);
+      mv.setAttribute('max-camera-orbit', `${t}deg 85deg 180m`);
     } else if (e.touches.length >= 2) {
       window.isCustomScrolling = false;
       // Allow freedom for two finger native rotation twists to execute perfectly
-      mv.setAttribute('min-camera-orbit', 'auto 0deg 50m');
-      mv.setAttribute('max-camera-orbit', 'auto 75deg 150m');
+      mv.setAttribute('min-camera-orbit', 'auto 45deg 40m');
+      mv.setAttribute('max-camera-orbit', 'auto 85deg 180m');
     }
   }, { passive: true });
 
   mv.addEventListener('touchmove', (e) => {
-    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1 || (selectedHotspot && (!currentRoutePathIds || !currentRoutePathIds.length))) return;
+    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1 || selectedHotspot) return;
 
     const deltaX = e.touches[0].clientX - scrollStartX;
     const deltaY = e.touches[0].clientY - scrollStartY;
@@ -1036,8 +1058,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!targetWaypoint) return;
 
       // Clear any locked ranges to allow top-down camera pitch natively
-      mv.setAttribute('min-camera-orbit', 'auto 0deg 50m');
-      mv.setAttribute('max-camera-orbit', 'auto 75deg 150m');
+      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
+      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
 
       // Ensure camera transitions smoothly
       mv.setAttribute('interpolation-decay', '400');
@@ -1048,27 +1070,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const pathIds = astar(24, targetWaypoint.id);
+      console.log('PATH:', pathIds, 'start:24 end:', targetWaypoint.id);
       if (pathIds && pathIds.length > 0) {
         currentRoutePathIds = pathIds;
         drawRoute(pathIds);
-
-        // Cancel any pending cinematic timeouts if user clicks multiple itineraries rapidly
-        if (window.itineraryDelay) clearTimeout(window.itineraryDelay);
-        if (window.itineraryOrbit) clearTimeout(window.itineraryOrbit);
-        
-        // Wait 3.5 seconds for the user to visually digest the entire raw drawn top-down route
-        window.itineraryDelay = setTimeout(() => {
-          // Drop down smoothly to 45 degree angle maintaining existing X-axis rotation natively
-          mv.setAttribute('interpolation-decay', '600');
-          mv.cameraOrbit = "auto 45deg 120m";
-          
-          // Initiate slow continuous spin effect automatically
-          window.itineraryOrbit = setTimeout(() => {
-             mv.setAttribute('auto-rotate-delay', '0');
-             mv.setAttribute('rotation-per-second', '12deg'); 
-             mv.autoRotate = true;
-          }, 1500); // 1.5s after the pitch drop begins
-        }, 3500);
       }
     });
   }
@@ -1105,15 +1110,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (legendBtn) legendBtn.addEventListener('click', () => hideLegendPrompt());
 
-  const cancelCinematic = () => {
-    if (window.itineraryDelay) clearTimeout(window.itineraryDelay);
-    if (window.itineraryOrbit) clearTimeout(window.itineraryOrbit);
-  };
-
-  modelViewer.addEventListener('pointerdown', () => { hideGesturePrompt(); cancelCinematic(); });
-  modelViewer.addEventListener('wheel', () => { hideGesturePrompt(); cancelCinematic(); });
+  modelViewer.addEventListener('pointerdown', hideGesturePrompt);
+  modelViewer.addEventListener('wheel', hideGesturePrompt);
   modelViewer.addEventListener('camera-change', (e) => {
-    if (e.detail.source === 'user-interaction') { hideGesturePrompt(); cancelCinematic(); }
+    if (e.detail.source === 'user-interaction') hideGesturePrompt();
   });
 
 });
