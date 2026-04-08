@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modelViewer = document.querySelector('model-viewer');
   const hotspots = document.querySelectorAll('.Hotspot');
   let selectedHotspot = null;
+  let isItineraryMode = false;
 
   // ─────────────────────────────────────────
   // STARTING CAMERA STATE
@@ -10,6 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const START_ORBIT  = "360deg 45deg 100m";
   const START_TARGET = "0m -1.3m 8.5m";
   const START_FOV    = "70deg";
+  const QUICK_TRANSITION_DECAY = "90";
+  const MOBILE_ZOOM_SENSITIVITY = "0.72";
+  const DESKTOP_ZOOM_SENSITIVITY = "0.82";
+  const TOP_VIEW_ZOOM_SENSITIVITY = "0.78";
+  const MOBILE_PAN_SPEED_FACTOR = 0.00135;
+  const TOUCH_PAN_DEADZONE = 8;
+
+  function applyQuickCameraTransition() {
+    modelViewer.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
+  }
 
   const SLOT_TO_KEY = {
     'hotspot-2': '1',   // Lobby
@@ -30,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function resetCamera() {
+    applyQuickCameraTransition();
     modelViewer.cameraOrbit  = START_ORBIT;
     modelViewer.cameraTarget = START_TARGET;
     modelViewer.fieldOfView  = START_FOV;
@@ -416,28 +428,32 @@ document.addEventListener('DOMContentLoaded', () => {
   function enterLockedMode() {
     if (window.innerWidth <= 768) {
       mv.setAttribute('disable-pan', '');
-      // Theta locked to exactly 360deg — hold-swipe CANNOT tilt the camera
-      mv.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m');
-      mv.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m');
-      mv.setAttribute('zoom-sensitivity', '1.2');
-      mv.setAttribute('interpolation-decay', '100');
+      mv.setAttribute('min-camera-orbit', '360deg 45deg 40m');
+      mv.setAttribute('max-camera-orbit', '360deg 45deg 180m');
+      mv.setAttribute('zoom-sensitivity', MOBILE_ZOOM_SENSITIVITY);
+      mv.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
     } else {
       mv.removeAttribute('disable-pan');
-      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
-      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
-      mv.setAttribute('interpolation-decay', '200');
+      mv.setAttribute('min-camera-orbit', '360deg 45deg 20m');
+      mv.setAttribute('max-camera-orbit', '360deg 45deg 150m');
+      mv.setAttribute('zoom-sensitivity', DESKTOP_ZOOM_SENSITIVITY);
+      mv.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
     }
     mv.autoRotate = false;
   }
 
   function enterHotspotOrbitMode() {
-    // Free theta+phi so the user can orbit around the selected hotspot
-    // but limit height strictly
+    enterLockedMode();
+    applyQuickCameraTransition();
+  }
+
+  function enterItineraryTopView() {
+    isItineraryMode = true;
     mv.removeAttribute('disable-pan');
-    mv.setAttribute('min-camera-orbit', 'auto 45deg 20m'); // No top down
-    mv.setAttribute('max-camera-orbit', 'auto 85deg 150m');
-    mv.setAttribute('interpolation-decay', '400'); // Smoother slower transition floats
-    mv.autoRotate = false;
+    mv.setAttribute('zoom-sensitivity', TOP_VIEW_ZOOM_SENSITIVITY);
+    applyQuickCameraTransition();
+    mv.setAttribute('min-camera-orbit', '0deg 0deg 55m');
+    mv.setAttribute('max-camera-orbit', '0deg 0deg 150m');
   }
 
   // ─────────────────────────────────────────
@@ -491,6 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   const selectHotspot = (h) => {
     if (selectedHotspot === h) return;
+    isItineraryMode = false;
     selectedHotspot = h;
 
     document.querySelectorAll('.legend-only-hotspot').forEach(exitHotspot => {
@@ -556,8 +573,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = parseFloat(parts[0]);
         const y = parseFloat(parts[1]);
         const z = parseFloat(parts[2]);
-        // Smooth out the target snapping jump 
-        mv.setAttribute('interpolation-decay', '400');
+        // Keep scripted moves quick but smooth.
+        applyQuickCameraTransition();
         
         // Set target to the hotspot — keeps same vertical/horizontal camera angle natively
         mv.cameraTarget = `${x}m ${y}m ${z}m`;
@@ -574,8 +591,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Allow orbit-only when hotspot is selected
-    enterHotspotOrbitMode();
+    // Keep the selected hotspot active, but preserve navigation until outside click reset.
+    enterLockedMode();
+    applyQuickCameraTransition();
 
     mv.autoRotate = false;
 
@@ -629,6 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // DESELECT — always resets camera to start
   // ─────────────────────────────────────────
   const deselectAll = () => {
+    isItineraryMode = false;
     selectedHotspot = null;
     hotspots.forEach(h => h.classList.remove('selected', 'faded-out'));
     mv.autoRotate = false;
@@ -800,25 +819,29 @@ document.addEventListener('DOMContentLoaded', () => {
     mv.setAttribute('camera-controls', '');
     if (window.innerWidth <= 768) {
       mv.setAttribute('disable-pan', '');
-      mv.setAttribute('zoom-sensitivity', '1.2');
-      mv.setAttribute('interpolation-decay', '100');
-      mv.setAttribute('min-camera-orbit', '359.5deg 44.5deg 40m');
-      mv.setAttribute('max-camera-orbit', '360.5deg 45.5deg 180m');
+      mv.setAttribute('zoom-sensitivity', MOBILE_ZOOM_SENSITIVITY);
+      mv.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
+      mv.setAttribute('min-camera-orbit', '360deg 45deg 40m');
+      mv.setAttribute('max-camera-orbit', '360deg 45deg 180m');
     } else {
       mv.removeAttribute('disable-pan');
-      mv.removeAttribute('zoom-sensitivity');
-      mv.setAttribute('interpolation-decay', '200');
-      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
-      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
+      mv.setAttribute('zoom-sensitivity', DESKTOP_ZOOM_SENSITIVITY);
+      mv.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
+      mv.setAttribute('min-camera-orbit', '360deg 45deg 20m');
+      mv.setAttribute('max-camera-orbit', '360deg 45deg 150m');
       hotspots.forEach(h => h.classList.remove('mobile-hotspot-disabled'));
     }
   };
 
   applyCameraLock();
   window.addEventListener('resize', debounce(() => {
-    applyCameraLock();
+    if (isItineraryMode) {
+      enterItineraryTopView();
+    } else {
+      applyCameraLock();
+    }
     // If a hotspot is selected, stay in orbit mode; otherwise re-lock
-    if (selectedHotspot) {
+    if (!isItineraryMode && selectedHotspot) {
       enterHotspotOrbitMode();
     }
   }, 200));
@@ -858,43 +881,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // DEV OVERLAY
   // ─────────────────────────────────────────
-  const updateDevOverlay = () => {
-    const orbit  = modelViewer.getCameraOrbit();
-    const target = modelViewer.getCameraTarget();
-    const fov    = modelViewer.getFieldOfView();
-    const thetaDeg = (orbit.theta * 180 / Math.PI).toFixed(2);
-    const phiDeg   = (orbit.phi   * 180 / Math.PI).toFixed(2);
-    const radius   = orbit.radius.toFixed(2);
-    const orbitStr  = `${thetaDeg}deg ${phiDeg}deg ${radius}m`;
-    const targetStr = `${target.x.toFixed(2)}m ${target.y.toFixed(2)}m ${target.z.toFixed(2)}m`;
-    const fovStr    = `${fov.toFixed(2)}deg`;
-    const zoomSens  = modelViewer.getAttribute('zoom-sensitivity') || "Default";
-    const orbitSens = modelViewer.getAttribute('orbit-sensitivity') || "Default";
-    let sizeStr = "Evaluating...";
-    const size = modelViewer.getDimensions();
-    if (size && size.x) sizeStr = `${size.x.toFixed(2)}m x ${size.y.toFixed(2)}m x ${size.z.toFixed(2)}m`;
-
-    const devOrbit    = document.getElementById('dev-orbit');
-    const devTarget   = document.getElementById('dev-target');
-    const devFov      = document.getElementById('dev-fov');
-    const devZoom     = document.getElementById('dev-zoom');
-    const devOrbitSens = document.getElementById('dev-orbit-sens');
-    const devSize     = document.getElementById('dev-size');
-    if (devOrbit && devTarget && devFov) {
-      devOrbit.innerText  = orbitStr;
-      devTarget.innerText = targetStr;
-      devFov.innerText    = fovStr;
-    }
-    if (devZoom)     devZoom.innerText     = zoomSens;
-    if (devOrbitSens) devOrbitSens.innerText = orbitSens;
-    if (devSize)     devSize.innerText     = sizeStr;
-  };
-
   // ─────────────────────────────────────────
   // CAMERA-CHANGE: pan clamp
   // ─────────────────────────────────────────
   modelViewer.addEventListener('camera-change', (e) => {
-    updateDevOverlay();
     const target = modelViewer.getCameraTarget();
     let clamped = false;
     const BOUND_X = 45;
@@ -905,7 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nx > BOUND_X)  { nx = BOUND_X;  clamped = true; }
     if (nx < -BOUND_X) { nx = -BOUND_X; clamped = true; }
 
-    if (window.innerWidth <= 768 && !selectedHotspot) {
+    if (window.innerWidth <= 768 && !selectedHotspot && !isItineraryMode) {
       // Full Z lock in base mode
       if (Math.abs(nz - 8.5) > 0.01) { nz = 8.5; clamped = true; }
     } else {
@@ -927,10 +917,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let scrollStartY = 0;
   let startCameraX = 0;
   let startCameraZ = 0;
-
   mv.addEventListener('touchstart', (e) => {
-    // Only intercept single-finger touches in base (no hotspot selected) mode on mobile
-    if (window.innerWidth > 768 || selectedHotspot) {
+    // Keep parallel navigation active on mobile, including when a hotspot is selected.
+    if (window.innerWidth > 768) {
       window.isCustomScrolling = false;
       return;
     }
@@ -942,33 +931,39 @@ document.addEventListener('DOMContentLoaded', () => {
       startCameraX = mv.getCameraTarget().x;
       startCameraZ = mv.getCameraTarget().z;
 
-      // Aggressively lock theta around the current angle so the finger drag acts purely as a 2D pan slider natively!
-      const currentOrbit = mv.getCameraOrbit();
-      const t = (currentOrbit.theta * 180 / Math.PI).toFixed(1);
-      mv.setAttribute('min-camera-orbit', `${t}deg 45deg 40m`);
-      mv.setAttribute('max-camera-orbit', `${t}deg 85deg 180m`);
+      if (isItineraryMode) {
+        enterItineraryTopView();
+      } else {
+        mv.setAttribute('min-camera-orbit', '360deg 45deg 40m');
+        mv.setAttribute('max-camera-orbit', '360deg 45deg 180m');
+      }
     } else if (e.touches.length >= 2) {
       window.isCustomScrolling = false;
-      // Allow freedom for two finger native rotation twists to execute perfectly
-      mv.setAttribute('min-camera-orbit', 'auto 45deg 40m');
-      mv.setAttribute('max-camera-orbit', 'auto 85deg 180m');
+      if (isItineraryMode) {
+        enterItineraryTopView();
+      } else {
+        mv.setAttribute('min-camera-orbit', '360deg 45deg 40m');
+        mv.setAttribute('max-camera-orbit', '360deg 45deg 180m');
+      }
     }
   }, { passive: true });
 
   mv.addEventListener('touchmove', (e) => {
-    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1 || selectedHotspot) return;
+    if (!window.isCustomScrolling || window.innerWidth > 768 || e.touches.length !== 1) return;
 
     const deltaX = e.touches[0].clientX - scrollStartX;
     const deltaY = e.touches[0].clientY - scrollStartY;
+    const dragDistance = Math.hypot(deltaX, deltaY);
+    if (dragDistance < TOUCH_PAN_DEADZONE) return;
 
     const orbit = mv.getCameraOrbit();
     const radiusStr = orbit.radius;
     let radius = 100;
     if (radiusStr) radius = parseFloat(radiusStr);
-    const panSpeed = 0.0016 * radius;
+    const panSpeed = MOBILE_PAN_SPEED_FACTOR * radius;
 
     // Map screen drag accurately via trig to world 3D vectors based on exact current camera orientation
-    const theta = orbit.theta;
+    const theta = Math.PI * 2;
     const mapDX = deltaX * Math.cos(theta) - deltaY * Math.sin(theta);
     const mapDZ = deltaX * Math.sin(theta) + deltaY * Math.cos(theta);
 
@@ -987,29 +982,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.isCustomScrolling = false;
   });
 
-  modelViewer.addEventListener('load', updateDevOverlay);
-
-  const copyBtn = document.getElementById('dev-copy-btn');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', () => {
-      const orbitStr  = document.getElementById('dev-orbit').innerText;
-      const targetStr = document.getElementById('dev-target').innerText;
-      const fovStr    = document.getElementById('dev-fov').innerText;
-      const copyString = `camera-orbit="${orbitStr}"\ncamera-target="${targetStr}"\nfield-of-view="${fovStr}"`;
-      navigator.clipboard.writeText(copyString).then(() => {
-        const orig = copyBtn.innerText;
-        copyBtn.innerText = "Copied!";
-        setTimeout(() => copyBtn.innerText = orig, 1500);
-      });
-    });
-  }
-
   // ─────────────────────────────────────────
   // SEARCH — keyboard zoom out + restore on blur
   // ─────────────────────────────────────────
   const mobileSearchInputRef = document.querySelector('.search-pill-input');
   if (mobileSearchInputRef) {
     mobileSearchInputRef.addEventListener('focus', () => {
+      applyQuickCameraTransition();
       mv.cameraOrbit  = "360deg 45deg 165m";
       mv.cameraTarget = START_TARGET;
       mv.fieldOfView  = START_FOV;
@@ -1057,12 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetWaypoint = waypointForRoom(targetKey);
       if (!targetWaypoint) return;
 
-      // Clear any locked ranges to allow top-down camera pitch natively
-      mv.setAttribute('min-camera-orbit', 'auto 0deg 20m');
-      mv.setAttribute('max-camera-orbit', 'auto 90deg 150m');
-
-      // Ensure camera transitions smoothly
-      mv.setAttribute('interpolation-decay', '400');
+      enterItineraryTopView();
       requestAnimationFrame(() => {
         mv.cameraOrbit = "0deg 0deg 120m";
         mv.cameraTarget = START_TARGET;
