@@ -132,34 +132,35 @@
   <!-- Mobile Bottom Right Controls -->
   <div class="mobile-bottom-right-controls">
     <!-- Recenter 3D Button -->
-    <div class="search-pill action-only" id="mobile-reset-btn">
-      <div class="search-pill-front">
-        <div class="search-icon-wrapper">
-          <i class="fas fa-location-arrow" style="font-size: 18px;"></i>
+    <div class="mobile-control-stack mobile-reset-stack">
+      <div class="search-pill action-only" id="mobile-reset-btn">
+        <div class="search-pill-front">
+          <div class="search-icon-wrapper">
+            <i class="fas fa-location-arrow" style="font-size: 18px;"></i>
+          </div>
         </div>
       </div>
+      <div class="mobile-control-label">Recenter position</div>
     </div>
 
     <!-- Search 3D Button -->
-    <div class="search-pill expandable-search">
-      <div class="search-pill-front">
-        <input type="text" class="search-pill-input" placeholder="Search..." />
-        <div class="search-icon-wrapper">
-          <svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24"
-            width="22" height="22">
-            <path
-              d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z">
-            </path>
-          </svg>
+    <div class="mobile-control-stack mobile-search-stack">
+      <div class="search-pill expandable-search">
+        <div class="search-pill-front">
+          <input type="text" class="search-pill-input" placeholder="Search..." />
+          <div class="search-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24"
+              width="22" height="22">
+              <path
+                d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z">
+              </path>
+            </svg>
+          </div>
         </div>
       </div>
+      <div class="mobile-control-label">Search</div>
     </div>
   </div>
-
-
-
-
-
 
 
   <!-- <model-viewer> HTML element -->
@@ -348,24 +349,30 @@
     <button slot="ar-button" id="ar-button">
       View in your space
     </button>
-    <div id="ar-prompt">
-      <img src="ar_hand_prompt.png">
-    </div>
   </model-viewer>
   <!-- Hand Gesture Prompts (Emoji Base) -->
   <div id="gesture-prompt-overlay">
     <div class="gesture-visuals">
-      <div class="gesture-box" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-        <div class="two-fingers" style="position:relative; width:40px; height:40px; font-size:26px;">
-          <span class="icon-pan" style="position:absolute; left:0;">👆</span>
-          <span class="icon-pan offset-finger" style="position:absolute; right:0; top:4px;">👆</span>
+      <div class="gesture-step gesture-step-navigate">
+        <div class="gesture-box">
+          <div class="gesture-navigate-icon">
+            <span class="gesture-finger">👆</span>
+            <span class="gesture-arrow gesture-arrow-left">←</span>
+            <span class="gesture-arrow gesture-arrow-right">→</span>
+            <span class="gesture-arrow gesture-arrow-up">↑</span>
+            <span class="gesture-arrow gesture-arrow-down">↓</span>
+          </div>
+          <span>Navigate</span>
         </div>
-        <span>Pan</span>
       </div>
-      <div class="gesture-divider" style="width:2px; height:40px; background:white; opacity:0.5;"></div>
-      <div class="gesture-box" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-        <span class="icon-orbit" style="font-size:26px; height:40px; display:flex; align-items:center;">👆</span>
-        <span>Orbit</span>
+      <div class="gesture-step gesture-step-zoom">
+        <div class="gesture-box">
+          <div class="gesture-zoom-icon">
+            <span class="gesture-finger gesture-finger-left">👆</span>
+            <span class="gesture-finger gesture-finger-right">👆</span>
+          </div>
+          <span>Zoom</span>
+        </div>
       </div>
     </div>
   </div>
