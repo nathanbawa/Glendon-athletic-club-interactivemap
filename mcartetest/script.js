@@ -17,9 +17,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const TOP_VIEW_ZOOM_SENSITIVITY = "0.78";
   const MOBILE_PAN_SPEED_FACTOR = 0.00135;
   const TOUCH_PAN_DEADZONE = 8;
+  const EMPTY_TAP_DEADZONE = 8;
+  const CAMERA_RESET_GUARD_MS = 650;
+  const CAMERA_BOUNDS_X = 45;
+  const CAMERA_BOUNDS_Z = 65;
+  let guardedCameraState = null;
+  let guardCameraUntil = 0;
+  let backgroundPointerSnapshot = null;
 
   function applyQuickCameraTransition() {
     modelViewer.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
+  }
+
+  function captureCameraState() {
+    const orbit = modelViewer.getCameraOrbit();
+    const target = modelViewer.getCameraTarget();
+    const fov = modelViewer.getFieldOfView();
+    return {
+      orbit: `${(orbit.theta * 180 / Math.PI).toFixed(2)}deg ${(orbit.phi * 180 / Math.PI).toFixed(2)}deg ${orbit.radius.toFixed(2)}m`,
+      target: `${target.x.toFixed(2)}m ${target.y.toFixed(2)}m ${target.z.toFixed(2)}m`,
+      fov: `${fov.toFixed(2)}deg`
+    };
+  }
+
+  function applyCameraState(state) {
+    if (!state) return;
+    applyQuickCameraTransition();
+    modelViewer.cameraOrbit = state.orbit;
+    modelViewer.cameraTarget = state.target;
+    modelViewer.fieldOfView = state.fov;
+  }
+
+  function guardCameraState(state, durationMs = CAMERA_RESET_GUARD_MS) {
+    guardedCameraState = state;
+    guardCameraUntil = performance.now() + durationMs;
   }
 
   const SLOT_TO_KEY = {
@@ -41,10 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function resetCamera() {
-    applyQuickCameraTransition();
-    modelViewer.cameraOrbit  = START_ORBIT;
-    modelViewer.cameraTarget = START_TARGET;
-    modelViewer.fieldOfView  = START_FOV;
+    const startState = {
+      orbit: START_ORBIT,
+      target: START_TARGET,
+      fov: START_FOV
+    };
+    applyCameraState(startState);
+    guardCameraState(startState);
   }
 
   // ─────────────────────────────────────────
@@ -724,6 +758,44 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // BACKGROUND CLICK → deselect + recenter
   // ─────────────────────────────────────────
+  mv.addEventListener('pointerdown', (e) => {
+    if (e.target !== mv) {
+      backgroundPointerSnapshot = null;
+      return;
+    }
+
+    backgroundPointerSnapshot = {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      camera: captureCameraState()
+    };
+  }, true);
+
+  mv.addEventListener('pointerup', (e) => {
+    if (!backgroundPointerSnapshot || e.target !== mv) {
+      backgroundPointerSnapshot = null;
+      return;
+    }
+
+    const moved = Math.hypot(
+      e.clientX - backgroundPointerSnapshot.clientX,
+      e.clientY - backgroundPointerSnapshot.clientY
+    );
+
+    if (moved < EMPTY_TAP_DEADZONE && !selectedHotspot && !isItineraryMode) {
+      e.preventDefault();
+      e.stopPropagation();
+      applyCameraState(backgroundPointerSnapshot.camera);
+      guardCameraState(backgroundPointerSnapshot.camera, 250);
+    }
+
+    backgroundPointerSnapshot = null;
+  }, true);
+
+  mv.addEventListener('pointercancel', () => {
+    backgroundPointerSnapshot = null;
+  }, true);
+
   mv.addEventListener('click', (e) => {
     if (e.target === mv && (selectedHotspot || isItineraryMode)) {
       deselectAll(); // already calls resetCamera() + enterLockedMode()
@@ -916,22 +988,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // CAMERA-CHANGE: pan clamp
   // ─────────────────────────────────────────
   modelViewer.addEventListener('camera-change', (e) => {
+    if (guardedCameraState && performance.now() < guardCameraUntil) {
+      const source = e.detail?.source || '';
+      if (source === 'user-interaction') {
+        applyCameraState(guardedCameraState);
+        return;
+      }
+    }
+
     const target = modelViewer.getCameraTarget();
     let clamped = false;
-    const BOUND_X = 45;
-    const BOUND_Z = 65;
     let nx = target.x;
     let nz = target.z;
 
-    if (nx > BOUND_X)  { nx = BOUND_X;  clamped = true; }
-    if (nx < -BOUND_X) { nx = -BOUND_X; clamped = true; }
+    if (nx > CAMERA_BOUNDS_X)  { nx = CAMERA_BOUNDS_X;  clamped = true; }
+    if (nx < -CAMERA_BOUNDS_X) { nx = -CAMERA_BOUNDS_X; clamped = true; }
 
     if (window.innerWidth <= 768 && !selectedHotspot && !isItineraryMode) {
       // Full Z lock in base mode
       if (Math.abs(nz - 8.5) > 0.01) { nz = 8.5; clamped = true; }
     } else {
-      if (nz > BOUND_Z)  { nz = BOUND_Z;  clamped = true; }
-      if (nz < -BOUND_Z) { nz = -BOUND_Z; clamped = true; }
+      if (nz > CAMERA_BOUNDS_Z)  { nz = CAMERA_BOUNDS_Z;  clamped = true; }
+      if (nz < -CAMERA_BOUNDS_Z) { nz = -CAMERA_BOUNDS_Z; clamped = true; }
     }
 
     if (clamped && e.detail.source === 'user-interaction') {
