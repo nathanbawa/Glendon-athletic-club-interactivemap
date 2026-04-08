@@ -24,13 +24,13 @@ model-viewer {
   bottom: 0;
   background-color: transparent;
   touch-action: none;
-  background: radial-gradient(ellipse at center, #f0f0f0 0%, #E5E5E5 60%, #d5d5d5 100%);
+  background: radial-gradient(ellipse at center, #ece8e4 0%, #D6CFCA 58%, #b8b0aa 100%);
 }
 
 html,
 body {
   font-family: 'Inter', sans-serif;
-  background: radial-gradient(ellipse at center, #c8c8c8 0%, #a8a8a8 60%, #888888 100%);
+  background: radial-gradient(ellipse at center, #eee9e5 0%, #D6CFCA 60%, #b9b0aa 100%);
   color: #000;
   overflow: hidden;
 }
@@ -885,6 +885,14 @@ hr.divider {
   z-index: 2;
 }
 
+.Hotspot.legend-only-hotspot {
+  display: none !important;
+}
+
+.Hotspot.legend-only-hotspot.legend-only-active {
+  display: inline-flex !important;
+}
+
 /* Dev Overlay HUD */
 #dev-overlay {
   position: absolute;
@@ -1447,13 +1455,16 @@ hr.divider {
 
 @media (max-width: 768px) {
   #top-bar {
-    height: 38px !important;
-    font-size: 14px !important;
+    display: flex !important;
   }
 
   #mobile-top-logo {
     height: 22px !important;
     margin-right: 8px !important;
+  }
+
+  model-viewer {
+    top: 60px !important;
   }
 }
 
@@ -1471,6 +1482,24 @@ hr.divider {
 @media (max-width: 768px) {
   #mobile-legend-container {
     display: block;
+    top: 72px;
+  }
+}
+
+.legend-subtext {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .legend-subtext {
+    display: block;
+    margin-top: 6px;
+    margin-left: 8px;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -1669,6 +1698,30 @@ hr.divider {
 #mobile-legend-menu li:active::before {
   transform: translateY(1px);
   transition: transform 34ms;
+}
+
+#mobile-legend-menu li.legend-section-label {
+  height: auto;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  cursor: default;
+}
+
+#mobile-legend-menu li.legend-section-label::before,
+#mobile-legend-menu li.legend-section-label::after {
+  display: none;
+}
+
+.legend-text-only {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: none;
+  padding: 0 4px;
+  height: auto;
 }
 
 /* Legend Inner Colored Dots (automatically maps mapped class styles natively) */
