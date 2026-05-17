@@ -1,0 +1,23 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Syncthing
+.stfolder/
+.stversions/
+.stignore
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (if added later)
+node_modules/
+npm-debug.log*
+
+# Gemini AI
+.gemini/
