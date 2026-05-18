@@ -18,7 +18,6 @@ model-viewer {
   height: 100vh;
   position: fixed;
   top: 48px;
-  /* accounts for top bar height */
   left: 0;
   right: 0;
   bottom: 0;
@@ -35,7 +34,9 @@ body {
   overflow: hidden;
 }
 
-/* Top Bar */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   TOP BAR â€” mobile style on desktop too
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #top-bar {
   position: fixed;
   top: 0;
@@ -43,7 +44,6 @@ body {
   width: 100%;
   height: 48px;
   background: #E31837;
-  /* Glendon Red */
   color: white;
   display: flex;
   align-items: center;
@@ -51,9 +51,476 @@ body {
   font-weight: bold;
   font-size: 16px;
   z-index: 1000;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
-/* DaisyUI-like Card & Dropdown implementation */
+#top-bar>span {
+  flex: 1;
+  text-align: center;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   DESKTOP TOP BAR â€” override to match mobile look
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (min-width: 769px) {
+  #top-bar {
+    background: rgba(235, 235, 235, 0.98);
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    height: 60px;
+    padding: 10px 15px;
+    justify-content: flex-start;
+    gap: 0;
+  }
+
+  #top-bar>span {
+    flex: 1;
+    text-align: center;
+    color: #111;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  #desktop-top-logo {
+    display: block !important;
+    height: 28px;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  model-viewer {
+    top: 60px !important;
+  }
+}
+
+/* Desktop logo in top bar */
+#desktop-top-logo {
+  display: none;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   DESKTOP SEARCH IN TOP BAR
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.desktop-search-container {
+  display: none;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+@media (min-width: 769px) {
+  .desktop-search-container {
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Desktop search pill â€” styled like the mobile expandable-search */
+.desktop-search-pill {
+  position: relative;
+  background: transparent;
+  padding: 0;
+  border: none;
+  cursor: text;
+  outline: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.desktop-search-pill:focus-within {
+  width: 240px;
+}
+
+.desktop-search-pill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: inherit;
+  filter: blur(2px);
+  transform: translateY(2px);
+  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
+  z-index: 1;
+}
+
+.desktop-search-pill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #8a0c20 0%, #b3102a 8%, #8a0c20 92%, #5c0815 100%);
+  z-index: 2;
+}
+
+.desktop-search-pill .search-pill-front {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: #E31837;
+  box-sizing: border-box;
+  overflow: hidden;
+  transform: translateY(-4px);
+  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
+  padding: 0;
+}
+
+.desktop-search-pill:hover .search-pill-front {
+  transform: translateY(-6px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+}
+
+.desktop-search-pill:hover::before {
+  transform: translateY(4px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+}
+
+.desktop-search-pill:active .search-pill-front {
+  transform: translateY(-1px);
+  transition: transform 34ms;
+}
+
+.desktop-search-pill:active::before {
+  transform: translateY(1px);
+  transition: transform 34ms;
+}
+
+.desktop-search-pill .search-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  fill: white;
+  color: white;
+  flex-shrink: 0;
+  width: 22px;
+  margin-right: 11px;
+}
+
+.desktop-search-input {
+  flex-grow: 1;
+  min-width: 0;
+  opacity: 0;
+  width: 0;
+  transition: opacity 0.2s ease, width 0.3s;
+  pointer-events: none;
+  outline: none;
+  font-size: 14px;
+  background: transparent;
+  color: white;
+  font-weight: normal;
+  border: none;
+  padding-left: 16px;
+}
+
+.desktop-search-pill:focus-within .desktop-search-input {
+  opacity: 1;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.desktop-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   DESKTOP RECENTER â€” sits above the logo (bottom-right)
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+#desktop-controls-left {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  #desktop-controls-left {
+    display: block;
+    position: fixed;
+    /* Aligned with the logo: bottom-right */
+    bottom: calc(10% + 90px + 12px);
+    /* logo is at bottom:10%, h=80px; sit just above it */
+    right: 5%;
+    z-index: 9999;
+  }
+}
+
+.desktop-control-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+}
+
+.desktop-recenter-stack {
+  width: 60px;
+  align-items: center;
+}
+
+.desktop-control-label {
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  max-width: 82px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   DESKTOP LEGEND â€” top-left, same style as mobile
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+#desktop-legend-container {
+  display: none;
+  position: fixed;
+  top: 80px;
+  /* just below top bar */
+  left: 12px;
+  z-index: 1005;
+}
+
+@media (min-width: 769px) {
+  #desktop-legend-container {
+    display: block;
+  }
+}
+
+/* Reuse mobile legend button style exactly */
+#desktop-legend-btn {
+  position: relative;
+  background: transparent;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  height: 38px;
+  min-width: 90px;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#desktop-legend-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: inherit;
+  filter: blur(2px);
+  transform: translateY(2px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+  z-index: 1;
+}
+
+#desktop-legend-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #8a0c20 0%, #b3102a 8%, #8a0c20 92%, #5c0815 100%);
+  z-index: 2;
+}
+
+.desktop-legend-btn-front {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background-color: #E31837;
+  padding: 0 12px;
+  box-sizing: border-box;
+  transform: translateY(-4px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+  color: white;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+#desktop-legend-btn .btn-text {
+  color: white;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+#desktop-legend-btn .btn-text i {
+  margin-left: 6px;
+}
+
+#desktop-legend-btn:hover .desktop-legend-btn-front {
+  transform: translateY(-5px);
+}
+
+#desktop-legend-btn:active .desktop-legend-btn-front {
+  transform: translateY(-1px);
+  transition: transform 34ms;
+}
+
+#desktop-legend-btn:hover::before {
+  transform: translateY(4px);
+}
+
+#desktop-legend-btn:active::before {
+  transform: translateY(1px);
+  transition: transform 34ms;
+}
+
+/* Desktop legend subtext (like mobile) */
+.desktop-legend-subtext {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .desktop-legend-subtext {
+    display: block;
+    margin-top: 6px;
+    margin-left: 8px;
+    color: #555;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* Desktop Legend Dropdown â€” same style as mobile menu */
+#desktop-legend-menu {
+  display: none;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 10px 0;
+  margin: 0;
+  width: 220px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  list-style: none;
+  flex-direction: column;
+  z-index: 1006;
+}
+
+#desktop-legend-menu.show {
+  display: flex !important;
+}
+
+/* Desktop legend menu items â€” same 3D pushable style as mobile */
+#desktop-legend-menu li {
+  position: relative;
+  background: transparent;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  margin: 6px 12px;
+  height: 48px;
+  border-radius: 6px;
+  list-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#desktop-legend-menu li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: inherit;
+  filter: blur(2px);
+  transform: translateY(2px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+  z-index: 1;
+}
+
+#desktop-legend-menu li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #ccc 0%, #eee 8%, #ccc 92%, #aaa 100%);
+  z-index: 2;
+}
+
+#desktop-legend-menu .li-front {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background-color: #ffffff;
+  padding: 0 14px;
+  box-sizing: border-box;
+  transform: translateY(-4px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5), background 0.2s;
+  font-size: 13px;
+  font-weight: 800;
+  color: #333;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+#desktop-legend-menu li:hover .li-front {
+  transform: translateY(-5px);
+}
+
+#desktop-legend-menu li:active .li-front {
+  transform: translateY(-1px);
+  transition: transform 34ms;
+  background: #f8f8f8;
+}
+
+#desktop-legend-menu li:hover::before {
+  transform: translateY(4px);
+}
+
+#desktop-legend-menu li:active::before {
+  transform: translateY(1px);
+  transition: transform 34ms;
+}
+
+#desktop-legend-menu li.legend-section-label {
+  height: auto;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  cursor: default;
+}
+
+#desktop-legend-menu li.legend-section-label::before,
+#desktop-legend-menu li.legend-section-label::after {
+  display: none;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   DaisyUI-like Card & Dropdown
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dropdown {
   position: relative;
   display: inline-block;
@@ -81,7 +548,6 @@ body {
   background: #f8f9fa;
 }
 
-/* Uiverse Hover-Reveal Card Styling */
 .dropdown-content.card {
   position: absolute;
   right: 100%;
@@ -221,7 +687,9 @@ body {
   color: #e53e3e;
 }
 
-/* 3D Pushable Glassmorphism Hotspot */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   HOTSPOT STYLES
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .Hotspot {
   position: relative;
   background: transparent;
@@ -241,7 +709,6 @@ body {
   opacity: 0.15;
 }
 
-/* The Shadow */
 .Hotspot::before {
   content: '';
   position: absolute;
@@ -258,7 +725,6 @@ body {
   z-index: 1;
 }
 
-/* The Edge (3D Side) */
 .Hotspot::after {
   content: '';
   position: absolute;
@@ -272,7 +738,6 @@ body {
   backdrop-filter: blur(2px);
 }
 
-/* The Front Face (hotspot-marker) */
 .hotspot-marker {
   position: relative;
   z-index: 3;
@@ -286,10 +751,8 @@ body {
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.4);
   transform: translateY(-4px);
-  /* Starts popped up */
   transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1), background 0.3s ease, border-color 0.3s ease;
   padding: 0 10px;
-  /* Base padding */
   box-sizing: border-box;
 }
 
@@ -297,39 +760,32 @@ body {
   background: rgba(255, 255, 255, 0.9);
   border-color: #fff;
   padding: 0 16px;
-  /* Expand padding slightly for the pill shape */
 }
 
-/* Hover & Active States */
 .Hotspot:hover {
   filter: brightness(110%);
 }
 
 .Hotspot:hover .hotspot-marker {
   transform: translateY(-6px);
-  /* pops up more on hover */
   transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
 }
 
 .Hotspot:active .hotspot-marker {
   transform: translateY(-1px);
-  /* Pushes completely down on click */
   transition: transform 34ms;
 }
 
 .Hotspot:hover::before {
   transform: translateY(4px);
-  /* shadow pushes lower on hover */
   transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
 }
 
 .Hotspot:active::before {
   transform: translateY(1px);
-  /* shadow shrinks on click */
   transition: transform 34ms;
 }
 
-/* Inner elements */
 .hotspot-icon {
   font-size: 16px;
   margin-left: 4px;
@@ -353,10 +809,8 @@ body {
 
 .Hotspot.selected .hotspot-number {
   background: #8b4513;
-  /* Original selected map color */
 }
 
-/* Original Slide-In mechanics */
 .hotspot-label {
   max-width: 0;
   opacity: 0;
@@ -375,7 +829,6 @@ body {
   max-width: 200px;
   opacity: 1;
   margin-left: 8px;
-  /* Adds the gap dynamically side-by-side */
 }
 
 .you-are-here {
@@ -430,8 +883,6 @@ body {
   vertical-align: middle;
 }
 
-
-
 .HotspotAnnotation {
   position: absolute;
   bottom: 100%;
@@ -457,7 +908,6 @@ body {
 .Hotspot:hover .HotspotAnnotation {
   opacity: 1;
 }
-
 
 .progress-bar {
   display: block;
@@ -489,7 +939,7 @@ body {
 }
 
 #ar-button {
-  background-image: url(ar_icon.png);
+  background-image: url(images/ar_icon.png);
   background-repeat: no-repeat;
   background-size: 20px 20px;
   background-position: 12px 50%;
@@ -521,43 +971,25 @@ body {
   outline: 1px solid #4285f4;
 }
 
-@keyframes circle {
-  from {
-    transform: translateX(-50%) rotate(0deg) translateX(50px) rotate(0deg);
-  }
-
-  to {
-    transform: translateX(-50%) rotate(360deg) translateX(50px) rotate(-360deg);
-  }
-}
-
-@keyframes elongate {
-  from {
-    transform: translateX(100px);
-  }
-
-  to {
-    transform: translateX(-100px);
-  }
-}
-
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   GLENDON LOGO (bottom-right watermark)
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #glendon-logo {
   position: fixed;
   bottom: 10%;
-  /* 10% from bottom */
   right: 5%;
-  /* A bit more to the right */
   width: 80px;
   height: 80px;
   opacity: 0.85;
   z-index: 9999;
   pointer-events: none;
-  /* Does not interfere with map interaction */
 }
 
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   LEGEND PANEL (old desktop panel â€” keep for mobile)
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #legend-panel.minimized {
   max-height: 48px;
-  /* Fit strictly to header */
 }
 
 #legend-panel.minimized .legend-content,
@@ -570,7 +1002,6 @@ body {
 
 .Hotspot.color-exit {
   background: #e63946;
-  /* Red */
 }
 
 .Hotspot.color-exit .hotspot-label,
@@ -581,7 +1012,6 @@ body {
 #legend-panel {
   position: fixed;
   top: 68px;
-  /* Below the top bar (48px) + margin */
   left: 20px;
   width: 280px;
   height: 420px;
@@ -650,11 +1080,6 @@ body {
   font-weight: 600;
 }
 
-.collapse-btn {
-  cursor: pointer;
-  color: #888;
-}
-
 .legend-search {
   width: auto;
   padding: 10px 15px;
@@ -677,7 +1102,6 @@ body {
   padding: 0 15px 15px 15px;
 }
 
-/* Slim Scrollbar Styling */
 .legend-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -776,75 +1200,65 @@ hr.divider {
   color: #000;
 }
 
-/* --- COLOR CODING --- */
-/* Unique colors for each room */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   COLOR CODING
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .color-lobby {
   background-color: #004A8D !important;
 }
 
-/* Glendon Blue */
 .color-weight {
   background-color: #2E8B57 !important;
 }
 
-/* Sea Green */
 .color-pool {
   background-color: #00CED1 !important;
 }
 
-/* Dark Turquoise */
 .color-stretching {
   background-color: #D49F0F !important;
 }
 
-/* Glendon Gold */
 .color-spinning {
   background-color: #9370DB !important;
 }
 
-/* Medium Purple */
 .color-boxing {
   background-color: #FF8C00 !important;
 }
 
-/* Dark Orange */
 .color-golf {
   background-color: #8FBC8B !important;
 }
 
-/* Dark Sea Green */
 .color-squash {
   background-color: #4169E1 !important;
 }
 
-/* Royal Blue */
 .color-basketball {
   background-color: #DC143C !important;
 }
 
-/* Crimson */
+.color-dance {
+  background-color: #DA70D6 !important;
+}
+
 .color-m-changing {
   background-color: #4682B4 !important;
 }
 
-/* Steel Blue */
 .color-w-changing {
   background-color: #C71585 !important;
 }
 
-/* Medium Violet Red */
 .color-w-locker {
   background-color: #FF69B4 !important;
 }
 
-/* Hot Pink */
 .color-m-locker {
   background-color: #1E90FF !important;
 }
 
-/* Dodger Blue */
-
-/* These remain consistent */
 .color-stairs {
   background-color: #000000 !important;
   color: white !important;
@@ -855,18 +1269,15 @@ hr.divider {
   color: white !important;
 }
 
-/* Ensure hotspot numbers have a white border to pop against their background */
 .hotspot-number {
   border: 1.5px solid white;
 }
 
-/* Search and Eye Toggle states */
 .search-hidden,
 .eye-hidden {
   display: none !important;
 }
 
-/* Exit Hotspots Override - Hide permanently as requested */
 .Hotspot.exit-hotspot {
   opacity: 0.7;
   z-index: 2;
@@ -879,9 +1290,6 @@ hr.divider {
 .Hotspot.legend-only-hotspot.legend-only-active {
   display: inline-flex !important;
 }
-
-/* Performance & Mobile Optimizations */
-
 
 .legend-content {
   -webkit-overflow-scrolling: touch;
@@ -896,6 +1304,9 @@ hr.divider {
   }
 }
 
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   LOADING SCREEN
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #loading-screen {
   position: fixed;
   inset: 0;
@@ -920,12 +1331,9 @@ hr.divider {
   font-size: 14px;
 }
 
-
-
-/* ========================================= */
-/* MOBILE OVERHAUL (Google Maps Style)       */
-/* ========================================= */
-
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   MOBILE OVERHAUL
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 #mobile-top-logo {
   display: none;
 }
@@ -943,13 +1351,10 @@ hr.divider {
 }
 
 @media (max-width: 768px) {
-
-  /* Hide the existing floating glendon logo */
   #glendon-logo {
     display: none !important;
   }
 
-  /* Mobile Search Pill (Curved Inside Drawer) */
   #mobile-search-container {
     display: flex !important;
     position: relative;
@@ -958,7 +1363,6 @@ hr.divider {
     right: auto;
     margin: 5px 20px 15px 20px;
     background: #f1f3f4;
-    /* Google Maps light grey */
     border-radius: 999px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) inset;
     align-items: center;
@@ -969,36 +1373,26 @@ hr.divider {
     flex-shrink: 0;
   }
 
-
-
-  /* Shrink Hotspot Markers */
   .Hotspot {
     transform: scale(0.65) !important;
     transform-origin: bottom center;
   }
 
-  /* Location Drop Pin */
   #mobile-location-btn {
     display: flex !important;
     align-items: center;
     justify-content: center;
     position: absolute;
     top: -65px;
-    /* Float cleanly right above the drawer */
     right: 15px;
-    /* Stay anchored to the right side natively */
     left: auto;
     transform: none;
-    /* Strip centering math */
     background: #E53935;
-    /* Google Maps location red style solid */
     color: white;
     border: none;
     width: 48px;
-    /* Smaller icon badge per explicit request */
     height: 48px;
     border-radius: 14px;
-    /* Google Maps 'squircle' radius exactly matching the green button */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
     cursor: pointer;
     z-index: 1002;
@@ -1034,14 +1428,12 @@ hr.divider {
     display: none !important;
   }
 
-  /* Top Bar */
   #top-bar {
     position: fixed !important;
     top: 0px !important;
     bottom: auto !important;
     width: 100%;
     background: rgba(235, 235, 235, 0.98);
-    /* Slightly darker */
     border-radius: 0 0 20px 20px;
     box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
     display: flex;
@@ -1052,7 +1444,6 @@ hr.divider {
     font-size: 14px;
     text-align: center;
     height: 60px;
-    /* Slightly taller for wrapping text */
     box-sizing: border-box;
   }
 
@@ -1061,7 +1452,6 @@ hr.divider {
     font-weight: 600;
     color: #111;
     line-height: 1.2;
-    /* Removed nowrap to allow word wrapping */
   }
 
   #mobile-top-logo {
@@ -1070,16 +1460,29 @@ hr.divider {
     margin-right: 10px;
   }
 
-  /* Bottom Sheet Drawer */
+  /* Hide desktop controls on mobile */
+  #desktop-controls-left {
+    display: none !important;
+  }
+
+  #desktop-legend-container {
+    display: none !important;
+  }
+
+  .desktop-search-container {
+    display: none !important;
+  }
+
+  #desktop-top-logo {
+    display: none !important;
+  }
+
   #legend-panel {
-    /* Reset desktop alignments */
     top: auto !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 60px !important;
-    /* Sit exactly above bottom bar */
     height: 85vh !important;
-    /* Strict height for translating percentages properly */
     width: 100% !important;
     margin: 0 !important;
     border-radius: 20px 20px 0 0 !important;
@@ -1087,7 +1490,6 @@ hr.divider {
     backdrop-filter: blur(6px) !important;
     -webkit-backdrop-filter: blur(6px) !important;
     transform: translateY(calc(100% - 40px));
-    /* Hidden state by default locally */
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     z-index: 1000 !important;
     display: flex !important;
@@ -1098,12 +1500,10 @@ hr.divider {
     opacity: 1 !important;
   }
 
-  /* Disable inner transitions to prevent lag while dragging */
   #legend-panel.dragging {
     transition: none !important;
   }
 
-  /* Handle Area */
   #mobile-drag-area {
     display: block !important;
     width: 100%;
@@ -1111,7 +1511,6 @@ hr.divider {
     cursor: grab;
     flex-shrink: 0;
     touch-action: none;
-    /* Crucial for custom touch handling */
   }
 
   #mobile-drag-area:active {
@@ -1152,12 +1551,10 @@ hr.divider {
     cursor: pointer;
   }
 
-  /* Hide Desktop Headers */
   .legend-header {
     display: none !important;
   }
 
-  /* Ensure content lists overflow properly */
   .legend-content {
     flex-grow: 1;
     overflow-y: auto;
@@ -1166,18 +1563,17 @@ hr.divider {
   }
 }
 
-/* Mobile Bottom Right Controls (Search + Recenter) */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   MOBILE BOTTOM RIGHT CONTROLS
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mobile-bottom-right-controls {
   display: none;
-  /* Desktop hidden */
   position: absolute;
   bottom: 20px;
   right: 20px;
-  /* Shifted firmly to right */
   z-index: 1000;
   flex-direction: column;
   align-items: flex-end;
-  /* Keep the control stacks pinned to the same right edge */
   gap: 14px;
   pointer-events: none;
 }
@@ -1190,12 +1586,14 @@ hr.divider {
 
 .mobile-bottom-right-controls>* {
   pointer-events: auto;
-  /* Re-enable for the buttons inside */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   SEARCH PILL â€” shared between mobile + desktop controls
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .search-pill {
   position: relative;
   background: transparent;
@@ -1204,13 +1602,11 @@ hr.divider {
   cursor: pointer;
   outline: none;
   width: 60px;
-  /* Base circle size */
   height: 60px;
   border-radius: 9999px;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* For the expanding search specifically */
 .expandable-search {
   transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1), filter 250ms;
 }
@@ -1220,7 +1616,6 @@ hr.divider {
   max-width: 340px;
 }
 
-/* Base Shadow */
 .search-pill::before {
   content: '';
   position: absolute;
@@ -1237,7 +1632,6 @@ hr.divider {
   z-index: 1;
 }
 
-/* Base Edge Thickness */
 .search-pill::after {
   content: '';
   position: absolute;
@@ -1250,7 +1644,6 @@ hr.divider {
   z-index: 2;
 }
 
-/* Info Pill Grey/Red Override */
 .info-pill-override::after {
   background: linear-gradient(to right, #c1c1c1 0%, #e0e0e0 8%, #d1d1d1 92%, #b0b0b0 100%) !important;
 }
@@ -1259,36 +1652,28 @@ hr.divider {
   background-color: #f0f0f0 !important;
 }
 
-/* Face Top Cover */
 .search-pill-front {
   position: relative;
   z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* keep default centered for Recenter button natively */
   width: 100%;
   height: 100%;
   border-radius: 9999px;
   background-color: #E31837;
-  /* Glendon Red */
   box-sizing: border-box;
   overflow: hidden;
   transform: translateY(-4px);
-  /* Elevated by default */
   transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
 }
 
-/* Expandable specific inner alignment */
 .expandable-search .search-pill-front {
   flex-direction: row;
   justify-content: flex-end;
-  /* when closed, SVG anchors cleanly to the right naturally */
   padding: 0;
-  /* Clear default padding */
 }
 
-/* Depth Interaction States */
 .search-pill:hover {
   filter: brightness(110%);
 }
@@ -1325,7 +1710,6 @@ hr.divider {
 
 .expandable-search .search-icon-wrapper {
   margin-right: 19px;
-  /* Gives the exact right-side space mathematically to sit center natively in a 60px circle */
 }
 
 .search-pill-input {
@@ -1348,7 +1732,6 @@ hr.divider {
 .expandable-search:focus-within .search-pill-input {
   opacity: 1;
   width: 100%;
-  /* Expands natively to the left seamlessly */
   pointer-events: auto;
 }
 
@@ -1371,13 +1754,13 @@ hr.divider {
   }
 }
 
-/* Mobile Top Left Dropdown Legend */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   MOBILE LEGEND CONTAINER
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #mobile-legend-container {
   display: none;
-  /* hidden on desktop */
   position: absolute;
   top: 56px;
-  /* Nudged down slightly */
   left: 12px;
   z-index: 1005;
 }
@@ -1406,7 +1789,6 @@ hr.divider {
   }
 }
 
-/* Solid 3D Red Override for Legend Toggle */
 .legend-btn-3d {
   position: relative;
   background: transparent;
@@ -1415,9 +1797,7 @@ hr.divider {
   cursor: pointer;
   outline: none;
   height: 38px;
-  /* Shrunk from 44px */
   min-width: 90px;
-  /* Shrunk from 105px */
   border-radius: 12px;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1460,7 +1840,6 @@ hr.divider {
   border-radius: inherit;
   background-color: #E31837;
   padding: 0 12px;
-  /* Shrunk */
   box-sizing: border-box;
   transform: translateY(-4px);
   transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
@@ -1470,7 +1849,6 @@ hr.divider {
   color: white;
   font-weight: 800;
   font-size: 12px;
-  /* Shrunk from 14px */
 }
 
 .legend-btn-front .btn-text i {
@@ -1495,21 +1873,16 @@ hr.divider {
   transition: transform 34ms;
 }
 
-/* Scrollable robust dropdown content */
 #mobile-legend-menu {
   display: none;
-  /* hidden visually */
   position: absolute;
   top: 50px;
-  /* below the bigger btn */
   left: 0;
   background: rgba(255, 255, 255, 0.4);
-  /* More transparent */
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   padding: 10px 0;
-  /* Padding inside the dropdown container */
   margin: 0;
   width: 220px;
   max-height: 280px;
@@ -1523,7 +1896,6 @@ hr.divider {
   display: flex !important;
 }
 
-/* 3D Pushable List Items (Matching the physical layer logic) */
 #mobile-legend-menu li {
   position: relative;
   background: transparent;
@@ -1533,7 +1905,6 @@ hr.divider {
   margin: 6px 12px;
   height: 48px;
   border-radius: 6px;
-  /* Squarer Inputs per request */
   list-style: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1628,7 +1999,6 @@ hr.divider {
   height: auto;
 }
 
-/* Legend Inner Colored Dots (automatically maps mapped class styles natively) */
 .legend-dot {
   width: 22px;
   height: 22px;
@@ -1641,7 +2011,6 @@ hr.divider {
   justify-content: center;
   flex-shrink: 0;
   background-color: #007bff;
-  /* Fallback baseline */
 }
 
 /* Gray Recenter Button Override */
@@ -1655,36 +2024,24 @@ hr.divider {
 
 #mobile-reset-btn .search-icon-wrapper {
   color: #E31837;
-  /* Glendon Red Icon */
 }
 
-.mobile-control-stack {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: max-content;
-  gap: 6px;
-  overflow: visible;
+/* Desktop recenter button â€” same gray style */
+#desktop-recenter-btn .search-pill-front {
+  background-color: #f0f0f0;
 }
 
-.mobile-reset-stack {
-  width: 60px;
+#desktop-recenter-btn::after {
+  background: linear-gradient(to right, #b4b4b4 0%, #d4d4d4 8%, #b4b4b4 92%, #888888 100%);
 }
 
-.mobile-control-label {
-  color: #000;
-  font-size: 10px;
-  font-weight: 900;
-  line-height: 1.1;
-  text-align: center;
-  max-width: 82px;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 1px rgba(0, 0, 0, 0.18);
+#desktop-recenter-btn .search-icon-wrapper {
+  color: #E31837;
 }
 
-/* Full Pill Pulsating Ping Animation (Dynamically inherits native color injected via JS variable) */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   HOTSPOT ANIMATIONS & PING
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes hotspot-ping {
   0% {
     transform: scale(1);
@@ -1706,14 +2063,11 @@ hr.divider {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  /* Copies the 9999px pill expansion perfectly */
   background-color: var(--ping-color, rgba(255, 255, 255, 0.8));
-  /* Maps physically from JS */
   animation: hotspot-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
   z-index: -1;
 }
 
-/* --- Search Fading Transition --- */
 model-viewer>.Hotspot {
   transition: opacity 0.5s ease, visibility 0.5s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -1722,10 +2076,11 @@ model-viewer>.Hotspot.faded-out {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  /* Immediately freezes clicks to prevent accident misclicks during fade out */
 }
 
-/* --- Custom Gesture Prompt Overlay --- */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   GESTURE PROMPT
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #gesture-prompt-overlay {
   position: absolute;
   top: 50%;
@@ -1735,7 +2090,6 @@ model-viewer>.Hotspot.faded-out {
   flex-direction: column;
   align-items: center;
   pointer-events: none;
-  /* Crucial so touches pass completely through to the map! */
   z-index: 5000;
   opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1852,21 +2206,27 @@ model-viewer>.Hotspot.faded-out {
 }
 
 @keyframes gesture-step-navigate {
-  0%, 44% {
+
+  0%,
+  44% {
     opacity: 1;
   }
 
-  48%, 100% {
+  48%,
+  100% {
     opacity: 0;
   }
 }
 
 @keyframes gesture-step-zoom {
-  0%, 48% {
+
+  0%,
+  48% {
     opacity: 0;
   }
 
-  54%, 100% {
+  54%,
+  100% {
     opacity: 1;
   }
 }
@@ -1894,7 +2254,9 @@ model-viewer>.Hotspot.faded-out {
 }
 
 @keyframes gesture-zoom-left {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(-50%, -50%) translateX(-12px) scale(1);
   }
 
@@ -1904,7 +2266,9 @@ model-viewer>.Hotspot.faded-out {
 }
 
 @keyframes gesture-zoom-right {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(-50%, -50%) translateX(12px) scale(1);
   }
 
@@ -1913,7 +2277,9 @@ model-viewer>.Hotspot.faded-out {
   }
 }
 
-/* --- Legend Prompt Overlay --- */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   LEGEND PROMPT
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #legend-prompt-overlay {
   position: fixed;
   top: 60px;
@@ -1976,7 +2342,6 @@ model-viewer>.Hotspot.faded-out {
   }
 }
 
-/* Pulsating Legend Button until legend prompt is dismissed */
 .legend-btn-3d.pulsating::before {
   animation: shadow-pulse 1s ease-in-out infinite;
 }
@@ -2015,7 +2380,9 @@ model-viewer>.Hotspot.faded-out {
   pointer-events: none !important;
 }
 
-/* Hotspot Drag Hint */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   HOTSPOT HINTS
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .hotspot-hint {
   position: absolute;
   top: calc(100% + 8px);
@@ -2083,7 +2450,9 @@ model-viewer>.Hotspot.faded-out {
 }
 
 @keyframes tap-recenter-hand {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
 
@@ -2104,46 +2473,6 @@ model-viewer>.Hotspot.faded-out {
 
 .hint-arrow.left {
   animation: fadeLeftArrow 1.4s infinite ease-in-out;
-}
-
-/* Dynamic Itinerary Trigger Button */
-#itinerary-btn {
-  display: none;
-  /* toggled to flex by JS */
-  position: fixed;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  min-width: 120px;
-  height: 60px;
-  border-radius: 999px;
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-#itinerary-btn.show-itinerary {
-  display: flex;
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-#itinerary-btn.pulse-itinerary .search-pill-front {
-  animation: itinerary-pulse 1.35s ease-in-out infinite;
-}
-
-@keyframes itinerary-pulse {
-  0%, 100% {
-    transform: translateY(-4px) scale(1);
-    filter: brightness(1);
-    box-shadow: 0 10px 22px rgba(227, 24, 55, 0.22);
-  }
-
-  50% {
-    transform: translateY(-7px) scale(1.06);
-    filter: brightness(1.1);
-    box-shadow: 0 16px 32px rgba(227, 24, 55, 0.34);
-  }
 }
 
 .hint-arrow.right {
@@ -2188,5 +2517,357 @@ model-viewer>.Hotspot.faded-out {
 
   50% {
     opacity: 0.2;
+  }
+}
+
+#route-banner {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(10, 10, 10, 0.88);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+#route-banner.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+#route-banner strong {
+  color: #E31837;
+}
+
+.route-banner-text {
+  line-height: 1.35;
+}
+
+.route-banner-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: background 0.15s;
+}
+
+.route-banner-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.route-banner-floor {
+  background: rgba(227, 24, 55, 0.22);
+  border: 1px solid rgba(227, 24, 55, 0.5);
+  color: white;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.route-banner-floor:hover {
+  background: rgba(227, 24, 55, 0.36);
+}
+
+.route-banner-floor:active {
+  transform: scale(0.97);
+}
+
+#navigate-popup {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 2100;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+#navigate-popup.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.nav-btn-wrapper {
+  margin-top: 0;
+}
+
+.nav-btn {
+  background: #E31837;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  font-family: 'Inter', sans-serif;
+}
+
+.nav-btn:hover {
+  background: #c4122c;
+}
+
+.nav-btn:active {
+  transform: scale(0.97);
+}
+
+.Hotspot.route-selectable .hotspot-marker {
+  background: rgba(227, 24, 55, 0.15) !important;
+  border-color: #E31837 !important;
+  box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.3), 0 0 16px rgba(227, 24, 55, 0.4);
+  animation: route-pulse 1.4s ease-in-out infinite;
+}
+
+.Hotspot.route-origin .hotspot-marker {
+  background: rgba(29, 158, 117, 0.2) !important;
+  border-color: #1D9E75 !important;
+  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.3);
+}
+
+.Hotspot.route-dimmed {
+  opacity: 0.18 !important;
+  pointer-events: none !important;
+}
+
+@keyframes route-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.3), 0 0 10px rgba(227, 24, 55, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(227, 24, 55, 0.15), 0 0 24px rgba(227, 24, 55, 0.5);
+  }
+}
+
+.mobile-control-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  gap: 6px;
+  overflow: visible;
+}
+
+.mobile-reset-stack {
+  width: 60px;
+}
+
+.mobile-control-label {
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  max-width: 82px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+/* ========================================= */
+/* FLOOR SELECTOR â€” Add to end of styles.css */
+/* ========================================= */
+
+/* Floor Selector Container */
+#floor-selector {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  z-index: 1001;
+  pointer-events: auto;
+  /* The outer pill wrapper */
+  background: transparent;
+}
+
+/* Each floor button â€” matches .legend-btn-3d geometry but pill-shaped */
+.floor-btn {
+  position: relative;
+  background: transparent;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  height: 40px;
+  min-width: 88px;
+  border-radius: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 250ms;
+}
+
+.floor-btn:first-child {
+  border-radius: 12px 0 0 12px;
+}
+
+.floor-btn:last-child {
+  border-radius: 0 12px 12px 0;
+}
+
+/* Shadow Layer */
+.floor-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: inherit;
+  filter: blur(2px);
+  transform: translateY(2px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+  z-index: 1;
+}
+
+/* Edge layer â€” inactive (grey) */
+.floor-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #b4b4b4 0%, #d4d4d4 8%, #b4b4b4 92%, #888 100%);
+  z-index: 2;
+  transition: background 0.35s ease;
+}
+
+/* Active floor button â€” red edge like the main buttons */
+.floor-btn.floor-active::after {
+  background: linear-gradient(to right, #8a0c20 0%, #b3102a 8%, #8a0c20 92%, #5c0815 100%);
+}
+
+/* Face */
+.floor-btn-front {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background-color: #f0f0f0;
+  box-sizing: border-box;
+  transform: translateY(-4px);
+  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5), background-color 0.35s ease, color 0.35s ease;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #555;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+
+/* Active face â€” red */
+.floor-btn.floor-active .floor-btn-front {
+  background-color: #E31837;
+  color: white;
+}
+
+/* Hover / active press states */
+.floor-btn:hover .floor-btn-front {
+  transform: translateY(-6px);
+}
+
+.floor-btn:active .floor-btn-front {
+  transform: translateY(-1px);
+  transition: transform 34ms;
+}
+
+.floor-btn:hover::before {
+  transform: translateY(4px);
+}
+
+.floor-btn:active::before {
+  transform: translateY(1px);
+  transition: transform 34ms;
+}
+
+/* Divider line between the two buttons */
+.floor-btn-divider {
+  position: relative;
+  z-index: 10;
+  width: 1px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  align-self: center;
+  margin-top: -4px;
+  /* aligns with the lifted face */
+}
+
+/* Floor loading overlay â€” subtle fade while swapping model */
+#floor-transition-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(236, 232, 228, 0) 0%, rgba(214, 207, 202, 0) 100%);
+  pointer-events: none;
+  z-index: 900;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+#floor-transition-overlay.fading {
+  opacity: 1;
+  background: radial-gradient(ellipse at center, rgba(236, 232, 228, 0.72) 0%, rgba(214, 207, 202, 0.85) 100%);
+}
+
+/* Mobile tweaks */
+@media (max-width: 768px) {
+  #floor-selector {
+    bottom: 18px;
+  }
+
+  .floor-btn {
+    height: 38px;
+    min-width: 78px;
+  }
+
+  .floor-btn-front {
+    font-size: 11px;
+    padding: 0 10px;
   }
 }
