@@ -1434,30 +1434,35 @@ hr.divider {
     bottom: auto !important;
     width: 100%;
     background: rgba(235, 235, 235, 0.98);
-    border-radius: 0 0 20px 20px;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
+    border-radius: 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 10px 15px;
+    justify-content: flex-start;
+    padding: 0 15px;
     z-index: 1001;
     font-size: 14px;
-    text-align: center;
-    height: 60px;
+    text-align: left;
+    height: 50px;
     box-sizing: border-box;
   }
 
   #top-bar span {
-    flex-grow: 0;
+    flex-grow: 1;
     font-weight: 600;
     color: #111;
     line-height: 1.2;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   #mobile-top-logo {
-    display: block;
-    height: 28px;
-    margin-right: 10px;
+    display: block !important;
+    height: 32px;
+    margin-right: 12px;
+    flex-shrink: 0;
   }
 
   /* Hide desktop controls on mobile */
@@ -1561,6 +1566,34 @@ hr.divider {
     padding-top: 5px;
     padding-bottom: 20px;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE BOTTOM LEFT CONTROLS
+   ───────────────────────────────────────────────────────────────────────────── */
+.mobile-bottom-left-controls {
+  display: none;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-left-controls {
+    display: flex;
+  }
+}
+
+.mobile-bottom-left-controls > * {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1669,7 +1702,7 @@ hr.divider {
 }
 
 .expandable-search .search-pill-front {
-  flex-direction: row;
+  flex-direction: row-reverse;
   justify-content: flex-end;
   padding: 0;
 }
@@ -1709,7 +1742,7 @@ hr.divider {
 }
 
 .expandable-search .search-icon-wrapper {
-  margin-right: 19px;
+  margin-left: 19px;
 }
 
 .search-pill-input {
@@ -1725,8 +1758,8 @@ hr.divider {
   color: white;
   font-weight: normal;
   border: none;
-  padding-left: 20px;
-  margin-right: 10px;
+  padding-right: 20px;
+  margin-left: 10px;
 }
 
 .expandable-search:focus-within .search-pill-input {
@@ -2412,7 +2445,7 @@ model-viewer>.Hotspot.faded-out {
 
 .hotspot-recenter-hint {
   position: absolute;
-  left: calc(100% + 10px);
+  right: calc(100% + 10px);
   top: 50%;
   transform: translateY(-50%);
   background: rgba(0, 0, 0, 0.72);
