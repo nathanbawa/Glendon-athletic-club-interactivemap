@@ -332,7 +332,8 @@ document.addEventListener('DOMContentLoaded', () => {
   CONNECTIONS.push([203, 204]);
   CONNECTIONS.push([204, 205]);
   CONNECTIONS.push([205, 206]);
-  CONNECTIONS.push([206, 901]);   // path end → Dance Studio
+  CONNECTIONS.push([206, 901]);   // path end   Dance Studio
+  CONNECTIONS.push([900, 901]);   // direct Gymnasium ↔ Dance Studio bridge
 
   // PATH 2: Lobby stairs → Gymnasium chain
   CONNECTIONS.push([903, 210]);   // Lobby Stairs hotspot → path start
@@ -697,6 +698,8 @@ document.addEventListener('DOMContentLoaded', () => {
     applyQuickCameraTransition();
     mv.setAttribute('min-camera-orbit', '0deg 0deg 55m');
     mv.setAttribute('max-camera-orbit', '0deg 0deg 150m');
+    // Zoom out to show all hotspots
+    mv.cameraOrbit = '0deg 0deg 120m';
   }
 
   // ─────────────────────────────────────────
@@ -771,8 +774,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'hotspot-gymnasium': 900,
     'hotspot-dance-studio': 901,
     'hotspot-back-stairs-f2': 903,
-    'hotspot-stairs-new-1': 250,
-    'hotspot-stairs-new-2': 230,
+    'hotspot-stairs-new-1': 230,   // M. Locker Stairs → PATH 3 (W.locker→gym) — was incorrectly 250
+    'hotspot-stairs-new-2': 250,   // W. Locker Stairs → PATH 5 (M.locker→dance) — was incorrectly 230
   };
 
   let navigatePopupEl = null;
@@ -895,9 +898,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     enterItineraryTopView();
     requestAnimationFrame(() => {
-      mv.cameraOrbit = '0deg 0deg 120m';
-      mv.cameraTarget = START_TARGET;
-      mv.fieldOfView = '60deg';
+      mv.cameraOrbit = '0deg 0deg 160m';   // zoom out further to show all hotspots
+      mv.cameraTarget = '0m -1.3m 0m';     // center the view on the whole floor
+      mv.fieldOfView = '75deg';            // wider FOV to show more
     });
 
     const pathIds = astar(startId, endId);
