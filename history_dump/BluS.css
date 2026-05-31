@@ -1,0 +1,153 @@
+:not(:defined) > * {
+  display: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: red;
+  font-family: Helvetica Neue, Arial, sans-serif;
+}
+
+model-viewer {
+  width: 100%;
+  height: 100%;
+  background-color: red;
+}
+
+/* HOTSPOTS */
+
+.Hotspot {
+  background: currentColor;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: transform 0.2s ease;
+  touch-action: manipulation;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.Hotspot:hover,
+.Hotspot:focus {
+  transform: scale(1.3);
+  outline: none;
+}
+
+.HotspotAnnotation {
+  background: #1f3c88;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* LEGEND */
+
+.map-legend,
+.legend {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  font-size: 14px;
+  color: #333;
+  min-width: 180px;
+  max-height: 60vh;
+  z-index: 999;
+  pointer-events: auto;
+  overflow-y: auto;
+}
+
+.legend-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* LEGEND COLORS */
+
+.legend-color.lobby { background: #f5c16c; }
+.legend-color.locker { background: #8faadc; }
+.legend-color.pool { background: #4da3ff; }
+.legend-color.fitness { background: #7cc576; }
+.legend-color.combat { background: #e57373; }
+.legend-color.stretch { background: #ba68c8; }
+
+/* MOBILE RESPONSIVE */
+
+@media (max-width: 768px) {
+  .Hotspot span {
+    font-size: 12px;
+  }
+  
+  .map-legend,
+  .legend {
+    bottom: 15px;
+    left: 15px;
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  
+  .legend-item {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .Hotspot span {
+    font-size: 11px;
+  }
+  
+  .map-legend,
+  .legend {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  
+  .legend-item {
+    font-size: 11px;
+  }
+  
+  .legend-color {
+    width: 12px;
+    height: 12px;
+  }
+}

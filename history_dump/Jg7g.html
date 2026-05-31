@@ -1,0 +1,145 @@
+<!-- Optional: Project Case Studies Template
+If you want to add detailed case studies for each project, you can:
+
+1. Create individual HTML files for each project
+2. Link them from the work-item clicked elements
+3. Use a lightbox/modal to show details
+
+This file shows how you could structure a detailed project page.
+Uncomment and use as needed.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 1 - Case Study</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    .case-study {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .header {
+      margin-bottom: 60px;
+    }
+    .project-image {
+      width: 100%;
+      max-height: 600px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 40px;
+    }
+    h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .meta {
+      color: #b0b0b0;
+      margin-bottom: 30px;
+    }
+    .section {
+      margin-bottom: 50px;
+    }
+    .section h2 {
+      font-size: 28px;
+      color: #00d4ff;
+      margin-bottom: 20px;
+    }
+    .section p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #b0b0b0;
+      margin-bottom: 15px;
+    }
+    .tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .tag {
+      padding: 6px 12px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid #00d4ff;
+      color: #00d4ff;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    .back-link {
+      color: #00d4ff;
+      text-decoration: none;
+      margin-bottom: 30px;
+      display: inline-block;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div class="case-study">
+  <a href="index.html" class="back-link">← Back to Portfolio</a>
+  
+  <div class="header">
+    <h1>Project Title</h1>
+    <p class="meta">Year • Client • Category</p>
+    <img src="path/to/main-image.jpg" alt="Project" class="project-image">
+  </div>
+
+  <div class="section">
+    <h2>Overview</h2>
+    <p>Brief description of the project, what was created, and the outcome.</p>
+  </div>
+
+  <div class="section">
+    <h2>Challenge</h2>
+    <p>What was the client's challenge or goal? What problem needed solving?</p>
+  </div>
+
+  <div class="section">
+    <h2>Solution</h2>
+    <div class="tags">
+      <span class="tag">3D Modeling</span>
+      <span class="tag">Rendering</span>
+      <span class="tag">VR</span>
+    </div>
+    <p>How did you solve it? What approach did you take?</p>
+    <p>Include technical details about software, techniques, timeline, etc.</p>
+  </div>
+
+  <div class="section">
+    <h2>Results</h2>
+    <p>What was the outcome? Include metrics if possible (e.g., conversion rates, client satisfaction).</p>
+  </div>
+
+  <div class="section">
+    <h2>Gallery</h2>
+    <p>[Add multiple project images/screenshots here]</p>
+  </div>
+</div>
+
+</body>
+</html>
+
+<!-- 
+To use this:
+1. Duplicate this template for each project
+2. Save as: project-1.html, project-2.html, etc.
+3. Update paths and content
+4. Add click handlers in script.js to open projects
+5. Use a modal or new page to display
+
+Alternative: Use a lightweight lightbox library like:
+- GLightbox (glightbox.js)
+- Lightbox2 (lightbox2.js)
+- Fancybox (fancybox.js)
+-->

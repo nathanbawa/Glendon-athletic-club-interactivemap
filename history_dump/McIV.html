@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nathan Bawa - 3D Artist & Real Estate Visualization</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">Nathan Bawa</div>
+      <ul class="nav-links">
+        <li><a href="#work">Work</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="home">
+    <div class="hero-content">
+      <h1 class="hero-name">Nathan Bawa</h1>
+      <p class="hero-subtitle">3D Artist · Real Estate Visualization · VR Environments</p>
+      <a href="#work" class="hero-cta">View my work ↓</a>
+    </div>
+  </section>
+
+  <!-- Work / Portfolio Grid -->
+  <section class="work" id="work">
+    <div class="container">
+      <h2 class="section-title">My Work</h2>
+      
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="real-estate">Real Estate</button>
+        <button class="filter-btn" data-filter="characters">Characters</button>
+        <button class="filter-btn" data-filter="vr">VR</button>
+        <button class="filter-btn" data-filter="motion">Motion</button>
+      </div>
+
+      <div class="work-grid">
+        <div class="work-item" data-category="real-estate">
+          <div class="work-thumbnail">
+            <img src="projects/luxury-villa-pool.jpg" alt="Luxury Villa with Pool">
+            <div class="work-overlay">
+              <h3>Luxury Villa with Pool</h3>
+              <p>Residential Sunset Visualization</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-item" data-category="real-estate">
+          <div class="work-thumbnail">
+            <img src="projects/architectural-3d-model.jpg" alt="3D Architectural Model">
+            <div class="work-overlay">
+              <h3>Architectural 3D Model</h3>
+              <p>Building Design & Development</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-item" data-category="characters">
+          <div class="work-thumbnail">
+            <img src="projects/interior-minimalist.jpg" alt="Minimalist Interior Design">
+            <div class="work-overlay">
+              <h3>Minimalist Interior Space</h3>
+              <p>Contemporary Interior Rendering</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-item" data-category="real-estate">
+          <div class="work-thumbnail">
+            <img src="projects/modern-residence-garage.jpg" alt="Modern Residence with Garage">
+            <div class="work-overlay">
+              <h3>Modern Residential Complex</h3>
+              <p>Contemporary Home with Garage</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-item" data-category="vr">
+          <div class="work-thumbnail">
+            <img src="projects/luxury-resort-home.jpg" alt="Luxury Resort-Style Home">
+            <div class="work-overlay">
+              <h3>Resort-Style Residence</h3>
+              <p>Premium Property Walkthrough</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-item" data-category="characters">
+          <div class="work-thumbnail">
+            <img src="projects/modern-living-interior.jpg" alt="Modern Living Room">
+            <div class="work-overlay">
+              <h3>Contemporary Living Space</h3>
+              <p>Interior Design & Styling</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about" id="about">
+    <div class="container">
+      <h2 class="section-title">About Me</h2>
+      <div class="about-grid">
+        <div class="about-photo">
+          <img src="about/photo.jpg" alt="Nathan Bawa">
+        </div>
+        <div class="about-text">
+          <p>I'm a 3D artist and real estate visualization specialist with a passion for creating immersive digital experiences. With a background from Glendon and experience at 7TV, I've developed expertise in architectural rendering, VR environment design, and interactive property walkthroughs.</p>
+          <p>My vision is to help real estate professionals, architects, and creative agencies bring their projects to life through cutting-edge 3D visualization and VR technology. I believe in creating compelling visuals that not only showcase projects but tell their story.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="services" id="services">
+    <div class="container">
+      <h2 class="section-title">What I Offer</h2>
+      <div class="services-grid">
+        <div class="service-card">
+          <h3>Real Estate Renders</h3>
+          <p>Interior & exterior 3D visualization that helps buyers envision properties and architects refine their designs.</p>
+        </div>
+        <div class="service-card">
+          <h3>VR Tours</h3>
+          <p>Interactive property walkthroughs that let clients explore spaces in immersive virtual reality environments.</p>
+        </div>
+        <div class="service-card">
+          <h3>3D Animation</h3>
+          <p>Motion graphics and character design for marketing campaigns, presentations, and creative projects.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="contact" id="contact">
+    <div class="container">
+      <h2 class="section-title">Get In Touch</h2>
+      <div class="contact-wrapper">
+        <form class="contact-form" id="contactForm">
+          <div class="form-group">
+            <input type="text" id="name" name="name" placeholder="Your Name" required>
+          </div>
+          <div class="form-group">
+            <input type="email" id="email" name="email" placeholder="Your Email" required>
+          </div>
+          <div class="form-group">
+            <textarea id="message" name="message" placeholder="Your Message" rows="5" required></textarea>
+          </div>
+          <button type="submit" class="contact-btn">Send Message</button>
+        </form>
+        <div class="contact-info">
+          <p>Or reach out directly:</p>
+          <p><a href="mailto:your.email@example.com">your.email@example.com</a></p>
+          <div class="social-links">
+            <a href="#" class="social-link">Instagram</a>
+            <a href="#" class="social-link">TikTok</a>
+            <a href="#" class="social-link">LinkedIn</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 Nathan Bawa. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

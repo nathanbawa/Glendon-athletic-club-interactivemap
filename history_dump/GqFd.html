@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Gym 3D Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Model Viewer -->
+  <script type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+  </script>
+
+  <style>
+    /* =========================
+       GLOBAL
+    ========================== */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #778399FF;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      background-color: #778399FF;
+    }
+
+    /* =========================
+       HOTSPOTS (FIXED SIZE)
+    ========================== */
+    .Hotspot {
+      position: relative;
+      width: 14px;
+      height: 14px;
+      background: currentColor;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+
+      /* 🔑 prevents zoom scaling */
+      transform: translate(-50%, -50%);
+      transform-origin: center;
+
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .Hotspot span {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: white;
+      color: black;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+      pointer-events: none;
+    }
+
+    /* =========================
+       LEGEND
+    ========================== */
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.95);
+      padding: 12px 14px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      font-size: 14px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .legend-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <model-viewer
+    src="MPTESTING.glb"
+    camera-controls
+    touch-action="pan-y"
+    exposure="1"
+    shadow-intensity="1"
+    field-of-view="45deg"
+
+    <!-- 🔑 UNRESTRICTED ZOOM -->
+    min-camera-orbit="auto auto 5m"
+    max-camera-orbit="auto auto 200m"
+  >
+
+    <!-- HOTSPOTS -->
+    <button class="Hotspot" slot="hotspot-1"
+      style="color:#e74c3c"
+      data-position="-0.46m -1.55m 16.84m">
+      <span>Lobby</span>
+    </button>
+
+    <button class="Hotspot" slot="hotspot-2"
+      style="color:#3498db"
+      data-position="-5.22m -1.03m -0.96m">
+      <span>Women Locker Room</span>
+    </button>
+
+    <button class="Hotspot" slot="hotspot-3"
+      style="color:#9b59b6"
+      data-position="-6.62m -1.02m -12.29m">
+      <span>Men Locker Room</span>
+    </button>
+
+    <button class="Hotspot" slot="hotspot-4"
+      style="color:#1abc9c"
+      data-position="-23.43m -1.04m -5.56m">
+      <span>Swimming Pool</span>
+    </button>
+
+    <button class="Hotspot" slot="hotspot-5"
+      style="color:#f1c40f"
+      data-position="8.06m -1.03m 15.76m">
+      <span>Golf Court</span>
+    </button>
+
+  </model-viewer>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color" style="background:#e74c3c"></div> Lobby
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background:#3498db"></div> Women Locker Room
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background:#9b59b6"></div> Men Locker Room
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background:#1abc9c"></div> Swimming Pool
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background:#f1c40f"></div> Golf Court
+    </div>
+  </div>
+
+</body>
+</html>

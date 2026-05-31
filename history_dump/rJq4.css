@@ -1,0 +1,198 @@
+:not(:defined) > * {
+  display: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a2a3a 0%, #2a3f5f 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+model-viewer {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a2a3a 0%, #2a3f5f 100%);
+}
+
+/* HOTSPOTS */
+
+.Hotspot {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  width: 6px;
+  height: 6px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  padding: 0;
+  display: block;
+}
+
+.Hotspot span {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 245, 250, 0.95));
+  color: #1a2a3a;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  display: none;
+  border-left: 4px solid #4da3ff;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.Hotspot.overlapping span {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.Hotspot:hover span,
+.Hotspot:focus span {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  display: block;
+  opacity: 1;
+}
+
+.HotspotAnnotation {
+  background: #1f3c88;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* LEGEND */
+
+.map-legend,
+.legend {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255,255,255,0.97);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  font-size: 14px;
+  color: #333;
+  min-width: 200px;
+  max-height: 60vh;
+  z-index: 999;
+  pointer-events: auto;
+  overflow-y: auto;
+}
+
+.legend-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.legend-icon {
+  font-size: 16px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* LEGEND COLORS */
+
+.legend-color.lobby { background: #f5c16c; }
+.legend-color.locker { background: #8faadc; }
+.legend-color.pool { background: #4da3ff; }
+.legend-color.fitness { background: #7cc576; }
+.legend-color.combat { background: #e57373; }
+.legend-color.stretch { background: #ba68c8; }
+
+/* MOBILE RESPONSIVE */
+
+@media (max-width: 768px) {
+  .Hotspot span {
+    font-size: 12px;
+  }
+  
+  .map-legend,
+  .legend {
+    bottom: 15px;
+    left: 15px;
+    padding: 14px 16px;
+    font-size: 12px;
+    min-width: 180px;
+  }
+  
+  .legend-item {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .legend-icon {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .Hotspot span {
+    font-size: 11px;
+  }
+  
+  .map-legend,
+  .legend {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 12px 14px;
+    font-size: 11px;
+  }
+  
+  .legend-item {
+    font-size: 11px;
+    margin-bottom: 7px;
+  }
+  
+  .legend-color {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .legend-icon {
+    font-size: 14px;
+    margin-right: 6px;
+  }
+}

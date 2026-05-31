@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Batmobile – Model Viewer</title>
+  <meta name="description" content="3D Batmobile Viewer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Model Viewer -->
+  <script type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+  </script>
+</head>
+
+<body>
+
+  <model-viewer
+    src="batmobil_car.glb"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    tone-mapping="neutral"
+    poster="poster.webp"
+    shadow-intensity="1">
+
+    <!-- Hotspot -->
+    <button class="Hotspot"
+      slot="hotspot-3"
+      data-position="-1.75m 3.1m 4.79m"
+      data-normal="-0.11m 0.94m 0.31m"
+      data-visibility-attribute="visible">
+      <div class="HotspotAnnotation">BAT MOBILE</div>
+    </button>
+
+    <!-- Progress bar -->
+    <div class="progress-bar hide" slot="progress-bar">
+      <div class="update-bar"></div>
+    </div>
+
+    <!-- AR button -->
+    <button slot="ar-button" id="ar-button">
+      View in your space
+    </button>
+
+    <!-- AR prompt -->
+    <div id="ar-prompt">
+      <img src="ar_hand_prompt.png">
+    </div>
+
+  </model-viewer>
+<div class="legend">
+  <div class="legend-item">
+    <span class="legend-color armor"></span>
+    <span class="legend-text">Armor Plating</span>
+  </div>
+
+  <div class="legend-item">
+    <span class="legend-color stealth"></span>
+    <span class="legend-text">Stealth Systems</span>
+  </div>
+
+  <div class="legend-item">
+    <span class="legend-color power"></span>
+    <span class="legend-text">Power Core</span>
+  </div>
+
+  <div class="legend-item">
+    <span class="legend-color mobility"></span>
+    <span class="legend-text">Mobility Systems</span>
+  </div>
+</div>
+
+  <!-- JS (AFTER HTML) -->
+  <script src="script.js"></script>
+
+</body>
+</html>

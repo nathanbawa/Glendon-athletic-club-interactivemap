@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Glendon Athletic Club – 3D Map</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Model Viewer -->
+  <script
+    type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+  </script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+
+  <model-viewer
+    id="gym-map"
+    src="MPTESTING.glb"
+    camera-controls
+    interaction-prompt="none"
+
+    tone-mapping="neutral"
+    exposure="0.75"
+
+    shadow-intensity="0.6"
+    shadow-softness="0.8"
+
+    camera-orbit="45deg 55deg 160m"
+    camera-target="0m 0m 0m"
+
+    min-camera-orbit="auto 20deg 100m"
+    max-camera-orbit="auto 80deg 250m"
+
+    field-of-view="30deg"
+    environment-image="neutral">
+
+    <!-- HOTSPOTS (CAMERA-AWARE) -->
+
+    <button class="Hotspot"
+      slot="hotspot-lobby"
+      data-position="-0.46m -1.55m 16.84m"
+      data-orbit="45deg 65deg 90m"
+      data-target="-0.5m -1.5m 16m">
+      <div class="HotspotAnnotation">Lobby</div>
+    </button>
+
+    <button class="Hotspot"
+      slot="hotspot-locker-w"
+      data-position="-5.22m -1.02m -0.96m"
+      data-orbit="-30deg 70deg 80m"
+      data-target="-5m -1m -1m">
+      <div class="HotspotAnnotation">Women’s Locker Room</div>
+    </button>
+
+    <button class="Hotspot"
+      slot="hotspot-locker-m"
+      data-position="-6.62m -1.02m -12.29m"
+      data-orbit="-60deg 70deg 90m"
+      data-target="-6.5m -1m -12m">
+      <div class="HotspotAnnotation">Men’s Locker Room</div>
+    </button>
+
+    <button class="Hotspot"
+      slot="hotspot-pool"
+      data-position="-23.43m -1.04m -5.56m"
+      data-orbit="-120deg 65deg 120m"
+      data-target="-23m -1m -5.5m">
+      <div class="HotspotAnnotation">Swimming Pool</div>
+    </button>
+
+    <button class="Hotspot"
+      slot="hotspot-weights"
+      data-position="16.15m -1.05m -3.15m"
+      data-orbit="90deg 60deg 90m"
+      data-target="16m -1m -3m">
+      <div class="HotspotAnnotation">Weight Room</div>
+    </button>
+
+  </model-viewer>
+
+  <!-- LEGEND -->
+  <div class="map-legend">
+    <div class="legend-title">Legend</div>
+    <div class="legend-item"><span class="legend-color lobby"></span>Lobby</div>
+    <div class="legend-item"><span class="legend-color locker"></span>Locker Rooms</div>
+    <div class="legend-item"><span class="legend-color pool"></span>Swimming Pool</div>
+    <div class="legend-item"><span class="legend-color fitness"></span>Fitness Areas</div>
+  </div>
+
+  <!-- Script -->
+  <script src="./script.js"></script>
+
+</body>
+</html>

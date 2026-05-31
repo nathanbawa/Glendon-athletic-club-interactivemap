@@ -1,0 +1,9 @@
+{
+    "explorer.confirmDelete": false,
+    "liveServer.settings.donotVerifyTags": true,
+    "liveServer.settings.donotShowInfoMsg": true,
+    "http.systemCertificatesNode": true,
+    "claudeCode.preferredLocation": "panel",
+    "files.autoSave": "afterDelay",
+    "geminicodeassist.project": "zealous-voyage-1c9f9"
+}

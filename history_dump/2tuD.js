@@ -1,0 +1,1190 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const modelViewer = document.querySelector('model-viewer');
+  const hotspots = document.querySelectorAll('.Hotspot');
+  let selectedHotspot = null;
+  let isItineraryMode = false;
+
+  const START_ORBIT  = "360deg 45deg 100m";
+  const START_TARGET = "0m -1.3m 8.5m";
+  const START_FOV    = "70deg";
+  const QUICK_TRANSITION_DECAY = "90";
+  const MOBILE_ZOOM_SENSITIVITY = "0.72";
+  const DESKTOP_ZOOM_SENSITIVITY = "0.82";
+  const TOP_VIEW_ZOOM_SENSITIVITY = "0.78";
+  const MOBILE_PAN_SPEED_FACTOR = 0.00135;
+  const TOUCH_PAN_DEADZONE = 8;
+  const EMPTY_TAP_DEADZONE = 8;
+  const CAMERA_RESET_GUARD_MS = 650;
+  const CAMERA_BOUNDS_X = 45;
+  const CAMERA_BOUNDS_Z = 65;
+  let guardedCameraState = null;
+  let guardCameraUntil = 0;
+  let backgroundPointerSnapshot = null;
+
+  function applyQuickCameraTransition() {
+    modelViewer.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
+  }
+
+  function captureCameraState() {
+    const orbit = modelViewer.getCameraOrbit();
+    const target = modelViewer.getCameraTarget();
+    const fov = modelViewer.getFieldOfView();
+    return {
+      orbit: `${(orbit.theta * 180 / Math.PI).toFixed(2)}deg ${(orbit.phi * 180 / Math.PI).toFixed(2)}deg ${orbit.radius.toFixed(2)}m`,
+      target: `${target.x.toFixed(2)}m ${target.y.toFixed(2)}m ${target.z.toFixed(2)}m`,
+      fov: `${fov.toFixed(2)}deg`
+    };
+  }
+
+  function applyCameraState(state) {
+    if (!state) return;
+    applyQuickCameraTransition();
+    modelViewer.cameraOrbit = state.orbit;
+    modelViewer.cameraTarget = state.target;
+    modelViewer.fieldOfView = state.fov;
+  }
+
+  function guardCameraState(state, durationMs = CAMERA_RESET_GUARD_MS) {
+    guardedCameraState = state;
+    guardCameraUntil = performance.now() + durationMs;
+  }
+
+  const SLOT_TO_KEY = {
+    'hotspot-2': '1', 'hotspot-20': '2', 'hotspot-9': '3',
+    'hotspot-5': '4', 'hotspot-6': '5', 'hotspot-4': '6',
+    'hotspot-3': '7', 'hotspot-18': '8', 'hotspot-10': '10',
+    'hotspot-11': '11', 'hotspot-7': '12', 'hotspot-8': '13',
+    'hotspot-21': '14', 'hotspot-22': '15', 'hotspot-23': '16',
+  };
+
+  function resetCamera() {
+    const startState = { orbit: START_ORBIT, target: START_TARGET, fov: START_FOV };
+    applyCameraState(startState);
+    guardCameraState(startState);
+  }
+
+  // ─────────────────────────────────────────
+  // WAYPOINTS
+  // ─────────────────────────────────────────
+  const WAYPOINTS = [
+    { id:24, label:'Lobby', key:'1', nx:-0.55, nz:16.54, ny: -1.25 },
+    { id:25, label:'Swimming Pool', key:'3', nx:-22.76, nz:-5.47, ny: -1.25 },
+    { id:26, label:'Weight Room', key:'2', nx:16.18, nz:-3.7, ny: -1.25 },
+    { id:27, label:'Stretching Room', key:'4', nx:20.85, nz:16.97, ny: -1.25 },
+    { id:28, label:'Spinning Room', key:'5', nx:27.99, nz:16.7, ny: -1.25 },
+    { id:29, label:'Boxing Room', key:'6', nx:14.43, nz:16.71, ny: -1.25 },
+    { id:30, label:'Golf Court', key:'7', nx:8.44, nz:16.72, ny: -1.25 },
+    { id:31, label:'Squash Court', key:'8', nx:-17.5, nz:-28.07, ny: -1.25 },
+    { id:32, label:'M.Changing Room', key:'10', nx:-9.94, nz:14.84, ny: -1.25 },
+    { id:33, label:'W.Changing Room', key:'11', nx:-10, nz:19.78, ny: -1.25 },
+    { id:34, label:'W.Locker Room', key:'12', nx:-5.08, nz:0.56, ny: -1.25 },
+    { id:35, label:'M.Locker Room', key:'13', nx:-5.57, nz:-13.43, ny: -1.25 },
+    { id:36, label:'Stairs 14', key:'14', nx:-2.01, nz:8.5, ny: -1.25 },
+    { id:37, label:'Stairs 15', key:'15', nx:27.95, nz:3.72, ny: -1.25 },
+    { id:38, label:'Stairs 16', key:'16', nx:-23.99, nz:-38.73, ny: -1.25 }
+  ];
+
+  const NEW_NODES = [
+    { id:102, type:'lobycbonnection', nx:0.229, nz:18.117, ny:-2.699 },
+    { id:103, type:'lobycbonnection', nx:3.087, nz:18.456, ny:-2.699 },
+    { id:104, type:'lobycbonnection', nx:3.340, nz:15.883, ny:-2.699 },
+    { id:105, type:'lobycbonnection', nx:3.615, nz:13.207, ny:-2.699 },
+    { id:106, type:'halway', nx:4.041, nz:10.653, ny:-2.699 },
+    { id:107, type:'halway', nx:3.879, nz:7.924, ny:-2.699 },
+    { id:108, type:'halway', nx:3.812, nz:4.425, ny:-2.699 },
+    { id:109, type:'halway', nx:3.523, nz:0.613, ny:-2.699 },
+    { id:110, type:'halway', nx:3.561, nz:-2.420, ny:-2.699 },
+    { id:111, type:'halway', nx:3.438, nz:-5.189, ny:-2.699 },
+    { id:112, type:'halway', nx:3.940, nz:-8.366, ny:-2.699 },
+    { id:113, type:'halway', nx:3.812, nz:-10.943, ny:-2.699 },
+    { id:114, type:'halway', nx:3.633, nz:-13.022, ny:-2.699 },
+    { id:115, type:'halway', nx:3.687, nz:-15.172, ny:-2.699 },
+    { id:116, type:'halway', nx:3.604, nz:-18.018, ny:-2.699 },
+    { id:117, type:'halway', nx:3.783, nz:-20.549, ny:-2.699 },
+    { id:118, type:'halway', nx:3.766, nz:-22.969, ny:-2.699 },
+    { id:119, type:'halway', nx:3.630, nz:-25.201, ny:-2.699 },
+    { id:120, type:'halway', nx:0.230, nz:-26.110, ny:-2.699 },
+    { id:121, type:'halway', nx:-2.009, nz:-25.759, ny:-2.699 },
+    { id:122, type:'halway', nx:-1.600, nz:-27.931, ny:-2.699 },
+    { id:123, type:'halway', nx:-1.512, nz:-31.432, ny:-2.699 },
+    { id:124, type:'halway', nx:-1.290, nz:-34.217, ny:-2.699 },
+    { id:125, type:'squashcourtconnection', nx:-4.274, nz:-34.545, ny:-2.699 },
+    { id:126, type:'squashcourtconnection', nx:-7.669, nz:-34.680, ny:-2.699 },
+    { id:127, type:'squashcourtconnection', nx:-10.356, nz:-34.696, ny:-2.699 },
+    { id:128, type:'squashcourtconnection', nx:-13.446, nz:-34.824, ny:-2.699 },
+    { id:129, type:'squashcourtconnection', nx:-13.661, nz:-30.266, ny:-2.699 },
+    { id:130, type:'weightroom connection', nx:6.913, nz:7.422, ny:-2.699 },
+    { id:131, type:'weightroom connection', nx:10.389, nz:7.471, ny:-2.699 },
+    { id:132, type:'weightroom connection', nx:15.891, nz:7.532, ny:-2.699 },
+    { id:133, type:'weightroom connection', nx:15.832, nz:3.786, ny:-2.699 },
+    { id:134, type:'weightroom connection', nx:16.008, nz:1.307, ny:-2.699 },
+    { id:135, type:'weightroom connection', nx:16.250, nz:-1.154, ny:-2.699 },
+    { id:136, type:'golfcourtconnection', nx:6.860, nz:9.990, ny:-2.699 },
+    { id:137, type:'halway', nx:11.212, nz:9.897, ny:-2.699 },
+    { id:138, type:'boxingroomconnection', nx:14.994, nz:10.059, ny:-2.699 },
+    { id:139, type:'halway', nx:18.148, nz:9.896, ny:-2.699 },
+    { id:140, type:'halway', nx:20.216, nz:9.838, ny:-2.699 },
+    { id:141, type:'halway', nx:21.552, nz:10.029, ny:-2.699 },
+    { id:142, type:'halway', nx:23.351, nz:9.995, ny:-2.699 },
+    { id:143, type:'halway', nx:25.382, nz:10.125, ny:-2.699 },
+    { id:144, type:'halway', nx:26.963, nz:9.937, ny:-2.699 },
+    { id:145, type:'halway', nx:28.448, nz:9.735, ny:-2.699 },
+    { id:146, type:'stairsconnection', nx:28.430, nz:8.694, ny:-2.699 },
+    { id:147, type:'stairsconnection', nx:28.464, nz:7.244, ny:-2.699 },
+    { id:148, type:'stairsconnection', nx:28.467, nz:5.683, ny:-2.699 },
+    { id:149, type:'halway', nx:2.102, nz:10.920, ny:-2.699 },
+    { id:150, type:'halway', nx:-0.070, nz:10.872, ny:-2.699 },
+    { id:151, type:'halway', nx:-1.815, nz:10.974, ny:-2.699 },
+    { id:152, type:'halway', nx:-3.516, nz:10.953, ny:-2.699 },
+    { id:153, type:'halway', nx:-5.550, nz:11.256, ny:-2.699 },
+    { id:154, type:'halway', nx:-7.501, nz:11.410, ny:-2.699 },
+    { id:155, type:'halway', nx:-9.304, nz:11.356, ny:-2.699 },
+    { id:156, type:'halway', nx:-10.844, nz:11.471, ny:-2.699 },
+    { id:157, type:'halway', nx:-12.300, nz:11.423, ny:-2.699 },
+    { id:158, type:'halway', nx:-14.136, nz:11.816, ny:-2.699 },
+    { id:159, type:'m.changingroomconection', nx:-15.364, nz:13.258, ny:-2.699 },
+    { id:160, type:'m.changingroomconection', nx:-15.167, nz:15.867, ny:-2.699 },
+    { id:161, type:'m.changingroomconection', nx:-13.235, nz:15.805, ny:-2.699 },
+    { id:162, type:'m.changingroomconection', nx:-11.724, nz:15.868, ny:-2.699 },
+    { id:163, type:'w.changingroomconection', nx:-15.003, nz:17.607, ny:-2.699 },
+    { id:164, type:'w.changingroomconection', nx:-13.022, nz:17.785, ny:-2.699 },
+    { id:165, type:'w.changingroomconection', nx:-11.687, nz:17.929, ny:-2.699 },
+    { id:166, type:'halway', nx:5.485, nz:10.096, ny:-2.699 },
+    { id:167, type:'golfcourtconnection', nx:8.332, nz:10.209, ny:-2.699 },
+    { id:168, type:'golfcourtconnection', nx:8.407, nz:11.803, ny:-2.699 },
+    { id:169, type:'golfcourtconnection', nx:8.378, nz:13.349, ny:-2.699 },
+    { id:170, type:'halway', nx:13.203, nz:9.956, ny:-2.699 },
+    { id:171, type:'boxingroomconection', nx:14.896, nz:11.774, ny:-2.699 },
+    { id:172, type:'boxingroomconection', nx:14.666, nz:13.632, ny:-2.699 },
+    { id:173, type:'stretchingroomconection', nx:20.397, nz:11.532, ny:-2.699 },
+    { id:174, type:'stretchingroomconection', nx:20.373, nz:12.778, ny:-2.699 },
+    { id:175, type:'stretchingroomconection', nx:20.511, nz:14.238, ny:-2.699 },
+    { id:176, type:'spinningroomconection', nx:27.065, nz:11.507, ny:-2.699 },
+    { id:177, type:'spinningroomconection', nx:26.978, nz:12.932, ny:-2.699 },
+    { id:178, type:'spinningroomconection', nx:26.951, nz:14.374, ny:-2.699 },
+    { id:179, type:'stairsconection', nx:1.935, nz:9.674, ny:-2.699 },
+    { id:180, type:'stairsconnection', nx:1.894, nz:8.444, ny:-2.699 },
+    { id:181, type:'squashcourtconnection', nx:-13.493, nz:-32.581, ny:-2.699 },
+    { id:182, type:'stairsconnection', nx:-16.344, nz:-34.765, ny:-2.699 },
+    { id:183, type:'stairsconnection', nx:-18.329, nz:-34.479, ny:-2.699 },
+    { id:184, type:'stairsconnection', nx:-20.023, nz:-34.434, ny:-2.699 },
+    { id:185, type:'stairsconnection', nx:-21.987, nz:-34.224, ny:-2.699 },
+    { id:186, type:'stairsconnection', nx:-24.579, nz:-34.981, ny:-2.699 },
+    { id:187, type:'w.lockerroomconnection', nx:2.386, nz:-0.980, ny:1.176 },
+    { id:188, type:'w.lockerroomconnection', nx:1.264, nz:-0.972, ny:-2.699 },
+    { id:189, type:'w.lockerroomconnection', nx:0.267, nz:-0.815, ny:-2.699 },
+    { id:190, type:'w.lockerroomconnection', nx:-0.716, nz:-0.627, ny:-2.699 },
+    { id:191, type:'M.lockerroomconnection', nx:2.035, nz:-10.768, ny:-2.699 },
+    { id:192, type:'M.lockerroomconnection', nx:0.934, nz:-10.813, ny:-2.699 },
+    { id:193, type:'M.lockerroomconnection', nx:-0.116, nz:-10.701, ny:-2.699 },
+    { id:194, type:'swimmingpoolconnection', nx:-14.335, nz:10.203, ny:-2.699 },
+    { id:196, type:'swimmingpoolconnection', nx:-14.422, nz:7.511, ny:-2.699 },
+    { id:197, type:'swimmingpoolconnection', nx:-14.618, nz:4.905, ny:-2.699 },
+    { id:198, type:'swimmingpoolconnection', nx:-14.724, nz:2.616, ny:-2.699 },
+    { id:199, type:'swimmingpoolconnection', nx:-14.591, nz:0.915, ny:-2.699 }
+  ];
+
+  NEW_NODES.forEach(n => WAYPOINTS.push(n));
+
+  const waypointMap = {};
+  WAYPOINTS.forEach(w => waypointMap[w.id] = w);
+
+  const _dist = (n1, n2) => Math.hypot(n1.nx - n2.nx, n1.nz - n2.nz);
+  const CONNECTIONS = [];
+
+  const graphNodes = NEW_NODES;
+  const halwayNodes = graphNodes.filter(g => g.type === 'halway');
+
+  for(let i = 0; i < graphNodes.length; i++) {
+    for(let j = i+1; j < graphNodes.length; j++) {
+      const A = graphNodes[i], B = graphNodes[j];
+      if (_dist(A, B) < 6.5) {
+        if (A.type === 'halway' && B.type === 'halway') CONNECTIONS.push([A.id, B.id]);
+        else if (A.type === B.type && A.type !== 'halway') CONNECTIONS.push([A.id, B.id]);
+      }
+    }
+  }
+
+  const uniqueTypes = [...new Set(graphNodes.filter(g => g.type !== 'halway').map(g => g.type))];
+  uniqueTypes.forEach(type => {
+    const typeNodes = graphNodes.filter(g => g.type === type);
+    let bestRoomNode = null, bestHallNode = null, minD = Infinity;
+    typeNodes.forEach(rn => {
+      halwayNodes.forEach(hn => {
+        let d = _dist(rn, hn);
+        if (d < minD) { minD = d; bestRoomNode = rn; bestHallNode = hn; }
+        if (d < 3.2) CONNECTIONS.push([rn.id, hn.id]);
+      });
+    });
+    if (bestRoomNode && bestHallNode) CONNECTIONS.push([bestRoomNode.id, bestHallNode.id]);
+  });
+
+  CONNECTIONS.push([181, 182]);
+  CONNECTIONS.push([181, 183]);
+  CONNECTIONS.push([145, 146]);
+  CONNECTIONS.push([146, 147]);
+  CONNECTIONS.push([147, 148]);
+
+  const MAP_ALIAS = {
+    '1': ['lobycbonnection'],
+    '3': ['swimmingpoolconnection'],
+    '2': ['weightroom connection'],
+    '4': ['stretchingroomconection'],
+    '5': ['spinningroomconection'],
+    '6': ['boxingroomconnection', 'boxingroomconection'],
+    '7': ['golfcourtconnection'],
+    '8': ['squashcourtconnection'],
+    '10': ['m.changingroomconection'],
+    '11': ['w.changingroomconection'],
+    '12': ['w.lockerroomconnection'],
+    '13': ['M.lockerroomconnection'],
+    '14': ['stairsconnection', 'stairsconection'],
+    '15': ['stairsconnection', 'stairsconection'],
+    '16': ['stairsconnection', 'stairsconection']
+  };
+
+  WAYPOINTS.filter(w => w.id < 100).forEach(room => {
+    const aliases = MAP_ALIAS[room.key] || [];
+    const viable = graphNodes.filter(g => aliases.includes(g.type)).sort((a,b) => _dist(room, a) - _dist(room, b));
+    if (viable.length > 0) CONNECTIONS.push([room.id, viable[0].id]);
+  });
+
+  const adjacency = {};
+  WAYPOINTS.forEach(w => adjacency[w.id] = []);
+  CONNECTIONS.forEach(([a, b]) => {
+    if (!adjacency[a]) adjacency[a] = [];
+    if (!adjacency[b]) adjacency[b] = [];
+    adjacency[a].push(b);
+    adjacency[b].push(a);
+  });
+
+  function astar(startId, endId) {
+    const dist = (a, b) => Math.hypot(waypointMap[a].nx - waypointMap[b].nx, waypointMap[a].nz - waypointMap[b].nz);
+    const open = new Set([startId]);
+    const cameFrom = {};
+    const gScore = { [startId]: 0 };
+    const fScore = { [startId]: dist(startId, endId) };
+    while (open.size) {
+      let current = [...open].reduce((a, b) => (fScore[a] ?? Infinity) < (fScore[b] ?? Infinity) ? a : b);
+      if (current === endId) {
+        const path = [];
+        while (current !== undefined) { path.unshift(current); current = cameFrom[current]; }
+        return path;
+      }
+      open.delete(current);
+      for (const neighbor of (adjacency[current] || [])) {
+        const tentative = (gScore[current] ?? 0) + dist(current, neighbor);
+        if (tentative < (gScore[neighbor] ?? Infinity)) {
+          cameFrom[neighbor] = current;
+          gScore[neighbor] = tentative;
+          fScore[neighbor] = tentative + dist(neighbor, endId);
+          open.add(neighbor);
+        }
+      }
+    }
+    return [];
+  }
+
+  function waypointForRoom(roomKey) {
+    return WAYPOINTS.find(w => w.key === roomKey) || null;
+  }
+
+  const routeSVG = document.getElementById('route-overlay');
+  let currentRoutePathIds = [];
+  let routeDrawLoop = null;
+  let routeTraceStart = 0;
+  let routeTraceDuration = 0;
+  let routeRunnerStarted = false;
+
+  function clearRoute() {
+    if (routeSVG) routeSVG.innerHTML = '';
+    document.querySelectorAll('.routing-hotspot').forEach(el => el.remove());
+    if (routeDrawLoop) { cancelAnimationFrame(routeDrawLoop); routeDrawLoop = null; }
+    routeTraceStart = 0; routeTraceDuration = 0; routeRunnerStarted = false;
+    currentRoutePathIds = [];
+  }
+
+  function drawRoute(pathIds) {
+    clearRoute();
+    if (!pathIds || pathIds.length < 2) return;
+    currentRoutePathIds = pathIds;
+    routeTraceStart = performance.now();
+    routeTraceDuration = 0;
+    routeRunnerStarted = false;
+
+    pathIds.forEach((id) => {
+      const w = waypointMap[id];
+      const h = document.createElement('div');
+      h.className = 'routing-hotspot';
+      h.slot = `hotspot-route-${id}`;
+      const py = w.ny !== undefined ? w.ny.toFixed(2) : '-1.15';
+      h.dataset.position = `${w.nx.toFixed(2)} ${py} ${w.nz.toFixed(2)}`;
+      h.dataset.normal = "0 1 0";
+      h.style.width = '0px'; h.style.height = '0px';
+      h.style.pointerEvents = 'none';
+      mv.appendChild(h);
+    });
+
+    if (!routeDrawLoop) loopRouteSVG();
+  }
+
+  function loopRouteSVG() {
+    if (currentRoutePathIds && currentRoutePathIds.length > 0) {
+      updateRouteSVG();
+      routeDrawLoop = requestAnimationFrame(loopRouteSVG);
+    } else {
+      routeDrawLoop = null;
+    }
+  }
+
+  function updateRouteSVG() {
+    if (!currentRoutePathIds || currentRoutePathIds.length < 2) return;
+    const points = currentRoutePathIds.map(id => {
+      const h = mv.querySelector(`[slot="hotspot-route-${id}"]`);
+      if (!h) return null;
+      const rect = h.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0 && rect.left === 0) return null;
+      return { x: rect.left, y: rect.top };
+    }).filter(p => p !== null);
+
+    if (points.length < 2) return;
+    const d = points.map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`)).join(' ');
+    if (!routeSVG) return;
+
+    let mainPath = document.getElementById('animated-route-path');
+    let revealPath = document.getElementById('route-reveal-path');
+    let startCircle = routeSVG.querySelector('.route-start');
+    let endCircle = routeSVG.querySelector('.route-end');
+    let routeRunner = document.getElementById('route-runner');
+    let routeRunnerMotion = document.getElementById('route-runner-motion');
+
+    if (!mainPath) {
+      routeSVG.innerHTML = `
+        <defs>
+          <path id="route-path-ref"></path>
+          <mask id="route-reveal-mask">
+            <rect width="100%" height="100%" fill="black"></rect>
+            <path id="route-reveal-path" stroke="white" stroke-width="16" fill="none" stroke-linecap="square" stroke-linejoin="miter"></path>
+          </mask>
+        </defs>
+        <path id="animated-route-path" stroke="#E31837" stroke-dasharray="8 8" stroke-width="6" fill="none" stroke-linecap="square" stroke-linejoin="miter" mask="url(#route-reveal-mask)"></path>
+        <circle class="route-start" r="6" fill="#1D9E75" stroke="white" stroke-width="2"></circle>
+        <circle class="route-end" r="6" fill="#E31837" stroke="white" stroke-width="2" opacity="0"></circle>
+        <rect id="route-runner" width="12" height="12" fill="#E31837" x="-6" y="-6" rx="2" ry="2" stroke="white" stroke-width="2" filter="drop-shadow(0 0 6px rgba(227,24,55,0.8))" opacity="0">
+          <animateMotion id="route-runner-motion" begin="indefinite" dur="3.5s" repeatCount="indefinite">
+            <mpath href="#route-path-ref"/>
+          </animateMotion>
+        </rect>`;
+      mainPath = document.getElementById('animated-route-path');
+      revealPath = document.getElementById('route-reveal-path');
+      startCircle = routeSVG.querySelector('.route-start');
+      endCircle = routeSVG.querySelector('.route-end');
+      routeRunner = document.getElementById('route-runner');
+      routeRunnerMotion = document.getElementById('route-runner-motion');
+    }
+
+    mainPath.setAttribute('d', d);
+    routeSVG.querySelector('#route-path-ref').setAttribute('d', d);
+    revealPath.setAttribute('d', d);
+    startCircle.setAttribute('cx', points[0].x);
+    startCircle.setAttribute('cy', points[0].y);
+    endCircle.setAttribute('cx', points[points.length-1].x);
+    endCircle.setAttribute('cy', points[points.length-1].y);
+
+    const totalLength = revealPath.getTotalLength();
+    if (!routeTraceDuration) routeTraceDuration = Math.min(2200, Math.max(900, totalLength * 4));
+
+    const elapsed = Math.max(0, performance.now() - routeTraceStart);
+    const progress = Math.min(elapsed / routeTraceDuration, 1);
+    const revealedLength = totalLength * progress;
+    const hiddenLength = Math.max(totalLength - revealedLength, 0.001);
+
+    revealPath.style.strokeDasharray = `${revealedLength} ${hiddenLength}`;
+    revealPath.style.strokeDashoffset = '0';
+    endCircle.style.opacity = progress > 0.96 ? '1' : '0';
+
+    if (progress >= 1) {
+      routeRunner.style.opacity = '1';
+      if (!routeRunnerStarted && routeRunnerMotion) {
+        routeRunnerStarted = true;
+        routeRunnerMotion.beginElement();
+      }
+    } else {
+      routeRunner.style.opacity = '0';
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // CAMERA ORBIT MODES
+  // ─────────────────────────────────────────
+  const mv = modelViewer;
+
+  // Determine if we're on desktop
+  const isDesktop = () => window.innerWidth > 768;
+
+  function setupCameraControls() {
+    if (isDesktop()) {
+      // Desktop: native camera-controls with constrained orbit (no tilt, pan enabled)
+      mv.setAttribute('camera-controls', '');
+      mv.removeAttribute('disable-pan');
+      mv.setAttribute('orbit-sensitivity', '0.8');
+      mv.setAttribute('pan-sensitivity', '1.2');
+      mv.setAttribute('zoom-sensitivity', '0.8');
+      mv.setAttribute('interpolation-decay', '80');
+      mv.setAttribute('min-camera-orbit', 'auto 45deg auto');
+      mv.setAttribute('max-camera-orbit', 'auto 45deg auto');
+    } else {
+      // Mobile: use model-viewer's built-in touch controls
+      mv.setAttribute('camera-controls', '');
+      mv.setAttribute('disable-pan', '');
+      mv.setAttribute('zoom-sensitivity', MOBILE_ZOOM_SENSITIVITY);
+      mv.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
+      mv.setAttribute('min-camera-orbit', '360deg 45deg 40m');
+      mv.setAttribute('max-camera-orbit', '360deg 45deg 180m');
+    }
+  }
+
+  function enterLockedMode() {
+    if (!isDesktop()) {
+      mv.setAttribute('camera-controls', '');
+      mv.setAttribute('disable-pan', '');
+      mv.setAttribute('min-camera-orbit', '360deg 45deg 40m');
+      mv.setAttribute('max-camera-orbit', '360deg 45deg 180m');
+      mv.setAttribute('zoom-sensitivity', MOBILE_ZOOM_SENSITIVITY);
+      mv.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
+    } else {
+      mv.setAttribute('camera-controls', '');
+      mv.removeAttribute('disable-pan');
+      mv.setAttribute('orbit-sensitivity', '0.8');
+      mv.setAttribute('pan-sensitivity', '1.2');
+      mv.setAttribute('zoom-sensitivity', '0.8');
+      mv.setAttribute('interpolation-decay', '80');
+      mv.setAttribute('min-camera-orbit', 'auto 45deg auto');
+      mv.setAttribute('max-camera-orbit', 'auto 45deg auto');
+    }
+    mv.autoRotate = false;
+  }
+
+  function enterHotspotOrbitMode() {
+    enterLockedMode();
+    applyQuickCameraTransition();
+  }
+
+  function enterItineraryTopView() {
+    isItineraryMode = true;
+    applyQuickCameraTransition();
+    if (!isDesktop()) {
+      mv.setAttribute('camera-controls', '');
+      mv.removeAttribute('disable-pan');
+      mv.setAttribute('zoom-sensitivity', TOP_VIEW_ZOOM_SENSITIVITY);
+      mv.setAttribute('min-camera-orbit', '0deg 0deg 55m');
+      mv.setAttribute('max-camera-orbit', '0deg 0deg 150m');
+    } else {
+      mv.removeAttribute('camera-controls');
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // DESKTOP UNIFIED EVENT SYSTEM
+  // Consolidated pointer + wheel handling (desktop only)
+  // ─────────────────────────────────────────
+  let isDragging = false;
+  let dragStartX = 0, dragStartY = 0;
+  let dragPointerId = null;
+  let isOverMV = false;
+
+  // Track when pointer is over model-viewer
+  mv.addEventListener('pointerenter', () => {
+    if (isDesktop()) isOverMV = true;
+  }, { capture: true });
+
+  mv.addEventListener('pointerleave', () => {
+    if (isDesktop()) isOverMV = false;
+  }, { capture: true });
+
+  // Unified pointer down - start drag or capture state
+  document.addEventListener('pointerdown', (e) => {
+    if (!isDesktop() || e.button !== 0) return;
+
+    // Skip if clicking on UI elements
+    if (e.target.closest('button, input, a, #top-bar, #desktop-controls-left, #desktop-legend-container, #info-dropdown-container, #itinerary-btn, .mobile-bottom-right-controls')) return;
+
+    isDragging = true;
+    dragPointerId = e.pointerId;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    mv.style.cursor = 'grabbing';
+
+    // Capture pointer to ensure we get all moves even if pointer leaves mv
+    if (mv.setPointerCapture) {
+      try {
+        mv.setPointerCapture(e.pointerId);
+      } catch (err) {
+        // Silently handle if capture fails
+      }
+    }
+
+    e.preventDefault();
+  }, { capture: false });
+
+  // Unified pointer move - handle drag + maintain cursor state
+  document.addEventListener('pointermove', (e) => {
+    if (!isDesktop()) return;
+
+    // Update cursor based on position
+    if (!isDragging) {
+      mv.style.cursor = isOverMV ? 'grab' : 'default';
+    }
+
+    // Only process drag if actively dragging with matching pointer ID
+    if (!isDragging || e.pointerId !== dragPointerId) return;
+
+    const deltaX = e.clientX - dragStartX;
+    const deltaY = e.clientY - dragStartY;
+
+    const target = mv.getCameraTarget();
+    const panX = (deltaX * 1.2) / 100;
+    const panZ = -(deltaY * 1.2) / 100;
+
+    mv.setAttribute('interpolation-decay', '1');
+    mv.cameraTarget = `${(target.x + panX).toFixed(2)}m ${target.y.toFixed(2)}m ${(target.z + panZ).toFixed(2)}m`;
+
+    e.preventDefault();
+  }, { capture: false });
+
+  // Unified pointer up - end drag
+  document.addEventListener('pointerup', (e) => {
+    if (!isDesktop()) return;
+
+    if (isDragging && e.pointerId === dragPointerId) {
+      isDragging = false;
+      dragPointerId = null;
+      mv.style.cursor = isOverMV ? 'grab' : 'default';
+      mv.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY);
+
+      // Release captured pointer
+      if (mv.releasePointerCapture) {
+        try {
+          mv.releasePointerCapture(e.pointerId);
+        } catch (err) {
+          // Silently handle if release fails
+        }
+      }
+    }
+
+    e.preventDefault();
+  }, { capture: false });
+
+  // Desktop scroll zoom - unified with other events
+  mv.addEventListener('wheel', (e) => {
+    if (!isDesktop() || isDragging) return; // Skip zoom if currently dragging
+    e.preventDefault();
+    e.stopPropagation();
+
+    const currentOrbit = mv.getCameraOrbit();
+    const factor = e.deltaY < 0 ? 0.92 : 1.09;
+    let newRadius = currentOrbit.radius * factor;
+    newRadius = Math.max(20, Math.min(150, newRadius));
+
+    mv.setAttribute('interpolation-decay', '30');
+    mv.cameraOrbit = `${(currentOrbit.theta * 180 / Math.PI).toFixed(2)}deg ${(currentOrbit.phi * 180 / Math.PI).toFixed(2)}deg ${newRadius.toFixed(2)}m`;
+    setTimeout(() => mv.setAttribute('interpolation-decay', QUICK_TRANSITION_DECAY), 150);
+  }, { passive: false });
+
+  // Disable context menu on model-viewer
+  mv.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  // ─────────────────────────────────────────
+  // INFO CARD
+  // ─────────────────────────────────────────
+  const ROOM_DETAILS = {
+    'Boxing room': "Our Boxing studio is equipped with four heavy bags, one speed bag and battle ropes. Gloves may be borrowed at Reception but for hygienic reasons, it is advised that you either bring your own gloves or purchase gloves/hand wraps at Reception. The space is accessible during Club hours.",
+    'Golf Court': "The indoor golf driving range is available for use by members during regular club hours. There are two practice tees which are divided by a mesh curtain. Clubs and balls are provided if required.",
+    'Spinning room': "The Glendon Athletic Club offers Group Cycling classes. All GAC members can attend our Group Cycle classes at no additional charge.",
+    'Stretching room': "The Stretching Room is a self-contained area equipped with mats, stability balls, medicine balls and a Precor stretch machine. It also features music specially programmed for this area. As a consideration to others, members are asked to refrain from bringing equipment from the Weight Room into the Stretching Room. Clean athletic footwear with non-marking soles must be worn in the Group Exercise Room.",
+    'Swimming Pool': "The pool is 25 yards long and six lanes wide and features floor-to-ceiling windows. Our Pool offers different sessions: Lengths Swim, Senior Swim, Rec Swim, Aquafitness, etc.",
+    'Squash court': "All GAC members have access to four international squash courts and three outdoor tennis courts. Courts may be reserved at www.glendonac.ca up to three days in advance.",
+    'Weight room': "The Weight Room features a large selection of free weights, selectorized machines and cardio equipment."
+  };
+
+  let infoTimeout = null;
+  let infoInteracted = false;
+
+  const showInfoCard = (labelStr) => {
+    const titleEl = document.getElementById('info-title');
+    const descEl  = document.getElementById('info-desc');
+    const container = document.getElementById('info-dropdown-content');
+    if (titleEl && descEl && container) {
+      titleEl.textContent = labelStr;
+      descEl.innerHTML = ROOM_DETAILS[labelStr] || "Click the Learn More button to view full club scheduling and availability details.";
+      container.classList.add('force-show');
+      infoInteracted = false;
+      if (infoTimeout) clearTimeout(infoTimeout);
+      infoTimeout = setTimeout(() => {
+        if (!infoInteracted) container.classList.remove('force-show');
+      }, 5000);
+    }
+  };
+
+  const setupInfoInteractions = () => {
+    const container = document.getElementById('info-dropdown-content');
+    const closeBtn  = document.getElementById('info-close-btn');
+    if (container) container.addEventListener('pointerdown', () => { infoInteracted = true; });
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (container) container.classList.remove('force-show');
+        if (document.activeElement) document.activeElement.blur();
+      });
+    }
+  };
+  setupInfoInteractions();
+
+  // ─────────────────────────────────────────
+  // HOTSPOT SELECTION
+  // ─────────────────────────────────────────
+  const selectHotspot = (h) => {
+    if (selectedHotspot === h) return;
+    isItineraryMode = false;
+    selectedHotspot = h;
+
+    document.querySelectorAll('.legend-only-hotspot').forEach(exitHotspot => {
+      if (exitHotspot !== h) exitHotspot.classList.remove('legend-only-active');
+    });
+
+    hotspots.forEach(other => {
+      other.classList.remove('selected');
+      other.style.removeProperty('--ping-color');
+      const hasYouAreHere = other.querySelector('.you-are-here') !== null;
+      if (other !== h && !hasYouAreHere) other.classList.add('faded-out');
+      else other.classList.remove('faded-out');
+    });
+    h.classList.add('selected');
+
+    const colorNode = h.querySelector('.hotspot-number');
+    if (colorNode) {
+      const bg = window.getComputedStyle(colorNode).backgroundColor;
+      h.style.setProperty('--ping-color', bg);
+    }
+
+    const marker = h.querySelector('.hotspot-marker');
+    if (marker) {
+      let hint = marker.querySelector('.hotspot-hint');
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.className = 'hotspot-hint';
+        hint.innerHTML = `
+          <span class="hint-arrow left">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 2 A5 5 0 0 0 3 2" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              <polyline points="2.2,0.8 3,2.4 4.8,1.8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </span>
+          <span class="hint-finger">👆</span>
+          <span class="hint-arrow right">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 2 A5 5 0 0 1 9 2" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              <polyline points="9.8,0.8 9,2.4 7.2,1.8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </span>`;
+        marker.appendChild(hint);
+      }
+      hint.classList.remove('hint-hiding');
+      if (h._hintTimer) clearTimeout(h._hintTimer);
+      h._hintTimer = setTimeout(() => hint.classList.add('hint-hiding'), 2500);
+
+      let recenterHint = marker.querySelector('.hotspot-recenter-hint');
+      if (!recenterHint) {
+        recenterHint = document.createElement('div');
+        recenterHint.className = 'hotspot-recenter-hint';
+        recenterHint.innerHTML = `<span class="recenter-hint-hand">👆</span><span>Tap outside to recenter</span>`;
+        marker.appendChild(recenterHint);
+      }
+      recenterHint.classList.add('show-recenter-hint');
+      if (h._recenterHintTimer) clearTimeout(h._recenterHintTimer);
+      h._recenterHintTimer = setTimeout(() => recenterHint.classList.remove('show-recenter-hint'), 3200);
+    }
+
+    const pos = h.dataset.position;
+    if (pos) {
+      const parts = pos.split(' ');
+      if (parts.length === 3) {
+        const x = parseFloat(parts[0]);
+        const y = parseFloat(parts[1]);
+        const z = parseFloat(parts[2]);
+        applyQuickCameraTransition();
+        mv.cameraTarget = `${x}m ${y}m ${z}m`;
+        if (!isDesktop()) {
+          mv.cameraOrbit = "360deg 45deg 65m";
+        } else {
+          const currentOrbit = mv.getCameraOrbit();
+          const theta = (currentOrbit.theta * 180 / Math.PI).toFixed(1);
+          const phi   = (currentOrbit.phi   * 180 / Math.PI).toFixed(1);
+          mv.cameraOrbit = `${theta}deg ${phi}deg 65m`;
+        }
+      }
+    }
+
+    enterLockedMode();
+    applyQuickCameraTransition();
+    mv.autoRotate = false;
+
+    const labelText = h.querySelector('.hotspot-label')?.textContent?.trim() || 'Room Details';
+    showInfoCard(labelText);
+
+    const itineraryBtn = document.getElementById('itinerary-btn');
+    if (itineraryBtn) {
+      if (h.classList.contains('legend-only-hotspot')) {
+        itineraryBtn.classList.remove('show-itinerary', 'pulse-itinerary');
+        delete itineraryBtn.dataset.targetSlot;
+      } else {
+        itineraryBtn.classList.add('show-itinerary');
+        itineraryBtn.classList.remove('pulse-itinerary');
+        void itineraryBtn.offsetWidth;
+        itineraryBtn.classList.add('pulse-itinerary');
+        itineraryBtn.dataset.targetSlot = h.slot;
+      }
+    }
+  };
+
+  window.triggerHotspot = (selector) => {
+    const h = document.querySelector(selector);
+    if (h) {
+      if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
+      selectHotspot(h);
+    }
+  };
+
+  window.triggerLegendOnlyHotspot = (selector) => {
+    const h = document.querySelector(selector);
+    if (h) {
+      h.classList.add('legend-only-active');
+      if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
+      selectHotspot(h);
+    }
+  };
+
+  window.triggerLegendOnlyHotspots = () => {
+    deselectAll();
+    document.querySelectorAll('.legend-only-hotspot').forEach(h => {
+      h.classList.add('legend-only-active');
+      h.classList.remove('faded-out', 'selected');
+    });
+    hotspots.forEach(h => {
+      const hasYouAreHere = h.querySelector('.you-are-here') !== null;
+      if (!h.classList.contains('legend-only-hotspot') && !hasYouAreHere) h.classList.add('faded-out');
+    });
+  };
+
+  // ─────────────────────────────────────────
+  // DESELECT
+  // ─────────────────────────────────────────
+  const deselectAll = () => {
+    isItineraryMode = false;
+    selectedHotspot = null;
+    hotspots.forEach(h => h.classList.remove('selected', 'faded-out'));
+    hotspots.forEach(h => {
+      const recenterHint = h.querySelector('.hotspot-recenter-hint');
+      if (recenterHint) recenterHint.classList.remove('show-recenter-hint');
+      if (h._recenterHintTimer) clearTimeout(h._recenterHintTimer);
+    });
+    mv.autoRotate = false;
+    clearRoute();
+    currentRoutePathIds = [];
+
+    const titleEl   = document.getElementById('info-title');
+    const descEl    = document.getElementById('info-desc');
+    const container = document.getElementById('info-dropdown-content');
+    if (titleEl && descEl && container) {
+      container.classList.remove('force-show');
+      titleEl.textContent = "Glendon Athletic Club";
+      descEl.innerHTML = `<strong>Hours:</strong><br>Mon-Thu: 7 AM - 10:30 PM<br>Fri: 7 AM - 9 PM<br>Sat-Sun: 8 AM - 8 PM`;
+    }
+
+    const itineraryBtn = document.getElementById('itinerary-btn');
+    if (itineraryBtn) {
+      itineraryBtn.classList.remove('show-itinerary', 'pulse-itinerary');
+      delete itineraryBtn.dataset.targetSlot;
+    }
+
+    enterLockedMode();
+    resetCamera();
+  };
+
+  // ─────────────────────────────────────────
+  // HOTSPOT CLICK
+  // ─────────────────────────────────────────
+  hotspots.forEach(h => {
+    h.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
+      selectHotspot(h);
+    });
+  });
+
+  // ─────────────────────────────────────────
+  // LEGEND & SEARCH
+  // ─────────────────────────────────────────
+  const legendBtn       = document.getElementById('mobile-legend-btn');
+  const legendMenu      = document.getElementById('mobile-legend-menu');
+  const expandableSearch = document.querySelector('.expandable-search');
+  const searchPillNode  = document.querySelector('.search-pill-input');
+  const infoDropdownTrigger = document.getElementById('info-dropdown-trigger');
+  const container       = document.getElementById('info-dropdown-content');
+
+  if (infoDropdownTrigger) {
+    infoDropdownTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (legendMenu) legendMenu.classList.remove('show');
+      if (container) {
+        if (container.classList.contains('force-show')) {
+          container.classList.remove('force-show');
+          if (document.activeElement) document.activeElement.blur();
+        } else {
+          const titleEl = document.getElementById('info-title');
+          const descEl  = document.getElementById('info-desc');
+          if (titleEl && descEl) {
+            titleEl.textContent = "Glendon Athletic Club";
+            descEl.innerHTML = `<strong>Hours:</strong><br>Mon-Thu: 7 AM - 10:30 PM<br>Fri: 7 AM - 9 PM<br>Sat-Sun: 8 AM - 8 PM`;
+          }
+          container.classList.add('force-show');
+        }
+      }
+    });
+  }
+
+  if (legendBtn && legendMenu) {
+    legendBtn.addEventListener('click', () => {
+      const isShowing = legendMenu.classList.toggle('show');
+      if (isShowing && searchPillNode) {
+        searchPillNode.blur();
+        searchPillNode.value = '';
+        searchPillNode.dispatchEvent(new Event('input'));
+      }
+    });
+  }
+
+  const SEARCH_SYNONYMS = {
+    'weight room': ['gym', 'gymm', 'fitness', 'workout', 'weights', 'lifting'],
+    'spinning room': ['spinning', 'spin', 'bike', 'bicycle', 'cycling', 'cycle'],
+    'swimming pool': ['pool', 'swim', 'aquatics', 'water'],
+    'stretching room': ['stretching', 'stretch', 'mobility', 'warmup'],
+    'boxing room': ['boxing', 'box', 'fight'],
+    'golf court': ['golf', 'putting', 'swing'],
+    'squash court': ['squash', 'racquet', 'racket'],
+    'lobby': ['entrance', 'entry', 'front desk', 'reception']
+  };
+
+  // Desktop Legend Handler
+  const desktopLegendBtn = document.getElementById('desktop-legend-btn');
+  const desktopLegendMenu = document.getElementById('desktop-legend-menu');
+
+  if (desktopLegendBtn && desktopLegendMenu) {
+    desktopLegendBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      desktopLegendMenu.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!desktopLegendBtn.contains(e.target) && !desktopLegendMenu.contains(e.target)) {
+        desktopLegendMenu.classList.remove('show');
+      }
+    });
+  }
+
+  if (searchPillNode) {
+    if (expandableSearch) {
+      expandableSearch.addEventListener('click', () => searchPillNode.focus());
+    }
+    searchPillNode.addEventListener('focus', () => {
+      if (legendMenu) legendMenu.classList.remove('show');
+    });
+    searchPillNode.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      hotspots.forEach(h => {
+        const labelText = h.querySelector('.hotspot-label');
+        if (!labelText) return;
+        const label = labelText.textContent.toLowerCase();
+        const synonymMatches = Object.entries(SEARCH_SYNONYMS).some(([name, aliases]) =>
+          label.includes(name) && aliases.some(alias => alias.includes(query) || query.includes(alias))
+        );
+        if (query === '' || label.includes(query) || synonymMatches) h.classList.remove('faded-out');
+        else h.classList.add('faded-out');
+      });
+    });
+  }
+
+  // Desktop Search
+  const desktopSearchInput = document.querySelector('.desktop-search-input');
+  if (desktopSearchInput) {
+    desktopSearchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      hotspots.forEach(h => {
+        const labelEl = h.querySelector('.hotspot-label');
+        const labelStr = labelEl ? labelEl.textContent.toLowerCase() : '';
+        const matchesDirect = labelStr.includes(query);
+        const matchesSynonym = query && SEARCH_SYNONYMS[labelStr] &&
+          SEARCH_SYNONYMS[labelStr].some(syn => syn.includes(query) || query.includes(syn));
+        const isVisible = query === '' || matchesDirect || matchesSynonym;
+        h.classList.toggle('faded-out', !isVisible);
+        h.style.pointerEvents = isVisible ? 'auto' : 'none';
+      });
+    });
+    desktopSearchInput.addEventListener('focus', () => {
+      if (desktopLegendMenu) desktopLegendMenu.classList.remove('show');
+    });
+  }
+
+  // ─────────────────────────────────────────
+  // MODEL LOAD
+  // ─────────────────────────────────────────
+  modelViewer.addEventListener('load', () => {
+    hotspots.forEach(h => {
+      if (h.dataset.position) {
+        const pos = h.dataset.position.split(' ');
+        if (pos.length === 3) {
+          const y = parseFloat(pos[1]) + 2.0;
+          h.dataset.position = `${pos[0]} ${y}m ${pos[2]}`;
+        }
+      }
+    });
+    const screen = document.getElementById('loading-screen');
+    if (screen) { screen.style.opacity = '0'; setTimeout(() => screen.style.display = 'none', 500); }
+  });
+
+  setTimeout(() => {
+    const screen = document.getElementById('loading-screen');
+    if (screen) { screen.style.opacity = '0'; setTimeout(() => screen.style.display = 'none', 500); }
+  }, 10000);
+
+  function debounce(fn, delay) {
+    let timer;
+    return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
+  }
+
+  // ─────────────────────────────────────────
+  // APPLY CAMERA LOCK (responsive)
+  // ─────────────────────────────────────────
+  const applyCameraLock = () => {
+    setupCameraControls();
+    if (!isDesktop()) {
+      hotspots.forEach(h => h.classList.remove('mobile-hotspot-disabled'));
+    }
+  };
+
+  applyCameraLock();
+
+  window.addEventListener('resize', debounce(() => {
+    if (isItineraryMode) enterItineraryTopView();
+    else applyCameraLock();
+    if (!isItineraryMode && selectedHotspot) enterHotspotOrbitMode();
+  }, 200));
+
+  // ─────────────────────────────────────────
+  // HOTSPOT VISIBILITY OBSERVER
+  // ─────────────────────────────────────────
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-visible') {
+        const h = mutation.target;
+        if (h.dataset.visible === 'false' || !h.hasAttribute('data-visible')) h.classList.add('angled-away');
+        else h.classList.remove('angled-away');
+      }
+    });
+  });
+  hotspots.forEach(h => observer.observe(h, { attributes: true }));
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .Hotspot:not([data-visible]) { display: inline-flex !important; visibility: visible !important; }
+    .Hotspot:not([data-visible]) > * { opacity: 1 !important; pointer-events: auto !important; transform: none !important; }
+  `;
+  document.head.appendChild(style);
+
+  // ─────────────────────────────────────────
+  // CAMERA-CHANGE: pan clamp (mobile only — desktop handled by custom code)
+  // ─────────────────────────────────────────
+  modelViewer.addEventListener('camera-change', (e) => {
+    if (isDesktop()) return; // desktop clamp happens via our custom code
+
+    if (guardedCameraState && performance.now() < guardCameraUntil) {
+      if ((e.detail?.source || '') === 'user-interaction') {
+        applyCameraState(guardedCameraState);
+        return;
+      }
+    }
+
+    const target = modelViewer.getCameraTarget();
+    let clamped = false;
+    let nx = target.x, nz = target.z;
+
+    if (nx > CAMERA_BOUNDS_X) { nx = CAMERA_BOUNDS_X; clamped = true; }
+    if (nx < -CAMERA_BOUNDS_X) { nx = -CAMERA_BOUNDS_X; clamped = true; }
+
+    if (!selectedHotspot && !isItineraryMode) {
+      if (Math.abs(nz - 8.5) > 0.01) { nz = 8.5; clamped = true; }
+    } else {
+      if (nz > CAMERA_BOUNDS_Z) { nz = CAMERA_BOUNDS_Z; clamped = true; }
+      if (nz < -CAMERA_BOUNDS_Z) { nz = -CAMERA_BOUNDS_Z; clamped = true; }
+    }
+
+    if (clamped && e.detail.source === 'user-interaction') {
+      modelViewer.cameraTarget = `${nx}m ${target.y}m ${nz}m`;
+    }
+  });
+
+  // ─────────────────────────────────────────
+  // MOBILE TOUCH PAN
+  // ─────────────────────────────────────────
+  window.isCustomScrolling = false;
+  let scrollStartX = 0, scrollStartY = 0;
+  let startCameraX = 0, startCameraZ = 0;
+
+  mv.addEventListener('touchstart', (e) => {
+    if (isDesktop()) { window.isCustomScrolling = false; return; }
+    if (e.touches.length === 1) {
+      window.isCustomScrolling = true;
+      scrollStartX = e.touches[0].clientX;
+      scrollStartY = e.touches[0].clientY;
+      startCameraX = mv.getCameraTarget().x;
+      startCameraZ = mv.getCameraTarget().z;
+      if (isItineraryMode) enterItineraryTopView();
+      else { mv.setAttribute('min-camera-orbit', '360deg 45deg 40m'); mv.setAttribute('max-camera-orbit', '360deg 45deg 180m'); }
+    } else if (e.touches.length >= 2) {
+      window.isCustomScrolling = false;
+      if (isItineraryMode) enterItineraryTopView();
+      else { mv.setAttribute('min-camera-orbit', '360deg 45deg 40m'); mv.setAttribute('max-camera-orbit', '360deg 45deg 180m'); }
+    }
+  }, { passive: true });
+
+  mv.addEventListener('touchmove', (e) => {
+    if (!window.isCustomScrolling || isDesktop() || e.touches.length !== 1) return;
+    const deltaX = e.touches[0].clientX - scrollStartX;
+    const deltaY = e.touches[0].clientY - scrollStartY;
+    const dragDistance = Math.hypot(deltaX, deltaY);
+    if (dragDistance < TOUCH_PAN_DEADZONE) return;
+
+    const orbit = mv.getCameraOrbit();
+    const radius = orbit.radius ? parseFloat(orbit.radius) : 100;
+    const panSpeed = MOBILE_PAN_SPEED_FACTOR * radius;
+    const theta = Math.PI * 2;
+    const mapDX = deltaX * Math.cos(theta) - deltaY * Math.sin(theta);
+    const mapDZ = deltaX * Math.sin(theta) + deltaY * Math.cos(theta);
+
+    let newX = Math.max(-45, Math.min(45, startCameraX - (mapDX * panSpeed)));
+    let newZ = Math.max(-65, Math.min(65, startCameraZ - (mapDZ * panSpeed)));
+    mv.cameraTarget = `${newX}m -1.3m ${newZ}m`;
+  }, { passive: true });
+
+  mv.addEventListener('touchend', () => { window.isCustomScrolling = false; });
+
+  // ─────────────────────────────────────────
+  // RECENTER BUTTONS
+  // ─────────────────────────────────────────
+  const mobileResetBtn = document.getElementById('mobile-reset-btn');
+  if (mobileResetBtn) {
+    mobileResetBtn.addEventListener('click', (e) => { e.stopPropagation(); deselectAll(); });
+  }
+
+  const desktopResetBtn = document.getElementById('desktop-recenter-btn');
+  if (desktopResetBtn) {
+    desktopResetBtn.addEventListener('click', (e) => { e.stopPropagation(); deselectAll(); });
+  }
+
+  // ─────────────────────────────────────────
+  // GESTURE TUTORIAL
+  // ─────────────────────────────────────────
+  const gesturePromptEl = document.getElementById('gesture-prompt-overlay');
+  const legendPromptEl = document.getElementById('legend-prompt-overlay');
+  const GESTURE_PROMPT_INITIAL_DELAY = 650;
+  const GESTURE_PROMPT_REPEAT_DELAY = 18000;
+  const GESTURE_PROMPT_VISIBLE_MS = 5200;
+  const LEGEND_PROMPT_VISIBLE_MS = 3600;
+  let gesturePromptTimeout = null;
+  let legendPromptTimeout = null;
+  let promptCycleTimeout = null;
+
+  const canShowAmbientPrompts = () => {
+    const infoOpen = container && container.classList.contains('force-show');
+    const searchActive = expandableSearch && expandableSearch.matches(':focus-within');
+    return !selectedHotspot && !isItineraryMode && !infoOpen && !searchActive;
+  };
+
+  const clearPromptCycleTimers = () => {
+    if (gesturePromptTimeout) clearTimeout(gesturePromptTimeout);
+    if (legendPromptTimeout) clearTimeout(legendPromptTimeout);
+    if (promptCycleTimeout) clearTimeout(promptCycleTimeout);
+    gesturePromptTimeout = legendPromptTimeout = promptCycleTimeout = null;
+  };
+
+  const schedulePromptCycle = (delay = GESTURE_PROMPT_REPEAT_DELAY) => {
+    if (promptCycleTimeout) clearTimeout(promptCycleTimeout);
+    promptCycleTimeout = setTimeout(() => showGesturePrompt(), delay);
+  };
+
+  const hideLegendPrompt = () => {
+    if (legendPromptTimeout) clearTimeout(legendPromptTimeout);
+    if (legendPromptEl) legendPromptEl.classList.remove('show-prompt');
+    if (legendBtn) legendBtn.classList.remove('pulsating');
+  };
+
+  const showLegendPrompt = () => {
+    if (!canShowAmbientPrompts()) return;
+    if (legendPromptEl) { legendPromptEl.style.display = ''; legendPromptEl.classList.add('show-prompt'); }
+    if (legendBtn) legendBtn.classList.add('pulsating');
+    if (legendPromptTimeout) clearTimeout(legendPromptTimeout);
+    legendPromptTimeout = setTimeout(() => { hideLegendPrompt(); schedulePromptCycle(); }, LEGEND_PROMPT_VISIBLE_MS);
+  };
+
+  const hideGesturePrompt = ({ scheduleNext = true } = {}) => {
+    if (gesturePromptTimeout) clearTimeout(gesturePromptTimeout);
+    if (gesturePromptEl) gesturePromptEl.classList.remove('show-prompt');
+    hideLegendPrompt();
+    if (scheduleNext) schedulePromptCycle();
+  };
+
+  const showGesturePrompt = () => {
+    if (!canShowAmbientPrompts()) { schedulePromptCycle(); return; }
+    clearPromptCycleTimers();
+    if (gesturePromptEl) { gesturePromptEl.style.display = ''; gesturePromptEl.classList.add('show-prompt'); }
+    gesturePromptTimeout = setTimeout(() => { hideGesturePrompt({ scheduleNext: false }); showLegendPrompt(); }, GESTURE_PROMPT_VISIBLE_MS);
+  };
+
+  modelViewer.addEventListener('load', () => schedulePromptCycle(GESTURE_PROMPT_INITIAL_DELAY));
+
+  // ─────────────────────────────────────────
+  // ITINERARY BUTTON
+  // ─────────────────────────────────────────
+  const itineraryBtn = document.getElementById('itinerary-btn');
+  if (itineraryBtn) {
+    itineraryBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetSlot = itineraryBtn.dataset.targetSlot;
+      if (!targetSlot) return;
+      const targetKey = SLOT_TO_KEY[targetSlot];
+      if (!targetKey) return;
+      const targetWaypoint = waypointForRoom(targetKey);
+      if (!targetWaypoint) return;
+
+      enterItineraryTopView();
+      requestAnimationFrame(() => {
+        mv.cameraOrbit = "0deg 0deg 120m";
+        mv.cameraTarget = START_TARGET;
+        mv.fieldOfView = "60deg";
+      });
+
+      const pathIds = astar(24, targetWaypoint.id);
+      if (pathIds && pathIds.length > 0) { currentRoutePathIds = pathIds; drawRoute(pathIds); }
+    });
+  }
+
+  if (legendBtn) legendBtn.addEventListener('click', () => { hideLegendPrompt(); schedulePromptCycle(); });
+
+  // Suppress gesture prompts during interaction
+  document.addEventListener('pointerdown', () => { if (isDesktop()) hideGesturePrompt(); });
+  mv.addEventListener('wheel', () => hideGesturePrompt());
+  modelViewer.addEventListener('camera-change', (e) => {
+    if (e.detail.source === 'user-interaction') hideGesturePrompt();
+  });
+
+});

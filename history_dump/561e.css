@@ -1,0 +1,299 @@
+/* ===== GLOBAL STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #004A8D;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+model-viewer {
+  width: 100%;
+  height: 100%;
+  background: #004A8D;
+}
+
+/* ===== HOTSPOTS ===== */
+.Hotspot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  touch-action: manipulation;
+}
+
+.HotspotAnnotation {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #1a2a3a;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  opacity: 1;
+  transition: all 0.3s ease;
+  z-index: 50;
+}
+
+.hotspot-icon {
+  font-size: 11px;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e0f2ff 0%, #e0f7ff 100%);
+  flex-shrink: 0;
+}
+
+.Hotspot:hover .HotspotAnnotation,
+.Hotspot:focus .HotspotAnnotation,
+.Hotspot.active .HotspotAnnotation {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
+  transform: translateY(calc(-50% - 2px));
+}
+
+.Hotspot.overlapping .HotspotAnnotation {
+  opacity: 0.4;
+}
+
+.Hotspot.overlapping:hover .HotspotAnnotation,
+.Hotspot.overlapping:focus .HotspotAnnotation {
+  opacity: 1;
+}
+
+/* ===== LEGEND ===== */
+.legend {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 1000;
+  min-width: 220px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #2d3748;
+  transition: all 0.2s ease;
+}
+
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.legend-item:hover {
+  transform: translateX(4px);
+}
+
+.legend-item-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 10px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(31, 38, 135, 0.15);
+}
+
+.legend-item-icon {
+  font-size: 16px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(224, 242, 255, 0.8), rgba(224, 247, 255, 0.8));
+  backdrop-filter: blur(8px);
+}
+
+/* Scrollbar personnalisée */
+.legend::-webkit-scrollbar {
+  width: 6px;
+}
+
+.legend::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.legend::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.legend::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ===== YORK UNIVERSITY LOGO ===== */
+/**
+ * Brand Spacing Implementation:
+ * X = logo height (variable)
+ * Clear space (padding) = 0.5 × X
+ * 
+ * Minimum digital sizes:
+ * - Horizontal logo: 20px height minimum
+ * - Using responsive scaling with CSS custom properties
+ * 
+ * The .logo-wrapper enforces the clear space as padding
+ * around the logo image element
+ */
+
+.logo-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  /* Prevent rotation with 3D model */
+  transform: translateZ(0);
+  pointer-events: none;
+}
+
+.logo-wrapper {
+  /* X = logo height (32px in this case) */
+  /* Clear space = 0.5X = 16px padding on all sides */
+  --logo-height: 32px;
+  --clear-space: calc(var(--logo-height) * 0.5);
+  
+  padding: var(--clear-space);
+  background: transparent;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Visual boundary for clear space (optional - remove for production) */
+  /* border: 1px dashed rgba(255, 255, 255, 0.2); */
+}
+
+.york-logo {
+  height: var(--logo-height);
+  width: auto;
+  max-width: 200px;
+  aspect-ratio: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+  opacity: 0.95;
+  transition: opacity 0.3s ease;
+  pointer-events: auto;
+}
+
+.york-logo:hover {
+  opacity: 1;
+}
+
+/* Responsive scaling for different screen sizes */
+@media (max-width: 768px) {
+  .logo-container {
+    bottom: 16px;
+    right: 16px;
+  }
+  
+  .logo-wrapper {
+    --logo-height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-container {
+    bottom: 12px;
+    right: 12px;
+  }
+  
+  .logo-wrapper {
+    --logo-height: 24px;
+  }
+}
+
+/* Ensure minimum size (20px minimum for horizontal logo) */
+@media (max-width: 320px) {
+  .logo-wrapper {
+    --logo-height: 20px;
+  }
+}
+
+/* MOBILE RESPONSIVE */
+
+@media (max-width: 768px) {
+  .hotspot-label {
+    font-size: 16px;
+    padding: 8px 14px;
+  }
+
+  .legend {
+    bottom: 15px;
+    left: 15px;
+    padding: 14px 16px;
+    font-size: 12px;
+  }
+
+  .legend-item {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hotspot-label {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .legend {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 12px 14px;
+    font-size: 11px;
+  }
+
+  .legend-item {
+    font-size: 11px;
+    margin-bottom: 7px;
+  }
+
+  .legend-item-icon {
+    font-size: 14px;
+  }
+}

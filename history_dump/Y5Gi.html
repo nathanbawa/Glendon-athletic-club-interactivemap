@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>360 Image Viewer</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: #000;
+        }
+
+        /* Navigation Arrows */
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+            touch-action: manipulation;
+        }
+
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .nav-button:active {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        #leftBtn {
+            left: 20px;
+        }
+
+        #rightBtn {
+            right: 20px;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .nav-button {
+                width: 50px;
+                height: 50px;
+                font-size: 28px;
+            }
+
+            #leftBtn {
+                left: 10px;
+            }
+
+            #rightBtn {
+                right: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-button {
+                width: 45px;
+                height: 45px;
+                font-size: 24px;
+            }
+
+            #leftBtn {
+                left: 8px;
+            }
+
+            #rightBtn {
+                right: 8px;
+            }
+        }
+
+        /* Swipe indicator */
+        .swipe-hint {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-size: 12px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .swipe-hint.show {
+            opacity: 1;
+        }
+
+        /* Image Counter */
+        .counter {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 100;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .counter {
+                bottom: 15px;
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Swipe Hint (Mobile) -->
+    <div class="swipe-hint" id="swipeHint">Swipe to change image</div>
+
+    <!-- Navigation Buttons -->
+    <button id="leftBtn" class="nav-button" title="Previous image">❮</button>
+    <button id="rightBtn" class="nav-button" title="Next image">❯</button>
+
+    <!-- Counter Display -->
+    <div class="counter">
+        <span id="imageIndex">1</span> / 2
+    </div>
+
+    <!-- A-Frame Scene -->
+    <a-scene vr-mode-ui="enabled: true">
+        <!-- Camera with look controls -->
+        <a-entity camera look-controls wasd-controls="enabled: false"></a-entity>
+
+        <!-- 360 Image (will be swapped dynamically) -->
+        <a-sky id="skyImage" src="360photoconverter.jpg" rotation="0 -90 0"></a-sky>
+    </a-scene>
+
+    <script>
+        const images = [
+            '360photoconverter.jpg',
+            'housev3converter.jpg'
+        ];
+
+        let currentImageIndex = 0;
+        const skyImage = document.getElementById('skyImage');
+        const imageIndexDisplay = document.getElementById('imageIndex');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const swipeHint = document.getElementById('swipeHint');
+
+        // Touch/Swipe gesture support
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let touchEndY = 0;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        // Function to change image
+        function changeImage(index) {
+            currentImageIndex = index;
+            skyImage.setAttribute('src', images[currentImageIndex]);
+            imageIndexDisplay.textContent = currentImageIndex + 1;
+        }
+
+        // Navigate to previous image
+        function previousImage() {
+            const newIndex = currentImageIndex === 0 ? images.length - 1 : currentImageIndex - 1;
+            changeImage(newIndex);
+        }
+
+        // Navigate to next image
+        function nextImage() {
+            const newIndex = currentImageIndex === images.length - 1 ? 0 : currentImageIndex + 1;
+            changeImage(newIndex);
+        }
+
+        // Event listeners for buttons
+        leftBtn.addEventListener('click', previousImage);
+        rightBtn.addEventListener('click', nextImage);
+
+        // Optional: Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') previousImage();
+            if (e.key === 'ArrowRight') nextImage();
+        });
+
+        // Touch/Swipe support
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, false);
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        }, false);
+
+        function handleSwipe() {
+            const swipeThreshold = 120; // Increased threshold
+            const horizontalDiff = touchStartX - touchEndX;
+            const verticalDiff = Math.abs(touchStartY - touchEndY);
+
+            // Only trigger if horizontal movement is much more than vertical
+            // This prevents accidental swipes while panning/scrolling
+            if (Math.abs(horizontalDiff) > swipeThreshold && Math.abs(horizontalDiff) > verticalDiff * 2) {
+                if (horizontalDiff > 0) {
+                    // Swiped left - show next image
+                    nextImage();
+                } else {
+                    // Swiped right - show previous image
+                    previousImage();
+                }
+            }
+        }
+
+        // Show swipe hint on mobile
+        if (isMobile) {
+            swipeHint.classList.add('show');
+            setTimeout(() => {
+                swipeHint.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize display
+        imageIndexDisplay.textContent = currentImageIndex + 1;
+    </script>
+</body>
+</html>

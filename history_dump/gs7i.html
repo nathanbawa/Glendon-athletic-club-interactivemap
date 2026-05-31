@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Glendon Athletic Map</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Interactive 3D Map for Glendon Athletic Club">
+
+  <!-- Essential Mobile & Web App Meta Tags -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#E31837">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Cache Control for GitHub Pages updates (optional but helpful) -->
+  <link type="text/css" href="./styles.css?v=9" rel="stylesheet" />
+  <link rel="preload" href="Gacmapfinale_compressed.glb" as="fetch" crossorigin>
+</head>
+
+<body>
+  <div id="loading-screen">
+    <img src="glendonlogo.webp" alt="Glendon Logo" />
+    <p>Loading map...</p>
+  </div>
+  <!-- Top Bar -->
+  <div id="top-bar">
+    <img id="mobile-top-logo" src="glendonlogo.webp" alt="Glendon Logo" />
+    <span>Glendon Athletic Club Interactive Map</span>
+  </div>
+  <!-- Mobile Top Left Legend Dropdown -->
+  <div id="mobile-legend-container">
+    <button class="legend-btn-3d" id="mobile-legend-btn">
+      <div class="legend-btn-front">
+        <span class="btn-text">Legend <i class="fas fa-caret-down"></i></span>
+      </div>
+    </button>
+    <div class="legend-subtext">Entrance/Exits</div>
+    <ul id="mobile-legend-menu">
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-2\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-lobby">1</div>Lobby / Entrance
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-20\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-weight">2</div>Weight room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-9\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-pool">3</div>Swimming Pool
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-5\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-stretching">4</div>Stretching room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-6\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-spinning">5</div>Spinning room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-4\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-boxing">6</div>Boxing room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-3\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-golf">7</div>Golf Court
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-18\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-squash">8</div>Squash court
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-10\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-m-changing">10</div>M. changing room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-11\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-w-changing">11</div>W. changing room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-7\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-w-locker">12</div>W. Locker room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-8\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-m-locker">13</div>M. Locker room
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerHotspot) window.triggerHotspot('[slot=\'hotspot-2\']'); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-lobby">E</div>Entrance
+        </div>
+      </li>
+      <li
+        onclick="if(window.triggerLegendOnlyHotspots) window.triggerLegendOnlyHotspots(); this.parentElement.classList.remove('show');">
+        <div class="li-front">
+          <div class="legend-dot color-exit">E</div>Exit
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Mobile Bottom Right Controls -->
+  <div class="mobile-bottom-right-controls">
+    <!-- Recenter 3D Button -->
+    <div class="mobile-control-stack mobile-reset-stack">
+      <div class="search-pill action-only" id="mobile-reset-btn">
+        <div class="search-pill-front">
+          <div class="search-icon-wrapper">
+            <i class="fas fa-location-arrow" style="font-size: 18px;"></i>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-control-label">Recenter position</div>
+    </div>
+
+    <!-- Search 3D Button -->
+    <div class="mobile-control-stack mobile-search-stack">
+      <div class="search-pill expandable-search">
+        <div class="search-pill-front">
+          <input type="text" class="search-pill-input" placeholder="Search..." />
+          <div class="search-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24"
+              width="22" height="22">
+              <path
+                d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z">
+              </path>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-control-label">Search</div>
+    </div>
+  </div>
+  <!-- <model-viewer> HTML element -->
+  <model-viewer id="mv" src="Gacmapfinale_compressed.glb" camera-controls interaction-prompt="none"
+    camera-orbit="0deg 45deg 100m" camera-target="0m -1.3m 8.5m" field-of-view="70deg"
+    min-camera-orbit="auto 0deg 20m" max-camera-orbit="auto 90deg 150m" interpolation-decay="200" pan-sensitivity="1.8"
+    exposure="0.82" shadow-intensity="1.65" shadow-softness="0.8" bounds="tight" disable-tap loading="eager" reveal="auto" tone-mapping="neutral"
+    poster="poster.webp" touch-action="pan-y" ar ar-modes="webxr scene-viewer quick-look">
+    <div id="info-dropdown-container" style="position: absolute; top: 20px; right: 12px; z-index: 1000;">
+      <div role="button" id="info-dropdown-trigger" class="search-pill info-pill-override"
+        style="width:38px; height:38px; display:block;">
+        <div class="search-pill-front">
+          <i class="fas fa-info" style="color:#E31837; font-size:16px; margin:auto;"></i>
+        </div>
+      </div>
+      <div class="dropdown-content card" id="info-dropdown-content">
+        <div class="card__front-text">GAC Info</div>
+        <div class="card__content">
+          <button id="info-close-btn" class="btn-ghost">✕</button>
+          <h2 class="card__title" id="info-title">Glendon Athletic Club</h2>
+          <div class="card__description" id="info-desc">
+            <strong>Hours:</strong><br>
+            Mon-Thu: 7 AM - 10:30 PM<br>
+            Fri: 7 AM - 9 PM<br>
+            Sat-Sun: 8 AM - 8 PM
+          </div>
+          <a href="https://www.yorku.ca/glendon/glendon-athletic-club/about-the-gac/" target="_blank"
+            class="btn-primary">Learn More</a>
+        </div>
+      </div>
+    </div>
+    <button class="Hotspot" slot="hotspot-2"
+      data-position="-0.551538062727321m -2.3945470342935096m 16.539627028885956m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-lobby">1</div>
+        <div class="hotspot-icon">🏢</div>
+        <div class="hotspot-label">Lobby</div>
+        <div class="you-are-here">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle class="you-are-here-outer" cx="50" cy="50" r="40" />
+            <circle class="you-are-here-inner" cx="50" cy="50" r="20" />
+          </svg>
+          <span>You are here</span>
+        </div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-3"
+      data-position="8.437275370193435m -1.0287922461393153m 16.72265748311171m"
+      data-normal="0.00436433888409535m 0.9999904762277014m 0m" data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-golf">7</div>
+        <div class="hotspot-icon">⛳</div>
+        <div class="hotspot-label">Golf Court</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-4"
+      data-position="14.433459818907735m -1.05924774230175m 16.707232043377523m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-boxing">6</div>
+        <div class="hotspot-icon">🥊</div>
+        <div class="hotspot-label">Boxing room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-5"
+      data-position="20.84727849002133m -1.0404507932719014m 16.967584193638768m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-stretching">4</div>
+        <div class="hotspot-icon">🧘</div>
+        <div class="hotspot-label">Stretching room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-6"
+      data-position="27.99132979393329m -1.0404507932719014m 16.696790888225205m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-spinning">5</div>
+        <div class="hotspot-icon">🚴</div>
+        <div class="hotspot-label">Spinning room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-7"
+      data-position="-5.07776444161724m -1.8667741003567355m 0.5588579926922752m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-w-locker">12</div>
+        <div class="hotspot-icon">🔒</div>
+        <div class="hotspot-label">W.Locker room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-8"
+      data-position="-5.568420021465271m -1.8128206135868652m -13.430809149171129m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-m-locker">13</div>
+        <div class="hotspot-icon">🔒</div>
+        <div class="hotspot-label">M. Locker room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-9"
+      data-position="-22.755174169906574m -1.8819745803040462m -5.472320528105499m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-pool">3</div>
+        <div class="hotspot-icon">🏊</div>
+        <div class="hotspot-label">Swimming Pool</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-10"
+      data-position="-9.938181479396764m 0.4684005389835306m 14.840629844557307m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-m-changing">10</div>
+        <div class="hotspot-icon">🔒</div>
+        <div class="hotspot-label">M.changing room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-11"
+      data-position="-10.000326654578657m 0.4684005389835306m 19.782660721116677m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-w-changing">11</div>
+        <div class="hotspot-icon">🔒</div>
+        <div class="hotspot-label">W. changing room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-18"
+      data-position="-17.500092505793585m -1.8787937421865735m -28.07412929130228m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-squash">8</div>
+        <div class="hotspot-icon">🎾</div>
+        <div class="hotspot-label">Squash court</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-20"
+      data-position="16.18306637402933m -1.8955074344638945m -3.700744943780854m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-weight">2</div>
+        <div class="hotspot-icon">🏋️</div>
+        <div class="hotspot-label">Weight room</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-21"
+      data-position="-2.013584774238617m -0.5874605795021197m 8.49744720902788m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-stairs">14</div>
+        <div class="hotspot-icon">🪜</div>
+        <div class="hotspot-label">Stairs</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-22"
+      data-position="27.9540205609903m -0.013889892644726842m 3.7187076021023175m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-stairs">15</div>
+        <div class="hotspot-icon">🪜</div>
+        <div class="hotspot-label">Stairs</div>
+      </div>
+    </button><button class="Hotspot" slot="hotspot-23"
+      data-position="-23.98910027002954m -0.22358405590057373m -38.72637679230526m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-stairs">16</div>
+        <div class="hotspot-icon">🪜</div>
+        <div class="hotspot-label">Stairs</div>
+      </div>
+    </button><button class="Hotspot exit-hotspot legend-only-hotspot" slot="hotspot-exit-1"
+      data-position="-2.013584774238617m -0.5874605795021197m 8.49744720902788m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-exit">E</div>
+        <div class="hotspot-icon">↗</div>
+        <div class="hotspot-label">Exit 1</div>
+      </div>
+    </button><button class="Hotspot exit-hotspot legend-only-hotspot" slot="hotspot-exit-2"
+      data-position="27.9540205609903m -0.013889892644726842m 3.7187076021023175m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-exit">E</div>
+        <div class="hotspot-icon">↗</div>
+        <div class="hotspot-label">Exit 2</div>
+      </div>
+    </button><button class="Hotspot exit-hotspot legend-only-hotspot" slot="hotspot-exit-3"
+      data-position="-23.98910027002954m -0.22358405590057373m -38.72637679230526m" data-normal="0m 1m 0m"
+      data-visibility-attribute="visible">
+      <div class="hotspot-marker">
+        <div class="hotspot-number color-exit">E</div>
+        <div class="hotspot-icon">↗</div>
+        <div class="hotspot-label">Exit 3</div>
+      </div>
+    </button><div class="progress-bar hide" slot="progress-bar">
+      <div class="update-bar"></div>
+    </div>
+    <button slot="ar-button" id="ar-button">
+      View in your space
+    </button>
+  </model-viewer>
+  <!-- Hand Gesture Prompts (Emoji Base) -->
+  <div id="gesture-prompt-overlay">
+    <div class="gesture-visuals">
+      <div class="gesture-step gesture-step-navigate">
+        <div class="gesture-box">
+          <div class="gesture-navigate-icon">
+            <span class="gesture-finger">👆</span>
+            <span class="gesture-arrow gesture-arrow-left">←</span>
+            <span class="gesture-arrow gesture-arrow-right">→</span>
+            <span class="gesture-arrow gesture-arrow-up">↑</span>
+            <span class="gesture-arrow gesture-arrow-down">↓</span>
+          </div>
+          <span>Navigate</span>
+        </div>
+      </div>
+      <div class="gesture-step gesture-step-zoom">
+        <div class="gesture-box">
+          <div class="gesture-zoom-icon">
+            <span class="gesture-finger gesture-finger-left">👆</span>
+            <span class="gesture-finger gesture-finger-right">👆</span>
+          </div>
+          <span>Zoom</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend Prompt Overlay (Near Legend Button) -->
+  <div id="legend-prompt-overlay">
+    <div class="legend-prompt-content">
+      <span class="legend-hand-icon">👆</span>
+      <span class="legend-prompt-text">Open Legend</span>
+    </div>
+  </div>
+  <svg id="route-overlay"
+    style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;"></svg>
+
+  <img src="glendonlogo.webp" id="glendon-logo" alt="Glendon Logo">
+  <!-- Itinerary Routing Button -->
+  <div id="itinerary-btn" class="search-pill action-only">
+    <div class="search-pill-front" style="background: #E31837; color: white;">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;">
+          <polyline points="9 10 4 15 9 20"></polyline>
+          <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+        </svg>
+        <span style="font-size: 11px; font-family: 'Montserrat', sans-serif; font-weight: 600; text-transform: uppercase;">See Itinerary</span>
+      </div>
+    </div>
+  </div>
+  <script defer src="script.js?v=9"></script>
+  <!-- Loads <model-viewer> for browsers: -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.2.0/model-viewer.min.js"></script>
+</body>
+
+</html>

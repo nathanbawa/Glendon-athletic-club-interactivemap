@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nathan Bawa — UrbanStage 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EAE6DF;
+    --text: #1C1B1A;
+    --accent: #4A4A4A;
+    --dim: #DBD6CE;
+    --muted: #827C76;
+    --overlay-fade: rgba(248, 247, 244, 0.9);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Aileron', 'Inter', sans-serif;
+    font-weight: 500;
+    overflow-x: hidden;
+  }
+
+  /* UTILITY */
+  .mono {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* FLOATING CTA */
+  .floating-cta {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    z-index: 900;
+    background: var(--bg);
+    color: var(--accent);
+    text-decoration: none;
+    padding: 1.2rem 2rem;
+    border-radius: 30px;
+    box-shadow: 10px 10px 20px rgba(0,0,0,0.08), -10px -10px 20px #ffffff;
+    transition: 0.2s ease-in-out;
+  }
+  .floating-cta:hover { 
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff;
+    transform: translateY(2px);
+  }
+
+  /* BUTTONS */
+  .btn-outline {
+    display: inline-block;
+    color: var(--text);
+    background: var(--bg);
+    text-decoration: none;
+    padding: 1.2rem 2.5rem;
+    border-radius: 30px;
+    box-shadow: 10px 10px 20px rgba(0,0,0,0.08), -10px -10px 20px #ffffff;
+    transition: 0.2s ease-in-out;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-outline:hover { 
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff;
+    transform: translateY(2px);
+  }
+  .btn-link {
+    display: inline-block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 1.2rem 2.5rem;
+    border: 1px solid transparent;
+    transition: opacity 0.3s;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-link:hover { opacity: 0.7; }
+  
+  /* MODAL */
+  .modal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8); z-index: 10000;
+    align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .modal.active { display: flex; opacity: 1; }
+  .modal-content {
+    background: var(--bg); padding: 4rem 2rem; border-radius: 30px;
+    max-width: 440px; width: 90%; position: relative;
+    box-shadow: 15px 15px 30px rgba(0,0,0,0.4), -15px -15px 30px rgba(255,255,255,0.05); text-align: center;
+  }
+  .modal-close {
+    position: absolute; top: 1.5rem; right: 2rem;
+    font-size: 2rem; cursor: pointer; color: var(--muted);
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-input {
+    width: 100%; padding: 1.2rem; margin-bottom: 2rem; border: none;
+    border-radius: 15px; outline: none;
+    box-shadow: inset 5px 5px 10px rgba(0,0,0,0.05), inset -5px -5px 10px #ffffff;
+    background: var(--bg); font-family: 'DM Mono', monospace; font-size: 1rem;
+    color: var(--text);
+  }
+  .modal-btn {
+    width: 100%; padding: 1.2rem; background: var(--bg); color: var(--text);
+    border: none; border-radius: 30px; font-family: 'DM Mono', monospace;
+    text-transform: uppercase; cursor: pointer; font-weight: bold; font-size: 1rem;
+    box-shadow: 10px 10px 20px rgba(0,0,0,0.08), -10px -10px 20px #ffffff;
+    transition: 0.2s ease-in-out;
+  }
+  .modal-btn:hover, .modal-btn:active { 
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.05), -5px -5px 10px #ffffff;
+    transform: translateY(2px); 
+  }
+  
+  .video-container-popup {
+    width: 350px; height: auto; max-height: 80vh; max-width: 90vw;
+    border-radius: 1em;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    display: flex; flex-direction: column;
+    background: #fff; font-family: sans-serif;
+  }
+  .video-wrapper-popup {
+    width: 100%; height: auto; background: #000; display: flex;
+  }
+  .video-wrapper-popup video {
+    width: 100%; height: auto; max-height: calc(80vh - 50px); object-fit: contain;
+  }
+  .video-stats-popup {
+    height: 50px; flex-shrink: 0; width: 100%; background: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1.5em; box-sizing: border-box; color: #bebebe;
+  }
+  .icon-btn {
+    background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; transition: transform 0.2s;
+  }
+  .icon-btn svg {
+    fill: #bebebe; width: 18px; height: 18px; transform: scale(1.2); transition: fill 0.2s;
+  }
+  .icon-btn:hover { transform: scale(1.1); }
+  .icon-btn:hover svg { fill: var(--text); }
+
+  /* HERO */
+  .hero {
+    height: 100vh;
+    display: flex;
+  }
+  .hero-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 6rem;
+    background: var(--bg);
+    position: relative;
+    z-index: 2;
+  }
+  .hero-right {
+    flex: 1;
+    position: relative;
+    background: #000;
+  }
+  .hero-right video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+  }
+  .hero-overlay {
+    display: none;
+  }
+  .hero-eyebrow { color: var(--muted); margin-bottom: 2rem; }
+  .hero-headline {
+    font-size: clamp(3rem, 6vw, 6rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: var(--text);
+  }
+  .hero-desc {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 480px;
+    margin-bottom: 3rem;
+  }
+  .hero-actions { display: flex; gap: 1rem; }
+
+  /* GALLERY Container (Smaller & Spaced) */
+  .gallery-container {
+    padding: 2rem 4rem 6rem;
+    background: var(--bg);
+  }
+  .gallery {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-flow: dense;
+    gap: 4rem 2rem;
+  }
+  
+  .gallery-item {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    background: var(--bg);
+    border-radius: 0;
+    box-shadow: 15px 15px 30px rgba(0,0,0,0.06), -15px -15px 30px #ffffff;
+    transition: 0.3s ease-in-out;
+  }
+  .gallery-item:hover {
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.04), -5px -5px 15px #ffffff;
+    transform: translateY(-3px);
+  }
+  .gallery-item.large { grid-column: span 8; }
+  .gallery-item.medium { grid-column: span 4; }
+  .gallery-item.half { grid-column: span 6; }
+  .gallery-item.slider-card { grid-column: span 4; }
+  .gallery-item.full { grid-column: span 12; }
+
+  .img-wrap {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background: var(--dim);
+    border-radius: 0;
+    aspect-ratio: 4/3;
+  }
+  .gallery-item.large .img-wrap { aspect-ratio: 16/9; }
+  .gallery-item.slider-card .img-wrap { aspect-ratio: 4/3; }
+  .gallery-item.full .img-wrap { aspect-ratio: 21/9; }
+  
+  /* CAROUSEL */
+  .carousel-wrapper {
+    position: absolute; inset: 0; overflow: hidden;
+  }
+  .carousel-track {
+    display: flex; width: 300%; height: 100%; transition: transform 0.5s ease-in-out;
+  }
+  .carousel-slide { width: 33.333%; height: 100%; }
+  .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+  .carousel-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.8); border: none; border-radius: 50%;
+    width: 40px; height: 40px; cursor: pointer; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background 0.2s; color: var(--text);
+  }
+  .carousel-btn:hover { background: #fff; }
+  .carousel-btn.prev { left: 1rem; }
+  .carousel-btn.next { right: 1rem; }
+  .carousel-dots {
+    position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 0.5rem; z-index: 10;
+  }
+  .carousel-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,0.5); cursor: pointer; border: 1px solid rgba(0,0,0,0.1);
+  }
+  .carousel-dot.active { background: #fff; border-color: transparent; }
+
+  .gallery-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: block;
+  }
+  .gallery-item:not(.slider-card):hover .gallery-img { transform: scale(1.05); }
+
+  .gallery-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 2.5rem;
+  }
+  .gallery-title { font-size: 1.4rem; color: var(--text); }
+  .gallery-desc { font-size: 0.95rem; color: var(--muted); line-height: 1.5; }
+  .gallery-client { color: var(--accent); margin-top: 0.5rem; }
+
+  .fallback-placeholder {
+    width: 100%; height: 100%;
+    min-height: 300px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--dim); color: var(--muted);
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+
+  /* BEFORE / AFTER SLIDER CSS */
+  .ba-container {
+    position: relative;
+    width: 100%; height: 100%;
+  }
+  .ba-img-after {
+    position: absolute; top:0; left:0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .ba-img-before {
+    position: absolute; top:0; left:0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+  }
+  .ba-handle {
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 2px;
+    background: var(--accent);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .ba-handle::after {
+    content: '↔';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--accent);
+    color: #fff;
+    padding: 0.6rem 0.5rem;
+    border-radius: 50%;
+    font-size: 1rem;
+    font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ba-range {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;
+    cursor: ew-resize;
+    z-index: 10;
+  }
+
+  /* VIDEO SECTION */
+  .videos-section {
+    padding: 4rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  .video-card {
+    position: relative;
+    background: var(--bg);
+    cursor: pointer;
+    border-radius: 0;
+    box-shadow: 15px 15px 30px rgba(0,0,0,0.06), -15px -15px 30px #ffffff;
+    transition: 0.3s ease-in-out;
+  }
+  .video-card:hover {
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.04), -5px -5px 15px #ffffff;
+    transform: translateY(-3px);
+  }
+  .video-container {
+    width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    border-radius: 0;
+  }
+  .video-container video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: saturate(0.5);
+    transition: filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .video-card:hover .video-container video { filter: saturate(1); }
+  
+  .video-meta { padding: 2.5rem; background: transparent; }
+  .video-title { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .video-tags { color: var(--muted); display: flex; justify-content: space-between; }
+
+  /* SERVICES */
+  .services { padding: 6rem 4rem; max-width: 1400px; margin: 0 auto; }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3rem;
+  }
+  .service-col { border-top: 1px solid rgba(0,0,0,0.1); padding-top: 2rem; }
+  .service-price { color: var(--accent); font-size: 1.2rem; margin-bottom: 1rem; }
+  .service-name { font-size: 2rem; margin-bottom: 1rem; line-height: 1.1; }
+  .service-desc { color: var(--muted); line-height: 1.5; }
+
+  /* PROCESS */
+  .process { padding: 4rem 4rem 8rem; max-width: 1400px; margin: 0 auto; }
+  .process-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .process-step { flex: 1; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 2rem; }
+  .step-num { font-size: 3rem; color: rgba(74,74,74,0.3); margin-bottom: 1rem; line-height: 1; font-weight: 600; }
+  .step-title { font-size: 1.5rem; margin-bottom: 0.8rem; font-weight: 600; }
+  .step-desc { color: var(--muted); line-height: 1.5; }
+
+  /* CONTACT */
+  .contact {
+    padding: 8rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    background: var(--dim);
+  }
+  .contact-left h2 { font-size: clamp(3rem, 5vw, 5rem); line-height: 1; font-style: italic; }
+  .contact-right { display: flex; flex-direction: column; gap: 3rem; }
+  .contact-block { display: flex; flex-direction: column; gap: 0.5rem; }
+  .contact-label { color: var(--accent); }
+  .contact-val { font-size: 1.2rem; text-decoration: none; color: var(--text); transition: color 0.2s; }
+  .contact-val:hover { color: var(--accent); }
+
+  /* FOOTER */
+  footer {
+    padding: 2rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    background: var(--bg);
+  }
+  footer span { color: var(--muted); }
+
+  /* RESPONSIVE */
+  @media (max-width: 1024px) {
+    .gallery-item.large, .gallery-item.medium, .gallery-item.half, .gallery-item.slider-card, .gallery-item.full { grid-column: span 12; }
+    .gallery-item.full .img-wrap { aspect-ratio: 16/9; }
+    .videos-section { grid-template-columns: 1fr; }
+    .services-grid { grid-template-columns: 1fr 1fr; gap: 4rem 2rem; }
+    .process-grid { flex-wrap: wrap; }
+    .process-step { min-width: 45%; }
+  }
+
+  @media (max-width: 768px) {
+    .hero { flex-direction: column; height: auto; }
+    .hero-left { padding: 5rem 1.5rem 3rem; }
+    .hero-right { height: 40vh; }
+    .hero-overlay { display: none; }
+    .hero-headline { font-size: clamp(2.5rem, 10vw, 4rem); }
+    .hero-actions { flex-direction: column; gap: 1rem; }
+    
+    .btn-outline, .btn-link, .floating-cta { padding: 1rem 1.5rem; text-align: center; }
+    .floating-cta { bottom: 1rem; right: 1rem; font-size: 0.8rem; }
+    
+    .gallery-container { padding: 3rem 1.5rem; }
+    .gallery { gap: 2.5rem 1rem; }
+    .gallery-text { padding: 1.5rem; }
+    .gallery-title { font-size: 1.2rem; }
+    .gallery-desc { font-size: 0.9rem; }
+    
+    .carousel-btn { width: 35px; height: 35px; }
+    .carousel-btn.prev { left: 0.5rem; }
+    .carousel-btn.next { right: 0.5rem; }
+    
+    .videos-section { padding: 1.5rem; gap: 2.5rem; display: flex; flex-direction: column; }
+    .video-meta { padding: 1.5rem; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .video-title { font-size: 1.3rem; }
+    
+    .services, .process { padding: 4rem 1.5rem; }
+    .services-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    .process-grid { display: flex; flex-direction: column; gap: 2.5rem; }
+    .process-step { min-width: 100%; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 1.5rem; }
+    
+    .clients-section { padding: 1rem 1.5rem 0 !important; }
+    .clients-logos { gap: 2rem !important; flex-direction: column; }
+    .client-logo { font-size: 1rem !important; }
+    
+    .contact { grid-template-columns: 1fr; gap: 3rem; padding: 4rem 1.5rem; }
+    .contact-left h2 { font-size: clamp(2.5rem, 8vw, 3.5rem); }
+    footer { flex-direction: column; gap: 1rem; align-items: center; text-align: center; padding: 2rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#" onclick="openModal(event)" class="floating-cta mono reveal">Schedule a Call</a>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow mono reveal">3D Visualization Toronto, CA</div>
+    <h1 class="hero-headline reveal" style="transition-delay: 0.1s;">Sell pre-construction with clarity.</h1>
+    <p class="hero-desc reveal" style="transition-delay: 0.2s;">
+      3D visualization for real estate developers and agents built to make spaces understandable before they exist.
+    </p>
+    <p class="reveal" style="margin-top:0px; margin-bottom:20px; transition-delay: 0.25s; color: var(--muted); font-size:14px; max-width: 480px;">
+      Based in Toronto working with developers, agents, and design teams.
+    </p>
+    <div class="hero-actions reveal" style="transition-delay: 0.3s;">
+      <a href="#" onclick="openModal(event)" class="btn-outline mono">Start a Project</a>
+      <a href="#" onclick="openModal(event)" class="btn-link mono">Schedule a Call</a>
+    </div>
+  </div>
+  <div class="hero-right reveal">
+    <video autoplay muted loop playsinline onerror="this.style.display='none';">
+      <!-- Ensure the walk_through_animation.mp4 file exists in root -->
+      <source src="walk%20through%20animation.mp4" type="video/mp4">
+    </video>
+    <div class="hero-overlay"></div>
+  </div>
+</section>
+
+<!-- GALLERY (Spaced and constrained) -->
+<section id="work" class="gallery-container">
+  <p class="reveal" style="max-width:600px; margin:0 auto 60px; text-align:center; color: var(--muted); font-size: 1.2rem;">
+    Selected work focused on pre-construction visualization and spatial communication.
+  </p>
+  <div class="gallery">
+    <!-- Large feature (Carousel) -->
+    <div class="gallery-item large reveal" style="cursor: default;">
+      <div class="img-wrap" style="cursor: default;">
+        <div class="carousel-wrapper">
+          <div class="carousel-track" id="carouselTrack" style="width: 400%;">
+            <div class="carousel-slide" style="width: 25%;"><img src="front-garage-result.png" alt="Exterior Front"></div>
+            <div class="carousel-slide" style="width: 25%;"><img src="kitchen-inside-result.png" alt="Interior Kitchen"></div>
+            <div class="carousel-slide" style="width: 25%;"><img src="garage-inside-result.png" alt="Interior Garage"></div>
+            <div class="carousel-slide" style="width: 25%;"><img src="livingroomcouch-result.png" alt="Living Room"></div>
+          </div>
+          <button class="carousel-btn prev" onclick="moveCarousel(-1)">❮</button>
+          <button class="carousel-btn next" onclick="moveCarousel(1)">❯</button>
+          <div class="carousel-dots" id="mainCarouselDots">
+            <div class="carousel-dot active" onclick="setCarousel(0)"></div>
+            <div class="carousel-dot" onclick="setCarousel(1)"></div>
+            <div class="carousel-dot" onclick="setCarousel(2)"></div>
+            <div class="carousel-dot" onclick="setCarousel(3)"></div>
+          </div>
+        </div>
+      </div>
+      <div class="gallery-text">
+        <h3 class="gallery-title">Comprehensive Property Rendering</h3>
+        <p class="gallery-desc">Built from architectural plans to help buyers understand and commit to a property before construction, covering both interior nuances and architectural exterior facades.</p>
+        <span class="gallery-client mono">Exterior & Interior Pre-Construction</span>
+      </div>
+    </div>
+
+    <!-- Half width shots (Medium 1 & 2) -->
+    <div class="gallery-item half reveal">
+      <div class="img-wrap">
+        <img src="poolgarden-reslut2.png" class="gallery-img" alt="Exterior Pool" onerror="this.replaceWith(createFallback('poolgarden-reslut2.png'))">
+      </div>
+      <div class="gallery-text">
+        <h3 class="gallery-title">Landscape & Lifestyle</h3>
+        <p class="gallery-desc">Showcasing outdoor amenities like pool gardens and terraces with photorealistic lighting.</p>
+        <span class="gallery-client mono">Exterior Visualization</span>
+      </div>
+    </div>
+
+    <div class="gallery-item half reveal">
+      <div class="img-wrap">
+        <img src="apart%20render.PNG" class="gallery-img" alt="Apartment Render" onerror="this.replaceWith(createFallback('apart render.PNG'))">
+      </div>
+      <div class="gallery-text">
+        <h3 class="gallery-title">Apartment Tower Blockout</h3>
+        <p class="gallery-desc">High-rise living space modeling, tailored for urban pre-construction marketing.</p>
+        <span class="gallery-client mono">Toronto Interior</span>
+      </div>
+    </div>
+
+    <!-- SINGLE Before/After Slider Card -->
+    <div class="gallery-item slider-card reveal">
+      <div class="img-wrap">
+        <div class="ba-container">
+          <!-- Render (After) -->
+          <img src="front-garage-result.png" class="ba-img-after" alt="Final Exterior Render" onerror="this.style.display='none'">
+          <!-- Clay Preview (Before) -->
+          <img src="front-garage-preview.jpg" class="ba-img-before" id="baBefore" alt="Clay Process Blockout" onerror="this.style.display='none'">
+          <div class="ba-handle" id="baHandle"></div>
+        </div>
+        <!-- Invisible range input to control the slide -->
+        <input type="range" class="ba-range" min="0" max="100" value="50" oninput="updateSlider(this.value)">
+      </div>
+      <div class="gallery-text">
+        <h3 class="gallery-title">Model & Visualization Progression</h3>
+        <p class="gallery-desc">Showing the exact progression from raw construction blockouts to photoreal exterior visualization.</p>
+        <span class="gallery-client mono">Interactive Display</span>
+      </div>
+    </div>
+
+    <!-- Development Carousel (Full width) -->
+    <div class="gallery-item full reveal" style="cursor: default;">
+      <div class="img-wrap" style="cursor: default;">
+        <div class="carousel-wrapper">
+          <div class="carousel-track" id="carouselTrackDev" style="width: 200%;">
+            <div class="carousel-slide" style="width: 50%;"><img src="5.jpg" alt="Dev Process 5"></div>
+            <div class="carousel-slide" style="width: 50%;"><img src="7.jpg" alt="Dev Process 7"></div>
+          </div>
+          <button class="carousel-btn prev" onclick="moveCarouselDev(-1)">❮</button>
+          <button class="carousel-btn next" onclick="moveCarouselDev(1)">❯</button>
+          <div class="carousel-dots">
+            <div class="carousel-dot dev-dot active" onclick="setCarouselDev(0)"></div>
+            <div class="carousel-dot dev-dot" onclick="setCarouselDev(1)"></div>
+          </div>
+        </div>
+      </div>
+      <div class="gallery-text" style="text-align: center; max-width: 800px; margin: 0 auto;">
+        <h3 class="gallery-title">Work Development & Analysis</h3>
+        <p class="gallery-desc">Behind the scenes structure and dimension setups pulling directly from reference architecture to ensure full-scale compliance and accuracy.</p>
+        <span class="gallery-client mono">Drafting Pipeline</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLIENTS -->
+<section class="clients-section reveal" style="padding: 2rem 4rem 1rem; max-width: 1400px; margin: 0 auto; text-align: center; opacity: 0.4; transition: opacity 0.3s;">
+  <div class="clients-eyebrow mono" style="color: var(--text); margin-bottom: 1.5rem; font-size: 0.75rem;">Trusted By</div>
+  <div class="clients-logos" style="display: flex; justify-content: center; align-items: center; gap: 4rem; flex-wrap: wrap; margin-bottom: 1rem;">
+    <div class="client-logo" style="text-transform: uppercase; font-family: 'Aileron', 'Inter', sans-serif; font-weight: 500; font-size: 1.1rem; letter-spacing: 0.05em; border-left: 2px solid var(--text); padding-left: 0.8rem; text-align: left; line-height: 1; color: var(--text);">
+      YORK<br><span style="font-size: 0.65rem; font-weight: 400; letter-spacing: 0.1em; color: var(--text);">UNIVERSITY</span>
+    </div>
+    <div class="client-logo" style="font-family: 'Aileron', 'Inter', sans-serif; font-weight: 800; font-size: 1rem; letter-spacing: -0.02em; color: var(--text);">
+      GLENDON <span style="font-weight: 400; color: var(--text);">ATHLETIC CLUB</span>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEOS -->
+<section class="videos-section">
+  <div class="video-card reveal" onclick="openVideoModal('walk%20through%20animation.mp4')">
+    <div class="video-container">
+      <video autoplay muted loop playsinline onerror="this.replaceWith(createFallback('walk through animation.mp4'))">
+        <source src="walk%20through%20animation.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="video-meta">
+      <h3 class="video-title">Animated Walkthrough</h3>
+      <div class="video-tags mono">
+        <span>60–90 sec</span>
+        <span>2026</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="video-card reveal" onclick="openVideoModal('Gacmapscreenrecording.mov')">
+    <div class="video-container">
+      <video autoplay muted loop playsinline poster="Gacmapscreenshots.png" onerror="this.replaceWith(createFallback('Gacmapscreenrecording.mov'))">
+        <source src="Gacmapscreenrecording.mov" type="video/mp4">
+      </video>
+    </div>
+    <div class="video-meta" style="padding-bottom:1rem;">
+      <h3 class="video-title">Interactive 3D Map York University</h3>
+      <p style="color:var(--muted); line-height:1.5; margin-bottom:1rem; margin-top:0.5rem;">
+        Developed with York University to translate a real facility into a navigable 3D environment.
+      </p>
+      <p style="color:var(--muted); line-height:1.5; margin-bottom:1.5rem;">
+        The system demonstrates how users can move through complex spaces digitally — with applications in real estate, leasing, and large developments.
+      </p>
+      <div class="video-tags mono">
+        <span style="font-size:0.6rem;">Real-world scale · Web-based interaction · Navigation system · Mobile optimized</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <h2 class="section-title reveal" style="text-align: center; font-size: 3rem; margin-bottom: 4rem;">Services</h2>
+  <div class="services-grid">
+    <div class="service-col reveal">
+      <h3 class="service-name">Exterior Visualization</h3>
+      <p class="service-desc mono">Photoreal renders designed for listings and development marketing.</p>
+    </div>
+    <div class="service-col reveal">
+      <h3 class="service-name">Interior Visualization</h3>
+      <p class="service-desc mono">Staged spaces with accurate lighting and material definition.</p>
+    </div>
+    <div class="service-col reveal">
+      <h3 class="service-name">Walkthrough Animation</h3>
+      <p class="service-desc mono">Camera-based sequences to communicate flow and scale.</p>
+    </div>
+    <div class="service-col reveal">
+      <h3 class="service-name">Interactive 3D</h3>
+      <p class="service-desc mono">Web-based environments for exploring spaces remotely.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process reveal">
+  <div class="process-grid">
+    <div class="process-step">
+      <div class="step-num">01</div>
+      <h4 class="step-title">Plans</h4>
+      <p class="step-desc mono">Review of architectural drawings and references.</p>
+    </div>
+    <div class="process-step">
+      <div class="step-num">02</div>
+      <h4 class="step-title">Model</h4>
+      <p class="step-desc mono">Accurate 3D structure built to scale.</p>
+    </div>
+    <div class="process-step">
+      <div class="step-num">03</div>
+      <h4 class="step-title">Light</h4>
+      <p class="step-desc mono">Materials, textures, and environment applied.</p>
+    </div>
+    <div class="process-step">
+      <div class="step-num">04</div>
+      <h4 class="step-title">Refine</h4>
+      <p class="step-desc mono">Adjustments based on feedback.</p>
+    </div>
+    <div class="process-step">
+      <div class="step-num">05</div>
+      <h4 class="step-title">Deliver</h4>
+      <p class="step-desc mono">Final assets prepared for marketing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHY THIS MATTERS / CONTACT -->
+<section id="contact" style="background: var(--dim); border-top: 1px solid rgba(0,0,0,0.05);">
+  <div class="reveal" style="padding: 8rem 4rem 4rem; max-width: 800px; margin: 0 auto; text-align: center;">
+    <h2 style="font-size: 3rem; margin-bottom: 2rem;">Why this matters</h2>
+    <p style="color: var(--muted); font-size: 1.2rem; line-height: 1.6;">
+      Pre-construction requires buyers to make decisions without seeing the final space.
+      <br><br>
+      Clear visualization reduces uncertainty and helps people understand what they are investing in.
+      <br><br>
+      The goal is simple: make the space feel real before it exists.
+    </p>
+  </div>
+
+  <div class="contact" style="padding-top: 4rem; border-top: none;">
+    <div class="contact-left reveal">
+      <h2 style="font-size: clamp(3rem, 5vw, 5rem); line-height: 1.1;">Start a project.</h2>
+      <p style="margin-top:2rem; max-width:400px; color:var(--muted); font-size:1.1rem; line-height:1.5;">
+        If you’re working on a development or listing and need clear visual communication, feel free to reach out.
+      </p>
+    </div>
+    <div class="contact-right reveal">
+    <div class="contact-block">
+      <span class="contact-label mono">EMAIL</span>
+      <a href="mailto:urbanstage3d@gmail.com" class="contact-val">urbanstage3d@gmail.com</a>
+    </div>
+    <div class="contact-block">
+      <span class="contact-label mono">LINKEDIN</span>
+      <a href="https://www.linkedin.com/in/nathan-bawa-a94082333" target="_blank" rel="noopener noreferrer" class="contact-val">linkedin.com/in/nathan-bawa-a94082333</a>
+    </div>
+    <div class="contact-block">
+      <span class="contact-label mono">INSTAGRAM</span>
+      <a href="#" class="contact-val">@urbanstage3d</a>
+    </div>
+    <div class="contact-block">
+      <span class="contact-label mono">LOCATION</span>
+      <span class="contact-val" style="cursor:default;">Toronto, Ontario, Remote Available</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="mono">© 2026 Nathan Bawa UrbanStage 3D</span>
+  <span class="mono">Toronto, Canada</span>
+</footer>
+
+<!-- MODAL UI -->
+<div class="modal" id="emailModal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal()">×</span>
+    <h2 style="font-weight: 600; margin-bottom: 0.5rem;">Request Services</h2>
+    <p style="color: var(--muted); margin-bottom: 2rem;">Leave your email and we'll reach out to schedule your project.</p>
+    <form onsubmit="submitForm(event)">
+      <input type="email" id="userEmail" placeholder="Your Email Address" required class="modal-input">
+      <button type="submit" class="modal-btn">Send Request</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="videoModal" onclick="if(event.target===this) closeVideoModal()">
+  <div class="video-container-popup">
+    <div class="video-wrapper-popup">
+      <video id="modalVideo" playsinline controls></video>
+    </div>
+    <div class="video-stats-popup">
+      <button onclick="togglePlay()" class="icon-btn" title="Play/Pause">
+        <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button onclick="closeVideoModal()" class="icon-btn" title="Exit">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // RESET SCROLL FIRST
+  document.body.style.overflow = 'auto';
+  
+  // Carousel Logic
+  let currentSlide = 0;
+  const slideCount = 4;
+  function updateCarousel() {
+    const track = document.getElementById('carouselTrack');
+    const dots = document.querySelectorAll('#mainCarouselDots .carousel-dot');
+    track.style.transform = `translateX(-${currentSlide * (100 / slideCount)}%)`;
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentSlide);
+    });
+  }
+  function moveCarousel(dir) {
+    currentSlide = (currentSlide + dir + slideCount) % slideCount;
+    updateCarousel();
+  }
+  function setCarousel(index) {
+    currentSlide = index;
+    updateCarousel();
+  }
+
+  // Dev Carousel Logic
+  let currentDevSlide = 0;
+  function updateCarouselDev() {
+    const track = document.getElementById('carouselTrackDev');
+    const dots = document.querySelectorAll('.dev-dot');
+    track.style.transform = `translateX(-${currentDevSlide * 50}%)`;
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentDevSlide);
+    });
+  }
+  function moveCarouselDev(dir) {
+    currentDevSlide = (currentDevSlide + dir + 2) % 2;
+    updateCarouselDev();
+  }
+  function setCarouselDev(index) {
+    currentDevSlide = index;
+    updateCarouselDev();
+  }
+
+  // Video Modal Logic
+  function openVideoModal(src) {
+    const modal = document.getElementById('videoModal');
+    const vid = document.getElementById('modalVideo');
+    vid.src = src;
+    modal.classList.add('active');
+    vid.play().then(() => {
+      document.getElementById('playIcon').style.display = 'none';
+      document.getElementById('pauseIcon').style.display = 'block';
+    }).catch(e => {
+      document.getElementById('playIcon').style.display = 'block';
+      document.getElementById('pauseIcon').style.display = 'none';
+    });
+  }
+  function closeVideoModal() {
+    const modal = document.getElementById('videoModal');
+    const vid = document.getElementById('modalVideo');
+    if (vid) {
+      vid.pause();
+      vid.removeAttribute('src');
+      vid.load();
+    }
+    modal.classList.remove('active');
+  }
+  function togglePlay() {
+    const vid = document.getElementById('modalVideo');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+    if(vid.paused) {
+      vid.play();
+      playIcon.style.display = 'none';
+      pauseIcon.style.display = 'block';
+    } else {
+      vid.pause();
+      playIcon.style.display = 'block';
+      pauseIcon.style.display = 'none';
+    }
+  }
+
+  // Email Modal Logic
+  function openModal(e) {
+    if(e) e.preventDefault();
+    document.getElementById('emailModal').classList.add('active');
+  }
+  function closeModal() {
+    document.getElementById('emailModal').classList.remove('active');
+  }
+  function submitForm(e) {
+    e.preventDefault();
+    const email = document.getElementById('userEmail').value;
+    window.location.href = 'mailto:urbanstage3d@gmail.com?subject=New Service Request&body=Hi Nathan, please reach out to me regarding a 3D visualization project. My email is: ' + email;
+    closeModal();
+  }
+
+  // Fallback UI generation for broken media
+  function createFallback(filename) {
+    const div = document.createElement('div');
+    div.className = 'fallback-placeholder mono';
+    div.innerText = '[' + filename + ']';
+    return div;
+  }
+
+  // Before / After Slider Logic
+  function updateSlider(val) {
+    const beforeImg = document.getElementById('baBefore');
+    const handle = document.getElementById('baHandle');
+    if(beforeImg && handle) {
+      beforeImg.style.clipPath = `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`;
+      handle.style.left = `${val}%`;
+    }
+  }
+
+  // Scroll Reveals
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+  
+  reveals.forEach(el => obs.observe(el));
+
+  // 360 VIEWER FUNCTIONALITY
+  const VIEWER_360_IMAGES = ['360photoconverter.jpg', 'housev3converter.jpg'];
+  let viewer360Current = 0;
+
+  function switch360Image(index, event) {
+    if (event) event.stopPropagation();
+    viewer360Current = index;
+    const preview = document.getElementById('viewer360Preview');
+    const sky = document.getElementById('viewer360Sky');
+    preview.style.backgroundImage = `url('${VIEWER_360_IMAGES[index]}')`;
+    if (sky) sky.setAttribute('src', VIEWER_360_IMAGES[index]);
+    
+    // Update button states
+    document.querySelectorAll('.viewer-image-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === index);
+    });
+  }
+
+  function open360Modal() {
+    const modal = document.getElementById('viewer360Modal');
+    modal.classList.add('active');
+    // Ensure scene loads properly
+    const scene = document.getElementById('viewer360Scene');
+    if (scene && !scene.hasLoaded) {
+      scene.addEventListener('loaded', () => {
+        const sky = document.getElementById('viewer360Sky');
+        if (sky) sky.setAttribute('src', VIEWER_360_IMAGES[viewer360Current]);
+      });
+    } else if (scene) {
+      const sky = document.getElementById('viewer360Sky');
+      if (sky) sky.setAttribute('src', VIEWER_360_IMAGES[viewer360Current]);
+    }
+    // Disable body scroll
+    document.body.style.overflow = 'hidden';
+  }
+
+  function close360Modal() {
+    const modal = document.getElementById('viewer360Modal');
+    if (modal) {
+      modal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+  }
+
+  // Close modal when clicking on the modal background
+  const viewer360Modal = document.getElementById('viewer360Modal');
+  if (viewer360Modal) {
+    viewer360Modal.addEventListener('click', (e) => {
+      if (e.target.id === 'viewer360Modal') {
+        close360Modal();
+      }
+    });
+  }
+
+  // Close modal with ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('viewer360Modal');
+      if (modal && modal.classList.contains('active')) {
+        close360Modal();
+      }
+    }
+  });
+
+
+</script>
+</body>
+</html>
